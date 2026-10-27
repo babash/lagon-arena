@@ -16,7 +16,7 @@ export class MatchViewer {
    * @param opts { sim, focus (id de la tortue suivie), code (son code), vitesse, autoplay,
    *               pensee (afficher le code et les capteurs), noms }
    */
-  constructor(container, { sim, focus = null, code = null, vitesse = 2.4, autoplay = true, pensee = true, noms = true, marqueurs = null } = {}) {
+  constructor(container, { sim, focus = null, code = null, vitesse = 2.4, autoplay = true, pensee = true, noms = true, marqueurs = null, controles: avecControles = true, zoom = 1 } = {}) {
     this.container = container; this.sim = sim; this.focus = focus;
     container.innerHTML = "";
     const box = el("div", { class: "lagon-box" });
@@ -27,8 +27,9 @@ export class MatchViewer {
     this.lagon = new Lagon(canvas, { noms });
     const rp = focus ? rapport(sim, focus) : null;
     this.player = new Player(this.lagon, sim, { vitesse, focus, onTick: (t) => this.onTick(t) });
-    this.ctrl = controles(this.player, marqueurs || (rp ? rp.marqueurs : []));
-    container.append(this.ctrl);
+    this.player.zoom = zoom;
+    this.ctrl = avecControles ? controles(this.player, marqueurs || (rp ? rp.marqueurs : [])) : null;
+    if (this.ctrl) container.append(this.ctrl);
     if (pensee && focus) {
       const p = el("div", { class: "pensee" });
       const cv = el("div"); this.capt = el("div", { class: "capteurs" });
@@ -57,15 +58,19 @@ export class MatchViewer {
       this.capt.innerHTML = capteursHTML(rec, t);
     }
   }
-  destroy() { this.player.destroy(); this.lagon.destroy(); this.ctrl.detruire(); this.container.innerHTML = ""; }
+  destroy() { this.player.destroy(); this.lagon.destroy(); if (this.ctrl) this.ctrl.detruire(); this.container.innerHTML = ""; }
+  suivre(id) { this.focus = id; this.player.focus = id; this.onTick(this.player.lastTick < 0 ? 0 : this.player.lastTick); }
 }
+
+// texte avec `code` → <code>code</code>
+export const codeTxt = (t) => esc(t).replace(/`([^`]+)`/g, "<code>$1</code>");
 
 // Bloc « rapport du match » : ce qui s'est passé + conseils
 export function rapportHTML(sim, id) {
   const r = rapport(sim, id);
   if (!r) return "";
   return `<div class="rapport"><ul>${r.lignes.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>` +
-    r.conseils.map((c) => `<div class="conseil">💡 ${esc(c)}</div>`).join("") + "</div>";
+    r.conseils.map((c) => `<div class="conseil">💡 ${codeTxt(c)}</div>`).join("") + "</div>";
 }
 
 // Tableau de classement d'un match (tous les participants)

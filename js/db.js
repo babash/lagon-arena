@@ -29,8 +29,17 @@ class Supabase {
     try { r = await fetch(this.base + path, { ...opts, headers: { ...this.headers, ...(opts.headers || {}) } }); }
     catch { throw new Error("Connexion impossible à la base de données. Vérifie la connexion Internet."); }
     const txt = await r.text();
-    const data = txt ? JSON.parse(txt) : null;
-    if (!r.ok) throw new Error((data && (data.message || data.hint)) || `Erreur ${r.status}`);
+    let data = null;
+    try { data = txt ? JSON.parse(txt) : null; } catch { data = { message: txt }; }
+    if (!r.ok) {
+      const m = (data && (data.message || data.hint)) || `Erreur ${r.status}`;
+      // base créée mais script supabase.sql pas (encore) lancé
+      if (/could not find the (function|table)|schema cache|does not exist|PGRST20[25]/i.test(m + " " + (data && data.code)))
+        throw new Error("La base de données n'est pas prête : l'enseignant doit lancer le fichier supabase.sql dans Supabase (SQL Editor → Run).");
+      if (r.status === 401 || /invalid api key|no api key/i.test(m))
+        throw new Error("Clé Supabase refusée : vérifiez SUPABASE_KEY dans js/config.js (clé « publishable »).");
+      throw new Error(m);
+    }
     return data;
   }
   rpc(fn, args = {}) { return this.req("/rpc/" + fn, { method: "POST", body: JSON.stringify(args) }); }

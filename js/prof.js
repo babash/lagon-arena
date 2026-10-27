@@ -24,7 +24,10 @@ $("#panneau").addEventListener("click", () => { const l = $(".prof-layout"); if 
 // =====================================================================
 function accueil() {
   CODE = null; SECRET = null; nettoyer();
-  $("#info").innerHTML = MODE === "demo" ? `<span class="pill mode-demo">Mode démo</span>` : `<span class="pill">🟢 Base de données</span>`;
+  $("#info").innerHTML = MODE === "demo" ? `<span class="pill mode-demo">Mode démo</span>` : `<span class="pill" id="etat-db">⏳ Base de données…</span>`;
+  if (MODE === "db") db.heureServeur()
+    .then(() => { const p = $("#etat-db"); if (p) p.textContent = "🟢 Base de données"; })
+    .catch((e) => { const p = $("#etat-db"); if (p) p.textContent = "🔴 Base de données"; toast(e.message, "err"); });
   const anciennes = Object.entries(mesSalles()).sort((a, b) => (b[1].cree || "").localeCompare(a[1].cree || ""));
   main.innerHTML = `<div class="grid2">
     <div class="card">
@@ -295,7 +298,7 @@ async function demarrerBrawl() {
 // ---------- brawl ----------
 const FEED = {
   nid: (n, e) => [`🥚 <b>${n}</b> pond son ${e.n}${e.n > 1 ? "e" : "er"} nid !`, "nid"],
-  capture: (n) => [`🦈 <b>${n}</b> s'est fait attraper !`, "capture"],
+  capture: (n, e) => [`🦈 <b>${n}</b> s'est fait attraper !${e.perdu ? " (−1 nid)" : ""}`, "capture"],
   plastique: (n) => [`🛍️ <b>${n}</b> a avalé un sac plastique…`, "capture"],
   epuisee: (n) => [`😵 <b>${n}</b> est épuisée !`, "capture"],
 };
@@ -322,7 +325,7 @@ async function scBrawl(st) {
   const noms = Object.fromEntries(sim.tortues.map((t) => [t.id, t]));
   let dernier = -1;
   const majDirect = (t) => {
-    const cpt = {}; for (const n of sim.nids) if (n.tick <= t) cpt[n.id] = (cpt[n.id] || 0) + 1;
+    const cpt = {}; for (const n of sim.nids) if (n.tick <= t && !(n.perdu != null && n.perdu <= t)) cpt[n.id] = (cpt[n.id] || 0) + 1;
     const cl = sim.tortues.map((x) => ({ ...x, n: cpt[x.id] || 0 })).sort((a, b) => b.n - a.n || estBot(a.id) - estBot(b.id) || String(a.nom).localeCompare(String(b.nom))).slice(0, 10);
     $("#live").innerHTML = cl.map((x) => `<li class="${estBot(x.id) ? "bot" : ""}"><span class="swatch" style="background:${x.couleur}"></span>${esc(x.nom)}<span class="n">${x.n} 🥚</span></li>`).join("");
     if (t < dernier) $("#feed").innerHTML = "";

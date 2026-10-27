@@ -23,7 +23,7 @@
   <section class="card">
     <div class="ico">📘</div>
     <h2>1. Le tutoriel</h2>
-    <p>Les règles du jeu expliquées pas à pas, avec des exemples à manipuler, puis des tortues en panne à réparer.</p>
+    <p>Pas besoin de savoir programmer : des exemples à manipuler, puis tes premiers <code>if</code>, pas à pas.</p>
     <p><b>Commence ici si tu n'as jamais joué !</b></p>
     <a class="btn big" href="tuto.html">Commencer le tutoriel →</a>
   </section>
@@ -54,9 +54,12 @@ import { db, MODE } from "./js/db.js";
 import { COULEURS } from "./js/engine.js";
 import { $, el, store, jeton } from "./js/common.js";
 
-$("#mode").innerHTML = MODE === "db"
-  ? "🟢 Connecté à la base de données de la classe"
-  : `<span class="pill mode-demo">Mode démo</span> la base de données n'est pas configurée : tout reste dans ce navigateur.`;
+if (MODE === "db") {
+  $("#mode").textContent = "⏳ Connexion à la base de données…";
+  db.heureServeur()
+    .then(() => { $("#mode").textContent = "🟢 Connecté à la base de données de la classe"; })
+    .catch((e) => { $("#mode").textContent = "🔴 " + e.message; });
+} else $("#mode").innerHTML = `<span class="pill mode-demo">Mode démo</span> la base de données n'est pas configurée : tout reste dans ce navigateur.`;
 
 let couleur = store.get("lagon:couleur") || COULEURS[Math.floor(Math.random() * COULEURS.length)];
 const pal = $("#palette");

@@ -1,22 +1,26 @@
 // =====================================================================
-//  Lagon Arena — tutoriel : les règles pas à pas, puis les missions
+//  Lagon Arena — tutoriel pour grands débutants
+//  Principe : un exemple à manipuler d'abord, très peu de texte,
+//  puis un petit exercice vérifié tout de suite.
 // =====================================================================
-import { simulate, BOTS, MISSIONS, STARTER, P, TWISTS, heureDe, estNuit, POINTS_RANG, BONUS_PROGRESSION, TICKS } from "./engine.js";
+import { simulate, BOTS, MISSIONS, P, POINTS_RANG, BONUS_PROGRESSION, tileAt } from "./engine.js";
 import { compile, runTurn, check } from "./interp.js";
 import { icone } from "./render.js";
-import { CodeEditor, CodeView } from "./editor.js";
+import { CodeEditor, CodeView, boiteOutils } from "./editor.js";
 import { MatchViewer, tableauMatch } from "./viewer.js";
-import { $, el, esc, store, AIDE_HTML } from "./common.js";
+import { CAPTEURS, ACTIONS_INFO } from "./primitives.js";
+import { $, el, esc, store } from "./common.js";
 
 const GRAINE_MISSION = 7;
-const prog = store.get("lagon:tuto", { vu: 0, missions: [] });
-const sauver = () => store.set("lagon:tuto", prog);
+const prog = store.get("lagon:tuto2", { faits: [] });
+const sauver = () => store.set("lagon:tuto2", prog);
+const fait = (cle) => { if (!prog.faits.includes(cle)) { prog.faits.push(cle); sauver(); majNav(); } };
 
-// --- un match de démonstration avec les 5 tortues d'entraînement (réutilisé par plusieurs étapes) ---
+// match de démonstration (5 tortues d'entraînement)
 let demo = null;
+const COUL = ["#ff7b5c", "#ffc93c", "#4363d8", "#f032e6", "#3cb44b"];
 const matchDemo = () => demo ||= simulate({
-  joueurs: BOTS.map((b, i) => ({ id: b.nom, nom: b.nom, couleur: ["#ff7b5c", "#ffc93c", "#4363d8", "#f032e6", "#3cb44b"][i], code: b.code })),
-  graine: 2024, twist: "calme",
+  joueurs: BOTS.map((b, i) => ({ id: b.nom, nom: b.nom, couleur: COUL[i], code: b.code })), graine: 2024, twist: "calme",
 });
 
 // =====================================================================
@@ -24,33 +28,139 @@ const matchDemo = () => demo ||= simulate({
 // =====================================================================
 function bascule(label, valeur, onChange) {
   const input = el("input", { type: "checkbox" }); input.checked = valeur;
-  const lab = el("label", { class: "switch" }, input, el("span", { class: "glissiere" }), el("span", {}, label));
+  const lab = el("label", { class: "switch" }, input, el("span", { class: "glissiere" }), el("span", { html: label }));
   input.addEventListener("change", () => onChange(input.checked));
+  lab.regler = (v) => { input.checked = v; };
   return lab;
 }
 const vf = (b) => `<span class="b-${b}">${b ? "True" : "False"}</span>`;
+const capt = (nom) => { const c = CAPTEURS.find((x) => x.nom === nom); return `${c.icone} <code>${nom}()</code>`; };
+const act = (nom) => { const a = ACTIONS_INFO.find((x) => x.nom === nom); return `${a.icone} <code>${nom}()</code>`; };
+
+// exécute UN tour d'un programme dans une situation donnée
+function unTour(compiled, sit) {
+  const base = { requin_proche: false, algue_ici: false, plastique_ici: false, sur_plage: false, est_la_nuit: false, energie: 8, heure: 12, ...sit };
+  return runTurn(compiled, Object.fromEntries(Object.entries(base).map(([k, v]) => [k, () => v])));
+}
+
+// petit programme-exemple + interrupteurs : on voit quelle ligne s'exécute
+function exemple(box, code, capteurs, sitDepart, phrase) {
+  // le jeu exige def tour(): on l'ajoute en coulisse (et on décale les numéros de ligne)
+  const comp = compile("def tour():\n" + code.split("\n").map((l) => "    " + l).join("\n"));
+  const s = { ...sitDepart };
+  box.innerHTML = `<div class="bascules"></div><div class="cv"></div><div class="msg ok resultat"></div>`;
+  const cv = new CodeView(box.querySelector(".cv")); cv.setCode(code);
+  const maj = () => {
+    const r = unTour(comp, s);
+    cv.montrer({ conds: r.conds.map(([n, v]) => [n - 1, v]), ligne: r.actionLine && r.actionLine - 1 });
+    box.querySelector(".resultat").innerHTML = r.action ? `→ ${phrase(r.action)}` : "→ 😐 Rien ne se passe : la condition est fausse, Python saute le bloc.";
+    box.querySelector(".resultat").className = "msg resultat " + (r.action ? "ok" : "warn");
+  };
+  const bs = {};
+  for (const k of capteurs) {
+    const c = CAPTEURS.find((x) => x.nom === k);
+    bs[k] = bascule(`${c.icone} <code>${k}()</code>`, s[k], (v) => { s[k] = v; maj(); });
+    box.querySelector(".bascules").append(bs[k]);
+  }
+  maj();
+  return { regler(sit) { Object.assign(s, sit); for (const k in bs) bs[k].regler(s[k]); maj(); } };
+}
+const PHRASE = {
+  manger: "😋 la tortue <b>mange</b>.", fuir: "💨 la tortue <b>fuit</b>.", pondre: "🥚 la tortue <b>pond</b> !",
+  aller_vers_algue: "➡️🌿 la tortue <b>nage vers les algues</b>.", aller_vers_plage: "➡️🏖️ la tortue <b>nage vers la plage</b>.", se_cacher: "🙈 la tortue <b>se cache</b>.",
+};
+const phrase = (a) => PHRASE[a] || `<code>${a}()</code>`;
+
+// exercice : écrire un petit programme, vérifié dans plusieurs situations
+function exercice(box, { cle, consigne, depart = "def tour():\n    ", cas, solution, indice, outils }) {
+  box.innerHTML = `<div class="exo">
+    <h3>🎯 À toi !</h3>
+    <div class="consigne">${consigne}</div>
+    <div class="ed"></div><div class="boite"></div>
+    <div class="row" style="margin-top:8px"><button class="btn vert verif">✔ Vérifier</button><button class="btn ghost small sol cache">👀 Voir la solution</button><button class="btn ghost small rst">↺ Recommencer</button></div>
+    <div class="res"></div></div>`;
+  const cleCode = "lagon:tuto2:" + cle;
+  const ed = new CodeEditor(box.querySelector(".ed"), { value: store.get(cleCode) || depart, onChange: (v) => store.set(cleCode, v) });
+  boiteOutils(box.querySelector(".boite"), ed, outils);
+  let essais = 0;
+  const res = box.querySelector(".res");
+  box.querySelector(".rst").addEventListener("click", () => { ed.value = depart; store.del(cleCode); res.innerHTML = ""; ed.focus(); });
+  box.querySelector(".sol").addEventListener("click", () => {
+    res.innerHTML = `<div class="msg info">👀 Une solution possible (recopie-la pour bien la retenir) :</div><div class="sol-code"></div>`;
+    const cv = new CodeView(res.querySelector(".sol-code")); cv.setCode(solution);
+  });
+  box.querySelector(".verif").addEventListener("click", () => {
+    essais++;
+    const c = check(ed.value);
+    if (!c.ok) {
+      ed.setErreur(c.error.line);
+      res.innerHTML = `<div class="msg err">🐞 <b>Ligne ${c.error.line}</b> : ${esc(c.error.message)}</div>` + (essais >= 2 ? `<div class="msg warn">💡 ${indice}</div>` : "");
+    } else {
+      const lignes = cas.map((k) => {
+        const r = unTour(c.compiled, k.sit);
+        const ok = k.attendu ? r.action === k.attendu : r.action !== k.pas;
+        return { ok, html: `<tr class="${ok ? "ok" : "ko"}"><td>${k.texte}</td><td>${k.attendu ? act(k.attendu) : `pas ${act(k.pas)}`}</td><td>${r.action ? act(r.action) : "rien"}</td><td>${ok ? "✅" : "❌"}</td></tr>` };
+      });
+      const tout = lignes.every((l) => l.ok);
+      res.innerHTML = `<table class="cas"><tr><th>Situation</th><th>Attendu</th><th>Ta tortue</th><th></th></tr>${lignes.map((l) => l.html).join("")}</table>` +
+        (tout ? `<div class="msg ok bravo">🎉 <b>Bravo !</b> Ton code marche dans toutes les situations.</div>`
+              : `<div class="msg err">Presque ! Regarde les lignes ❌.</div>` + (essais >= 2 ? `<div class="msg warn">💡 ${indice}</div>` : ""));
+      if (tout) { fait(cle); const b = el("button", { class: "btn big pulse" }, "Continuer →"); b.addEventListener("click", () => aller(courant + 1)); res.append(b); }
+    }
+    if (essais >= 2) box.querySelector(".sol").classList.remove("cache");
+  });
+}
+
+// quiz à boutons
+function quiz(box, titre, questions, rendreQuestion = null, fin = null) {
+  let qi = 0, score = 0;
+  const poser = () => {
+    if (qi >= questions.length) {
+      box.innerHTML = `<h3>${titre} : ${score} / ${questions.length} ${score === questions.length ? "🏆" : ""}</h3>` + (fin ? fin(score) : "");
+      const b = el("button", { class: "btn small ghost" }, "↺ Rejouer le quiz"); b.addEventListener("click", () => { qi = 0; score = 0; poser(); }); box.append(b);
+      if (score === questions.length && questions.cle) fait(questions.cle);
+      return;
+    }
+    const q = questions[qi];
+    box.innerHTML = `<h3>${titre} (${qi + 1}/${questions.length})</h3><div class="q-texte">${q.texte}</div><div class="row choix-rep"></div><div class="expl"></div>`;
+    if (rendreQuestion) rendreQuestion(q);
+    for (const [val, lab] of q.options) {
+      const b = el("button", { class: "btn ghost rep", html: lab });
+      b.addEventListener("click", () => {
+        box.querySelectorAll(".rep").forEach((x) => (x.disabled = true));
+        const bon = val === q.bon; if (bon) score++;
+        b.classList.remove("ghost"); b.classList.add(bon ? "vert" : "corail");
+        box.querySelector(".expl").innerHTML = `<div class="msg ${bon ? "ok" : "err"}">${bon ? "✅ Oui !" : "❌ Non."} ${q.pourquoi || ""}</div>`;
+        if (q.apres) q.apres();
+        const s = el("button", { class: "btn small" }, qi + 1 < questions.length ? "Suivante →" : "Résultat");
+        s.addEventListener("click", () => { qi++; poser(); });
+        box.querySelector(".expl").append(s);
+      });
+      box.querySelector(".choix-rep").append(b);
+    }
+  };
+  poser();
+}
 
 // =====================================================================
 //  Les étapes
 // =====================================================================
 const ETAPES = [];
 
-// ---------- 1. La mission ----------
+// ---------- 1. Le jeu ----------
 ETAPES.push({
-  court: "1", titre: "Ta mission",
+  court: "1", titre: "Le jeu",
   rendre(box) {
     box.innerHTML = `<div class="etape"><div class="texte">
-      <h2>🐢 Ta mission</h2>
-      <p>Tu es une tortue marine du lagon. Ton but : <b>pondre un maximum de nids</b> sur les plages pendant le match.</p>
-      <p>Mais tu n'as pas de manette : <b>tu écris le programme Python</b> qui décide de ce que fait ta tortue. Ensuite, toutes les tortues de la classe plongent <b>en même temps</b> dans le même lagon… et ce sont vos programmes qui jouent !</p>
-      <div class="objectif">🥚 1 nid pondu = 1 point. La tortue qui a le plus de nids à la fin du match gagne.</div>
-      <p>Pour y arriver, ta tortue devra :</p>
-      <ul>
-        <li>🌿 <b>manger des algues</b> pour garder de l'énergie ;</li>
-        <li>🏖️ aller <b>sur la plage, la nuit</b>, pour pondre ;</li>
-        <li>🦈 <b>échapper aux requins</b>.</li>
-      </ul>
-      <p class="muted">À droite : 5 tortues d'entraînement en plein match. Regarde les nids apparaître sur les plages quand la nuit tombe.</p>
+      <h2>🐢 Le jeu</h2>
+      <div class="but">🥚 But : <b>pondre le plus de nids.</b></div>
+      <div class="trio">
+        <div><span>🌿</span>Manger<br><small>pour avoir de l'énergie</small></div>
+        <div><span>🏖️🌙</span>Pondre<br><small>sur la plage, la nuit</small></div>
+        <div><span>🦈</span>Fuir<br><small>les requins (sinon −1 nid)</small></div>
+      </div>
+      <p>Pas de manette : <b>tu écris le programme</b> de ta tortue en Python.<br>Puis toutes les tortues de la classe jouent <b>en même temps</b>.</p>
+      <p class="muted">👉 Regarde : les nids apparaissent sur les plages la nuit.</p>
     </div><div><div id="vue"></div><div id="classement" class="petit" style="margin-top:10px"></div></div></div>`;
     const sim = matchDemo();
     const v = new MatchViewer($("#vue", box), { sim, vitesse: 5, pensee: false });
@@ -63,21 +173,12 @@ ETAPES.push({
 ETAPES.push({
   court: "2", titre: "Le lagon",
   rendre(box) {
-    const L = [
-      ["tortue", "<b>Ta tortue</b> : elle a ta couleur et ton pseudo. Elle avance d'une case par tour."],
-      ["herbier", "<b>Les algues</b> (herbiers) : la nourriture. Chaque case a 3 portions, qui repoussent petit à petit."],
-      ["plage", "<b>La plage</b> (à gauche et à droite) : le <b>seul</b> endroit où l'on peut pondre. Les requins n'y vont jamais."],
-      ["nid", "<b>Un nid</b> : chaque nid pondu reste sur la plage, avec la couleur de sa tortue."],
-      ["requin", "<b>Le requin</b> : il chasse les tortues qu'il voit. Quand il dort (z), il ne bouge pas."],
-      ["sac", "<b>Le sac plastique</b> : il dérive et ressemble à une algue… mais l'avaler rend malade."],
-      ["corail", "<b>Le corail</b> : un mur. Personne ne passe."],
-      ["nuit", "<b>La nuit</b> : le lagon s'assombrit. C'est le moment de pondre !"],
-    ];
+    const L = [["tortue", "Ta tortue"], ["herbier", "Algues = <b>nourriture</b>"], ["plage", "Plage = on y <b>pond</b> (et pas de requin)"], ["nid", "Nid = <b>1 point</b>"],
+      ["requin", "Requin = <b>danger</b> (−1 nid)"], ["sac", "Sac plastique = <b>poison</b>"], ["corail", "Corail = <b>mur</b>"], ["nuit", "Nuit = <b>l'heure de pondre</b>"]];
     box.innerHTML = `<div class="etape"><div class="texte">
       <h2>🗺️ Le lagon</h2>
-      <p>Le lagon est un quadrillage de cases. Toutes les tortues partent du <b>centre</b>, au milieu des requins et des algues.</p>
-      <div class="legende">${L.map(([t, txt]) => `<canvas data-ic="${t}"></canvas><div>${txt}</div>`).join("")}</div>
-    </div><div><div id="vue"></div><p class="petit muted">Le match de démonstration pendant la 2<sup>e</sup> nuit : des nids sont déjà apparus sur les plages.</p></div></div>`;
+      <div class="legende grosse">${L.map(([t, txt]) => `<canvas data-ic="${t}"></canvas><div>${txt}</div>`).join("")}</div>
+    </div><div><div id="vue"></div><p class="petit muted">Pendant la 2<sup>e</sup> nuit : des nids sont déjà pondus sur les plages.</p></div></div>`;
     box.querySelectorAll("canvas[data-ic]").forEach((c) => icone(c, c.dataset.ic));
     const v = new MatchViewer($("#vue", box), { sim: matchDemo(), autoplay: false, pensee: false });
     v.player.seek(108);
@@ -85,232 +186,281 @@ ETAPES.push({
   },
 });
 
-// ---------- 3. L'énergie ----------
+// ---------- 3. Les questions (capteurs) ----------
 ETAPES.push({
-  court: "3", titre: "L'énergie",
+  court: "3", titre: "Les questions", cle: "capteurs",
   rendre(box) {
     box.innerHTML = `<div class="etape"><div class="texte">
-      <h2>⚡ L'énergie</h2>
-      <ul>
-        <li>Ta tortue commence avec <b>${P.energieDepart}</b> d'énergie (maximum <b>${P.energieMax}</b>).</li>
-        <li>Nager fatigue : elle perd <b>1</b> d'énergie <b>tous les ${P.perteEnergie} tours</b>.</li>
-        <li><code>manger()</code> sur des algues : <b>+${P.gainAlgue}</b>.</li>
-        <li><code>pondre()</code> coûte <b>${P.coutPonte}</b>, et il faut avoir <b>au moins ${P.energiePonte}</b> pour pondre.</li>
-        <li>À <b>0</b>, ta tortue est <b>épuisée</b> 😵 : retour au point de départ, bloquée ${P.bloquee} tours.</li>
+      <h2>❓ Ta tortue se pose des questions</h2>
+      <div class="exemple-gros"><code>algue_ici()</code> = « Y a-t-il des algues ici ? »<br>Réponse : <span class="b-true">True</span> (oui) ou <span class="b-false">False</span> (non).</div>
+      <p>Ces questions s'appellent des <b>capteurs</b> :</p>
+      <table class="prims">${CAPTEURS.map((c) => `<tr><td>${c.icone}</td><td><code>${c.nom}()</code></td><td>${esc(c.role)}</td></tr>`).join("")}</table>
+    </div><div class="card"><div id="q"></div><div id="vue" style="margin-top:10px"></div></div></div>`;
+    // on cherche dans le match de démo des moments faciles à lire
+    const sim = matchDemo();
+    const trouver = (pred) => {
+      for (const [i, t] of sim.tortues.entries()) {
+        const tr = sim.traces[t.id];
+        for (let k = 20; k < tr.length; k++) {
+          const r = tr[k], f = sim.frames[k].tortues[i];
+          if (r && r.capteurs && !r.bloquee && f[4] === 0 && f[5] === 0 && pred(r, k, t)) return { id: t.id, nom: t.nom, tick: k, r };
+        }
+      }
+      return null;
+    };
+    const dist = (k, r) => Math.min(...sim.frames[k].requins.map((s) => Math.abs(s[0] - r.x) + Math.abs(s[1] - r.y)));
+    const Q = [
+      { cap: "algue_ici", m: trouver((r) => r.capteurs.algue_ici && !r.capteurs.requin_proche) },
+      { cap: "requin_proche", m: trouver((r, k) => r.capteurs.requin_proche && dist(k, r) <= 2) },
+      { cap: "sur_plage", m: trouver((r, k) => k > 50 && tileAt(r.x, r.y) === "eau" && !r.capteurs.requin_proche && !r.capteurs.est_la_nuit) },
+      { cap: "est_la_nuit", m: trouver((r) => r.capteurs.est_la_nuit && r.capteurs.sur_plage) },
+    ].filter((q) => q.m);
+    const v = new MatchViewer($("#vue", box), { sim, autoplay: false, pensee: false, controles: false, noms: false, zoom: 2.4 });
+    const questions = Q.map((q) => ({
+      texte: `Regarde la tortue <b>entourée</b> ⭕ (au centre de l'image).<br>Que répond ${capt(q.cap)} ?`,
+      options: [[true, "True <small>(oui)</small>"], [false, "False <small>(non)</small>"]],
+      bon: q.m.r.capteurs[q.cap],
+      pourquoi: `${capt(q.cap)} vaut ${vf(q.m.r.capteurs[q.cap])} : ${esc(CAPTEURS.find((c) => c.nom === q.cap).role)}`,
+      m: q.m,
+    }));
+    questions.cle = "capteurs";
+    quiz($("#q", box), "🔎 Quiz", questions, (q) => { v.suivre(q.m.id); v.player.seek(q.m.tick); });
+    return () => v.destroy();
+  },
+});
+
+// ---------- 4. Les ordres (actions) ----------
+ETAPES.push({
+  court: "4", titre: "Les ordres", cle: "actions",
+  rendre(box) {
+    box.innerHTML = `<div class="etape"><div class="texte">
+      <h2>❗ Ta tortue obéit à des ordres</h2>
+      <div class="exemple-gros"><code>manger()</code> = « Mange ! »<br>À chaque tour : <b>un seul ordre</b>.</div>
+      <p>Ces ordres s'appellent des <b>actions</b> :</p>
+      <table class="prims">${ACTIONS_INFO.map((a) => `<tr><td>${a.icone}</td><td><code>${a.nom}()</code></td><td>${esc(a.role)}</td></tr>`).join("")}</table>
+    </div><div class="card" id="q"></div></div>`;
+    const opts = ["manger", "pondre", "fuir", "aller_vers_plage"].map((a) => [a, act(a)]);
+    const questions = [
+      { texte: "🌿 Tu es sur des algues et tu as faim.", bon: "manger", pourquoi: "Sur des algues, on mange : +3 ⚡." },
+      { texte: "🦈 Un requin fonce sur toi !", bon: "fuir", pourquoi: "Le danger d'abord : on fuit." },
+      { texte: "🏖️🌙 Tu es sur la plage, il fait nuit, tu as 9 ⚡.", bon: "pondre", pourquoi: "Plage + nuit + assez d'énergie : on pond. +1 point !" },
+      { texte: "🌙 Il fait nuit et tu es loin de la plage.", bon: "aller_vers_plage", pourquoi: "Pour pondre, il faut d'abord aller sur la plage." },
+    ].map((q) => ({ ...q, options: opts }));
+    questions.cle = "actions";
+    quiz($("#q", box), "🧩 Quel ordre donner ?", questions);
+  },
+});
+
+// ---------- 5. Mon premier if ----------
+ETAPES.push({
+  court: "5", titre: "Mon premier if", cle: "if",
+  rendre(box) {
+    box.innerHTML = `<div class="etape"><div class="texte">
+      <h2>✍️ Ton premier <code>if</code></h2>
+      <p class="phrase-fr">« <b>Si</b> il y a des algues, <b>alors</b> mange. »</p>
+      <div class="anatomie">
+        <div class="ligne-code"><span class="a a1">if</span> <span class="a a2">algue_ici()</span><span class="a a3">:</span></div>
+        <div class="ligne-code"><span class="a a4">····</span><span class="a a5">manger()</span></div>
+        <ol class="leg">
+          <li><span class="a a1">if</span> = <b>si</b></li>
+          <li><span class="a a2">algue_ici()</span> = la <b>question</b></li>
+          <li><span class="a a3">:</span> = <b>deux-points</b> (obligatoires !)</li>
+          <li><span class="a a4">····</span> = <b>4 espaces</b> (touche <kbd>Tab</kbd>) : la ligne est « dans » le if</li>
+          <li><span class="a a5">manger()</span> = l'<b>ordre</b>, fait seulement si la réponse est True</li>
+        </ol>
+      </div>
+      <h3>🔬 Essaie :</h3><div id="ex"></div>
+    </div><div class="card" id="exo"></div></div>`;
+    exemple($("#ex", box), "if algue_ici():\n    manger()", ["algue_ici"], { algue_ici: true }, phrase);
+    exercice($("#exo", box), {
+      cle: "if",
+      consigne: `Écris : « <b>Si</b> un requin est proche, <b>alors</b> fuir. »<br><span class="petit muted">La ligne <code>def tour():</code> est déjà écrite : écris <b>en dessous</b>. Astuce : tape <code>si</code> ou clique dans la boîte à outils.</span>`,
+      cas: [{ texte: "🦈 requin proche", sit: { requin_proche: true }, attendu: "fuir" }, { texte: "😌 pas de requin", sit: { requin_proche: false }, pas: "fuir" }],
+      solution: "def tour():\n    if requin_proche():\n        fuir()\n",
+      indice: "Écris <code>if requin_proche():</code> puis appuie sur <kbd>Entrée</kbd> : la ligne suivante se décale toute seule. Écris alors <code>fuir()</code>.",
+      outils: { capteurs: ["requin_proche", "algue_ici", "sur_plage"], actions: ["fuir", "manger", "pondre"], mots: ["if"] },
+    });
+  },
+});
+
+// ---------- 6. else ----------
+ETAPES.push({
+  court: "6", titre: "else (sinon)", cle: "else",
+  rendre(box) {
+    box.innerHTML = `<div class="etape"><div class="texte">
+      <h2>↔️ <code>else</code> = sinon</h2>
+      <p class="phrase-fr">« <b>Si</b> il y a des algues, mange. <b>Sinon</b>, va vers les algues. »</p>
+      <div id="ex"></div>
+      <ul class="points">
+        <li><code>else:</code> = <b>dans tous les autres cas</b>.</li>
+        <li>Pas de question après <code>else</code>, mais toujours les <b>deux-points</b>.</li>
+        <li><code>else</code> est aligné avec son <code>if</code>.</li>
       </ul>
-      <p>👉 Le bon rythme : <b>manger le jour</b> pour être pleine d'énergie, <b>pondre la nuit</b>.</p>
-    </div><div class="card">
-      <h3>🎮 Essaie !</h3>
+    </div><div class="card" id="exo"></div></div>`;
+    exemple($("#ex", box), "if algue_ici():\n    manger()\nelse:\n    aller_vers_algue()", ["algue_ici"], { algue_ici: false }, phrase);
+    exercice($("#exo", box), {
+      cle: "else",
+      consigne: "Écris : « <b>Si</b> tu es sur la plage, pondre. <b>Sinon</b>, aller vers la plage. »",
+      cas: [{ texte: "🏖️ sur la plage", sit: { sur_plage: true, est_la_nuit: true }, attendu: "pondre" }, { texte: "🌊 dans l'eau", sit: { sur_plage: false }, attendu: "aller_vers_plage" }],
+      solution: "def tour():\n    if sur_plage():\n        pondre()\n    else:\n        aller_vers_plage()\n",
+      indice: "Après <code>pondre()</code>, appuie sur <kbd>Entrée</kbd> puis efface 4 espaces (<kbd>⌫</kbd>) pour revenir sous le <code>if</code>. Écris <code>else:</code>.",
+      outils: { capteurs: ["sur_plage", "est_la_nuit", "algue_ici"], actions: ["pondre", "aller_vers_plage", "manger"], mots: ["if", "else"] },
+    });
+  },
+});
+
+// ---------- 7. elif ----------
+ETAPES.push({
+  court: "7", titre: "elif", cle: "elif",
+  rendre(box) {
+    const code = "if requin_proche():\n    fuir()\nelif algue_ici():\n    manger()\nelse:\n    aller_vers_algue()";
+    box.innerHTML = `<div class="etape"><div class="texte">
+      <h2>🔝 <code>elif</code> : le premier vrai gagne</h2>
+      <p class="phrase-fr">« <b>Si</b> requin, fuis. <b>Sinon si</b> algues, mange. <b>Sinon</b>, va vers les algues. »</p>
+      <div id="ex"></div>
+      <div class="msg info">Python lit <b>de haut en bas</b>. Il fait <b>seulement le premier vrai</b> et ignore la suite.<br>👉 Le plus important (le danger) se met <b>en haut</b>.</div>
+    </div><div class="card" id="q"></div></div>`;
+    const ex = exemple($("#ex", box), code, ["requin_proche", "algue_ici"], { requin_proche: false, algue_ici: true }, phrase);
+    const opts = ["fuir", "manger", "aller_vers_algue"].map((a) => [a, act(a)]);
+    const questions = [
+      { sit: { requin_proche: true, algue_ici: true }, texte: "🦈 Un requin est proche <b>et</b> 🌿 tu es sur des algues.", bon: "fuir", pourquoi: "La 1<sup>re</sup> condition est vraie : Python s'arrête là. La tortue fuit (elle ne mange pas)." },
+      { sit: { requin_proche: false, algue_ici: true }, texte: "😌 Pas de requin, 🌿 tu es sur des algues.", bon: "manger", pourquoi: "1<sup>re</sup> condition fausse, 2<sup>e</sup> vraie : elle mange." },
+      { sit: { requin_proche: false, algue_ici: false }, texte: "😌 Pas de requin, 🌊 pas d'algues.", bon: "aller_vers_algue", pourquoi: "Tout est faux : c'est le <code>else</code>." },
+    ].map((q) => ({ ...q, options: opts, apres: () => ex.regler(q.sit) }));
+    questions.cle = "elif";
+    quiz($("#q", box), "🎯 Devine ce que fait la tortue", questions);
+  },
+});
+
+// ---------- 8. and ----------
+ETAPES.push({
+  court: "8", titre: "and (et)", cle: "and",
+  rendre(box) {
+    box.innerHTML = `<div class="etape"><div class="texte">
+      <h2>🤝 <code>and</code> = et</h2>
+      <p class="phrase-fr">Pour pondre, il faut être <b>sur la plage</b> <b>ET</b> que ce soit <b>la nuit</b>.</p>
+      <div id="bascules" class="row" style="gap:18px"></div>
+      <div class="codeview" id="cond" style="margin-top:12px"></div>
+      <div id="verdict" class="msg"></div>
+      <p class="petit muted">Il faut aussi au moins ${P.energiePonte} ⚡ : on peut écrire <code>and energie() >= ${P.energiePonte}</code>.</p>
+    </div><div class="card" id="exo"></div></div>`;
+    const s = { plage: true, nuit: false };
+    const maj = () => {
+      const ok = s.plage && s.nuit;
+      $("#cond", box).innerHTML = `<span class="l"><span class="n">1</span><span class="tok-kw">if</span> <span class="tok-sens">sur_plage</span>() <span class="tok-kw">and</span> <span class="tok-sens">est_la_nuit</span>():</span>` +
+        `<span class="l ${ok ? "act" : ""}"><span class="n">2</span>    <span class="tok-act">pondre</span>()</span>` +
+        `<div class="detail-cond"><span>${vf(s.plage)}</span><span class="tok-kw">and</span><span>${vf(s.nuit)}</span><span>→</span><span>${vf(ok)}</span></div>`;
+      const v = $("#verdict", box);
+      v.className = "msg " + (ok ? "ok" : "err");
+      v.innerHTML = ok ? "🥚 Les deux sont vrais : <b>la tortue pond !</b>" : "⛔ Une seule réponse fausse suffit : <b>pas de ponte</b>.";
+    };
+    $("#bascules", box).append(bascule("🏖️ <code>sur_plage()</code>", s.plage, (v) => { s.plage = v; maj(); }), bascule("🌙 <code>est_la_nuit()</code>", s.nuit, (v) => { s.nuit = v; maj(); }));
+    maj();
+    exercice($("#exo", box), {
+      cle: "and",
+      consigne: "Écris : « <b>Si</b> tu es sur la plage <b>et</b> qu'il fait nuit, pondre. <b>Sinon</b>, aller vers la plage. »",
+      cas: [
+        { texte: "🏖️ plage + 🌙 nuit", sit: { sur_plage: true, est_la_nuit: true }, attendu: "pondre" },
+        { texte: "🏖️ plage + ☀️ jour", sit: { sur_plage: true, est_la_nuit: false }, attendu: "aller_vers_plage" },
+        { texte: "🌊 eau + 🌙 nuit", sit: { sur_plage: false, est_la_nuit: true }, attendu: "aller_vers_plage" },
+      ],
+      solution: "def tour():\n    if sur_plage() and est_la_nuit():\n        pondre()\n    else:\n        aller_vers_plage()\n",
+      indice: "La première ligne : <code>if sur_plage() and est_la_nuit():</code>",
+      outils: { capteurs: ["sur_plage", "est_la_nuit"], actions: ["pondre", "aller_vers_plage"], mots: ["if", "else", "and"] },
+    });
+  },
+});
+
+// ---------- 9. Énergie et dangers ----------
+ETAPES.push({
+  court: "9", titre: "Énergie et dangers",
+  rendre(box) {
+    box.innerHTML = `<div class="etape"><div class="card">
+      <h3>⚡ L'énergie : essaie !</h3>
       <div class="jauge" id="jauge"><div></div><span></span></div>
       <p id="nids" class="bigscore" style="margin:10px 0"></p>
       <div class="row">
-        <button class="btn vert small" data-a="manger">🌿 manger()</button>
+        <button class="btn vert small" data-a="manger">😋 manger()</button>
         <button class="btn small" data-a="pondre">🥚 pondre()</button>
-        <button class="btn sombre small" data-a="temps">⏳ ${P.perteEnergie} tours passent</button>
-        <button class="btn corail small" data-a="plastique">🛍️ manger un sac plastique</button>
+        <button class="btn sombre small" data-a="temps">⏳ 6 tours passent</button>
+        <button class="btn corail small" data-a="plastique">🛍️ manger un sac</button>
       </div>
-      <div id="log" class="msg info">Clique sur les boutons pour voir comment l'énergie évolue.</div>
-      <p class="petit muted">Ici, on fait comme si ta tortue était sur une plage, la nuit, au milieu des algues. Dans le vrai jeu, il faut se déplacer !</p>
+      <div id="log" class="msg info">Clique sur les boutons.</div>
+    </div><div class="texte">
+      <h2>⚠️ À retenir</h2>
+      <div class="regle"><span>⚡</span><div>L'énergie <b>baisse</b> toute seule. À <b>0</b> : épuisée, retour au départ.</div></div>
+      <div class="regle"><span>🦈</span><div>Attrapée par un requin = retour au départ et <b>−1 nid</b>. <b>Refuges</b> : la <b>plage</b> 🏖️ et les <b>algues</b> 🌿 (sauf quand tu manges).</div></div>
+      <div class="regle"><span>🛍️</span><div>Sac plastique = <b>−${P.pertePlastique} ⚡</b>. <code>not plastique_ici()</code> = « <b>pas</b> de plastique ».</div></div>
+      <div class="regle"><span>🕐</span><div>Un match = <b>3 jours</b>. Nuit de 19 h à 6 h.</div></div>
     </div></div>`;
     let e = P.energieDepart, n = 0;
     const maj = (msg, type = "info") => {
       $("#jauge div", box).style.width = (100 * e / P.energieMax) + "%";
-      $("#jauge span", box).textContent = `énergie : ${e} / ${P.energieMax}`;
-      $("#nids", box).innerHTML = `<span class="bloc"><b>${n}</b>nid${n > 1 ? "s" : ""}</span>`;
+      $("#jauge span", box).textContent = `⚡ ${e} / ${P.energieMax}`;
+      $("#nids", box).innerHTML = `<span class="bloc"><b>${n}</b>nid${n > 1 ? "s" : ""} 🥚</span>`;
       if (msg) { const l = $("#log", box); l.className = "msg " + type; l.innerHTML = msg; }
     };
     box.querySelectorAll("[data-a]").forEach((b) => b.addEventListener("click", () => {
       const a = b.dataset.a;
-      if (a === "manger") {
-        if (e >= P.energieMax) return maj("Ta tortue n'a plus faim : manger avec 10 d'énergie ne sert à rien.", "warn");
-        e = Math.min(P.energieMax, e + P.gainAlgue); maj(`Miam ! +${P.gainAlgue} d'énergie.`, "ok");
-      } else if (a === "pondre") {
-        if (e < P.energiePonte) return maj(`<b>pondre() refusé</b> : il faut au moins ${P.energiePonte} d'énergie. Va manger d'abord !`, "err");
-        e -= P.coutPonte; n++; maj(`Un nid ! 🥚 (−${P.coutPonte} d'énergie)`, "ok");
-      } else if (a === "temps") {
-        e--; maj(`${P.perteEnergie} tours de nage : −1 d'énergie.`);
-      } else { e -= P.pertePlastique; maj(`Beurk ! Ce n'était pas une algue : <b>−${P.pertePlastique}</b> d'énergie.`, "err"); }
-      if (e <= 0) { e = 5; maj(`😵 <b>Épuisée !</b> Ta tortue retourne au départ et reste bloquée ${P.bloquee} tours. Elle repart avec 5 d'énergie.`, "err"); }
+      if (a === "manger") { if (e >= P.energieMax) return maj("Plus faim ! (déjà 10 ⚡)", "warn"); e = Math.min(P.energieMax, e + P.gainAlgue); maj(`Miam ! +${P.gainAlgue} ⚡`, "ok"); }
+      else if (a === "pondre") { if (e < P.energiePonte) return maj(`⛔ Refusé : il faut ${P.energiePonte} ⚡. Mange d'abord !`, "err"); e -= P.coutPonte; n++; maj(`🥚 Un nid ! (−${P.coutPonte} ⚡)`, "ok"); }
+      else if (a === "temps") { e--; maj("La nage fatigue : −1 ⚡"); }
+      else { e -= P.pertePlastique; maj(`Beurk ! −${P.pertePlastique} ⚡`, "err"); }
+      if (e <= 0) { e = 5; maj("😵 <b>Épuisée !</b> Retour au départ, bloquée 5 tours.", "err"); }
     }));
     maj();
   },
 });
 
-// ---------- 4. Le jour, la nuit et la ponte ----------
-ETAPES.push({
-  court: "4", titre: "Pondre",
-  rendre(box) {
-    const nuit = TWISTS.calme.nuit;
-    let bandes = "";
-    for (let t = 0; t < TICKS; t++) bandes += `<i class="${estNuit(heureDe(t), nuit) ? "n" : "j"}"></i>`;
-    box.innerHTML = `<div class="etape"><div class="texte">
-      <h2>🌙 Pondre : 3 conditions en même temps</h2>
-      <p>Un match dure <b>${TICKS} tours</b>, soit <b>3 jours et 3 nuits</b> (1 journée = 60 tours). Le match commence à <b>8 h du matin</b>.</p>
-      <div class="jours" title="Le match, tour par tour">${bandes}</div>
-      <div class="row petit muted" style="justify-content:space-between"><span>tour 0 (8 h)</span><span>☀️ jour · 🌙 nuit de 19 h à 6 h</span><span>tour ${TICKS}</span></div>
-      <p><code>pondre()</code> ne marche que si ta tortue est :</p>
-      <ol>
-        <li><b>sur une plage</b> 🏖️ <span class="muted">et</span></li>
-        <li><b>la nuit</b> 🌙 <span class="muted">et</span></li>
-        <li>avec <b>au moins ${P.energiePonte} d'énergie</b> ⚡.</li>
-      </ol>
-      <p>Les trois en même temps : en Python, on les relie avec <code>and</code>.<br>Sinon, <code>pondre()</code> est <b>refusé</b> et le tour est perdu.</p>
-    </div><div class="card">
-      <h3>🧪 Le testeur de ponte</h3>
-      <div id="bascules" class="row" style="gap:18px"></div>
-      <label class="champ" style="margin-top:12px"><span>⚡ <code>energie()</code> vaut <b id="ve"></b></span><input type="range" id="en" min="0" max="10" value="4"></label>
-      <div class="codeview" id="cond" style="margin-top:12px"></div>
-      <div id="verdict" class="msg"></div>
-    </div></div>`;
-    const s = { plage: true, nuit: false, e: 4 };
-    const maj = () => {
-      const c1 = s.plage, c2 = s.nuit, c3 = s.e >= P.energiePonte, ok = c1 && c2 && c3;
-      $("#ve", box).textContent = s.e;
-      $("#cond", box).innerHTML = `<span class="l"><span class="n">1</span><span class="tok-kw">if</span> <span class="tok-sens">sur_plage</span>() <span class="tok-kw">and</span> <span class="tok-sens">est_la_nuit</span>() <span class="tok-kw">and</span> <span class="tok-sens">energie</span>() <span class="tok-op">&gt;=</span> <span class="tok-num">${P.energiePonte}</span>:</span>` +
-        `<span class="l ${ok ? "act" : ""}"><span class="n">2</span>    <span class="tok-act">pondre</span>()</span>` +
-        `<div class="detail-cond"><span>${vf(c1)}</span><span class="tok-kw">and</span><span>${vf(c2)}</span><span class="tok-kw">and</span><span>${vf(c3)} <small>(${s.e} &gt;= ${P.energiePonte})</small></span><span>→</span><span>${vf(ok)}</span></div>`;
-      const raison = !c1 ? "pas sur une plage" : !c2 ? "il fait jour" : !c3 ? "pas assez d'énergie" : "";
-      const v = $("#verdict", box);
-      v.className = "msg " + (ok ? "ok" : "err");
-      v.innerHTML = ok ? "🥚 <b>pondre() réussit !</b> +1 nid." : `⛔ <b>pondre() refusé</b> : ${raison}. Il suffit d'une seule condition fausse pour que tout le <code>and</code> soit faux.`;
-    };
-    $("#bascules", box).append(bascule("🏖️ sur la plage", s.plage, (v) => { s.plage = v; maj(); }), bascule("🌙 il fait nuit", s.nuit, (v) => { s.nuit = v; maj(); }));
-    $("#en", box).addEventListener("input", (e) => { s.e = +e.target.value; maj(); });
-    maj();
-  },
-});
-
-// ---------- 5. Les dangers ----------
-ETAPES.push({
-  court: "5", titre: "Les dangers",
-  rendre(box) {
-    box.innerHTML = `<div class="etape"><div class="texte">
-      <h2>🦈 Les dangers… et les refuges</h2>
-      <div class="danger"><b>🦈 Les requins</b>
-        Un requin voit les tortues jusqu'à 4 cases et fonce sur la plus proche. S'il t'attrape : <b>retour au point de départ</b>, bloquée ${P.bloquee} tours 💫, puis ta tortue clignote quelques tours (protégée).
-        Le capteur <code>requin_proche()</code> vaut <code>True</code> quand un requin est à ${P.porteeRequin} cases ou moins.</div>
-      <div class="refuge"><b>🛡️ Deux refuges</b>
-        <b>La plage</b> : les requins ne sortent jamais de l'eau.<br>
-        <b>Les algues</b> : cachée dans les algues, ta tortue est invisible… <b>sauf quand elle mange</b> (les algues bougent !). <code>se_cacher()</code> la fait rester immobile et invisible.</div>
-      <div class="danger"><b>🛍️ Le plastique</b>
-        Un sac plastique sur des algues ressemble à de la nourriture. <code>manger()</code> sur un sac : <b>−${P.pertePlastique}</b> d'énergie au lieu de +${P.gainAlgue}. Le capteur <code>plastique_ici()</code> te prévient.</div>
-    </div><div><h3>🎬 Regarde : cette tortue mange alors qu'un requin arrive…</h3><div id="vue"></div>
-      <p class="petit muted">Tu répareras cette tortue dans la mission 2.</p></div></div>`;
-    const M = MISSIONS[1];
-    const sim = simulate({ joueurs: [{ id: "t", nom: "Gourmande", couleur: "#ff7b5c", code: M.code }], graine: GRAINE_MISSION, scenario: M.scenario });
-    const v = new MatchViewer($("#vue", box), { sim, focus: "t", pensee: false, vitesse: 2.4 });
-    v.player.onEnd = () => setTimeout(() => v.player.play(), 2500);
-    return () => v.destroy();
-  },
-});
-
-// ---------- 6. Le programme ----------
-ETAPES.push({
-  court: "6", titre: "Ton programme",
-  rendre(box) {
-    box.innerHTML = `<div class="etape"><div class="texte">
-      <h2>🧠 Ton programme</h2>
-      <p>Ton programme est une fonction <code>tour()</code>. Le jeu l'appelle <b>à chaque tour</b>, ${TICKS} fois par match. Ta tortue regarde autour d'elle avec ses <b>capteurs</b>, puis fait <b>une action</b>.</p>
-      ${AIDE_HTML.split("</ol>")[0]}</ol>
-      <p>👉 À droite, change la situation et regarde quelle ligne s'exécute. <span class="b-true">True</span> = condition vraie, <span class="b-false">False</span> = fausse.</p>
-      <div class="card quiz" id="quiz"></div>
-    </div><div class="card">
-      <h3>🔬 Explorateur de conditions</h3>
-      <div id="bascules" class="row" style="gap:14px"></div>
-      <div id="code" style="margin-top:12px"></div>
-      <div id="action" class="msg ok"></div>
-      <p class="petit muted">Remarque : les lignes après la première condition vraie ne sont même pas regardées.</p>
-    </div></div>`;
-    const comp = compile(STARTER);
-    const cv = new CodeView($("#code", box)); cv.setCode(STARTER);
-    const s = { requin_proche: false, est_la_nuit: false, sur_plage: false, algue_ici: true };
-    const executer = (sit) => runTurn(comp, Object.fromEntries(Object.entries({ ...sit, plastique_ici: false, energie: 8, heure: sit.est_la_nuit ? 22 : 14 }).map(([k, v]) => [k, () => v])));
-    const maj = () => {
-      const r = executer(s);
-      cv.montrer({ conds: r.conds, ligne: r.actionLine });
-      $("#action", box).innerHTML = `→ Ce tour-ci, ta tortue fait <code>${r.action}()</code> (ligne ${r.actionLine}).`;
-    };
-    for (const [k, lab] of [["requin_proche", "🦈 requin_proche()"], ["est_la_nuit", "🌙 est_la_nuit()"], ["sur_plage", "🏖️ sur_plage()"], ["algue_ici", "🌿 algue_ici()"]])
-      $("#bascules", box).append(bascule(lab, s[k], (v) => { s[k] = v; maj(); }));
-    maj();
-
-    // mini-quiz : prédire l'action avant de la voir
-    const Q = [
-      { sit: { requin_proche: true, est_la_nuit: true, sur_plage: true, algue_ici: false }, txt: "Il fait nuit, ta tortue est sur la plage… et un requin rôde à 2 cases.", ok: "fuir", pourquoi: "La 1re condition requin_proche() est vraie : Python s'arrête là. La tortue fuit au lieu de pondre ! (Sur la plage, elle ne risquait pourtant rien… à toi d'améliorer ça.)" },
-      { sit: { requin_proche: false, est_la_nuit: true, sur_plage: false, algue_ici: true }, txt: "Il fait nuit, ta tortue est dans les algues, aucun requin.", ok: "aller_vers_plage", pourquoi: "requin_proche() est faux, « est_la_nuit() and sur_plage() » est faux (pas sur la plage), puis est_la_nuit() est vrai : elle part vers la plage." },
-      { sit: { requin_proche: false, est_la_nuit: false, sur_plage: false, algue_ici: true }, txt: "C'est le jour, ta tortue est dans les algues, aucun requin.", ok: "manger", pourquoi: "Les trois premières conditions sont fausses, algue_ici() est vraie : elle mange." },
-    ];
-    let qi = 0, score = 0;
-    const quiz = $("#quiz", box);
-    const poser = () => {
-      if (qi >= Q.length) { quiz.innerHTML = `<h3>🎯 Devine l'action : ${score} / ${Q.length}</h3><p>${score === Q.length ? "Parfait ! Tu as compris : <b>le premier vrai gagne</b>." : "Relis bien : Python lit les conditions <b>de haut en bas</b> et s'arrête au <b>premier vrai</b>."}</p>`; return; }
-      const q = Q[qi];
-      quiz.innerHTML = `<h3>🎯 Devine l'action (${qi + 1}/${Q.length})</h3><p>${q.txt}<br><b>Avec le code de droite, que fait ta tortue ?</b></p><div class="row" id="rep"></div><div id="expl"></div>`;
-      for (const a of ["fuir", "pondre", "aller_vers_plage", "manger", "aller_vers_algue"]) {
-        const b = el("button", { class: "btn small ghost" }, a + "()");
-        b.addEventListener("click", () => {
-          quiz.querySelectorAll("#rep button").forEach((x) => (x.disabled = true));
-          const bon = a === q.ok; if (bon) score++;
-          b.classList.remove("ghost"); b.classList.add(bon ? "vert" : "corail");
-          Object.assign(s, q.sit);
-          $("#bascules", box).querySelectorAll("input").forEach((inp, i) => (inp.checked = s[["requin_proche", "est_la_nuit", "sur_plage", "algue_ici"][i]]));
-          maj();
-          $("#expl", quiz).innerHTML = `<div class="msg ${bon ? "ok" : "err"}">${bon ? "✅ Bien vu !" : `❌ Non : c'est <code>${q.ok}()</code>.`} ${esc(q.pourquoi)}</div>`;
-          const suiv = el("button", { class: "btn small" }, qi + 1 < Q.length ? "Question suivante →" : "Voir mon score");
-          suiv.addEventListener("click", () => { qi++; poser(); });
-          $("#expl", quiz).append(suiv);
-        });
-        $("#rep", quiz).append(b);
-      }
-    };
-    poser();
-  },
-});
-
-// ---------- 7. Aide-mémoire ----------
-ETAPES.push({
-  court: "7", titre: "Capteurs et actions",
-  rendre(box) {
-    box.innerHTML = `<div class="card aide aide-large"><h2>📋 L'aide-mémoire</h2>
-      <p>Voici <b>tout</b> ce que ta tortue sait faire. Tu retrouveras ce tableau dans l'onglet <b>❓ Aide</b> pendant la partie.</p>${AIDE_HTML}
-      <h3>✍️ Ce que tu peux écrire</h3>
-      <ul><li><code>if</code>, <code>elif</code>, <code>else</code>, avec <code>and</code>, <code>or</code>, <code>not</code> ;</li>
-      <li>les comparaisons <code>&lt;</code> <code>&gt;</code> <code>&lt;=</code> <code>&gt;=</code> <code>==</code> <code>!=</code> sur <code>energie()</code> et <code>heure()</code> ;</li>
-      <li>des if imbriqués (attention à l'indentation : 4 espaces) ;</li>
-      <li>Pas de boucles : c'est le jeu qui appelle <code>tour()</code> à chaque tour.</li></ul></div>`;
-  },
-});
-
-// ---------- 8 à 11. Les missions ----------
+// ---------- 10 à 13. Missions : réparer une tortue dans le lagon ----------
 const APPRIS = {
-  1: "<code>if</code> : quand la condition est <b>vraie</b>, Python exécute le bloc indenté juste en dessous. Il faut que l'action corresponde à la situation !",
-  2: "L'<b>ordre des <code>if</code> / <code>elif</code></b> compte : Python s'arrête au <b>premier vrai</b>. Le plus urgent (le danger) se teste en premier.",
-  3: "<code>and</code> : la condition entière n'est vraie que si <b>toutes</b> les parties sont vraies.",
-  4: "<code>not</code> inverse une condition : <code>not plastique_ici()</code> est vrai quand il n'y a <b>pas</b> de plastique.",
+  1: "Sous le <code>if</code>, il faut <b>l'ordre qui correspond</b> à la question.",
+  2: "<b>L'ordre des if compte</b> : le danger se teste en premier.",
+  3: "<code>and</code> : <b>les deux</b> conditions doivent être vraies.",
+  4: "<code>not</code> inverse : <code>not plastique_ici()</code> = « <b>pas</b> de plastique ».",
+};
+const SOLUTIONS = {
+  1: "def tour():\n    if algue_ici():\n        manger()\n    else:\n        aller_vers_algue()\n",
+  2: "def tour():\n    if requin_proche():\n        fuir()\n    elif algue_ici():\n        manger()\n    else:\n        aller_vers_algue()\n",
+  3: "def tour():\n    if sur_plage() and est_la_nuit():\n        pondre()\n    elif est_la_nuit():\n        aller_vers_plage()\n    elif algue_ici():\n        manger()\n    else:\n        aller_vers_algue()\n",
+  4: "def tour():\n    if algue_ici() and not plastique_ici():\n        manger()\n    else:\n        aller_vers_algue()\n",
+};
+const PROBLEME = {
+  1: "Elle va sur les algues… mais ne mange jamais.",
+  2: "Elle mange même quand un requin arrive.",
+  3: "Elle essaie de pondre en plein jour.",
+  4: "Elle mange le sac plastique !",
 };
 for (const M of MISSIONS) {
   ETAPES.push({
-    court: "M" + M.id, titre: "Mission " + M.id, mission: M.id,
+    court: "M" + M.id, titre: "Mission " + M.id, cle: "m" + M.id,
     rendre(box) {
       box.innerHTML = `<div class="etape"><div>
-        <div class="mission-head"><h2 style="margin:0">🔧 Mission ${M.id} : ${esc(M.titre)}</h2><span class="notion">${esc(M.notion)}</span></div>
-        <p class="texte">${esc(M.histoire)}</p>
-        <div class="objectif">🎯 Objectif : ${esc(M.objectif)}</div>
-        <p class="petit"><b>1.</b> Clique sur <b>▶ Tester</b> pour voir le problème. <b>2.</b> Regarde « Dans la tête de ta tortue ». <b>3.</b> Corrige le code et reteste.</p>
-        <div id="ed"></div>
+        <div class="mission-head"><h2 style="margin:0">🔧 Répare la tortue ${M.id}</h2><span class="notion">${esc(M.notion)}</span></div>
+        <p class="probleme">😟 ${PROBLEME[M.id]}</p>
+        <div class="objectif">🎯 ${esc(M.objectif)}</div>
+        <ol class="etapes-mini"><li>▶ <b>Teste</b> : regarde le problème.</li><li>✏️ <b>Corrige</b> le code.</li><li>▶ <b>Reteste</b>.</li></ol>
+        <div id="ed"></div><div id="boite"></div>
         <div class="row" style="margin-top:10px">
           <button class="btn vert" id="tester">▶ Tester</button>
           <button class="btn ghost small" id="indice">💡 Indice</button>
-          <button class="btn ghost small" id="reset">↺ Code de départ</button>
+          <button class="btn ghost small cache" id="sol">👀 Solution</button>
+          <button class="btn ghost small" id="reset">↺</button>
         </div>
         <div id="res"></div>
       </div><div id="vue" class="vue-mission"><div class="vide-vue"><div>Clique sur <b>▶ Tester</b> pour lancer la tortue.</div></div></div></div>`;
-      const cle = "lagon:tuto:code" + M.id;
+      const cle = "lagon:tuto2:m" + M.id;
       const ed = new CodeEditor($("#ed", box), { value: store.get(cle) || M.code, onChange: (v) => store.set(cle, v) });
-      let viewer = null;
-      $("#indice", box).addEventListener("click", () => { $("#res", box).innerHTML = `<div class="msg warn">💡 ${esc(M.indice)}</div>`; });
+      boiteOutils($("#boite", box), ed);
+      let viewer = null, essais = 0;
+      $("#indice", box).addEventListener("click", () => { $("#res", box).innerHTML = `<div class="msg warn">💡 ${esc(M.indice)}</div>`; $("#sol", box).classList.remove("cache"); });
+      $("#sol", box).addEventListener("click", () => {
+        $("#res", box).innerHTML = `<div class="msg info">👀 Une solution (recopie-la ligne par ligne pour la retenir) :</div><div id="solc"></div>`;
+        new CodeView($("#solc", box)).setCode(SOLUTIONS[M.id]);
+      });
       $("#reset", box).addEventListener("click", () => { ed.value = M.code; store.del(cle); $("#res", box).innerHTML = ""; });
       $("#tester", box).addEventListener("click", () => {
+        essais++;
         const c = check(ed.value);
         if (!c.ok) {
           ed.setErreur(c.error.line);
@@ -319,19 +469,19 @@ for (const M of MISSIONS) {
         }
         const sim = simulate({ joueurs: [{ id: "t", nom: "Ta tortue", couleur: "#ff7b5c", code: ed.value }], graine: GRAINE_MISSION, scenario: M.scenario });
         if (viewer) viewer.destroy();
-        viewer = new MatchViewer($("#vue", box), { sim, focus: "t", code: ed.value, vitesse: 2.4 });
+        viewer = new MatchViewer($("#vue", box), { sim, focus: "t", code: ed.value, vitesse: 5 });
         const ok = M.reussi(sim);
-        const warn = c.warnings.map((w) => `<div class="msg warn">⚠️ Ligne ${w.line} : ${esc(w.msg)}</div>`).join("");
         const res = $("#res", box);
-        res.innerHTML = warn + `<div class="msg info">⏳ Ta tortue joue… (${M.scenario.ticks} tours)</div>`;
+        res.innerHTML = `<div class="msg info">⏳ Ta tortue joue…</div>`;
         viewer.player.onEnd = () => {
           if (ok) {
-            if (!prog.missions.includes(M.id)) { prog.missions.push(M.id); sauver(); majNav(); }
-            res.innerHTML = warn + `<div class="msg ok bravo">✅ <b>Mission réussie !</b> ${esc(M.bilan(sim))}</div><div class="appris">🎓 <b>Ce que tu as appris :</b> ${APPRIS[M.id]}</div>`;
+            fait("m" + M.id);
+            res.innerHTML = `<div class="msg ok bravo">✅ <b>Réparée !</b> ${esc(M.bilan(sim))}</div><div class="appris">🎓 ${APPRIS[M.id]}</div>`;
             const b = el("button", { class: "btn big pulse", style: "margin-top:10px" }, "Continuer →");
             b.addEventListener("click", () => aller(courant + 1)); res.append(b);
           } else {
-            res.innerHTML = warn + `<div class="msg err">❌ <b>Pas encore…</b> ${esc(M.bilan(sim))}<br>Rejoue le match tour par tour (◀ ▶) et regarde quelle ligne s'exécute au mauvais moment.</div>`;
+            res.innerHTML = `<div class="msg err">❌ <b>Pas encore.</b> ${esc(M.bilan(sim))}<br>Regarde « Dans la tête de ta tortue » : quelle ligne s'exécute au mauvais moment ?</div>`;
+            if (essais >= 2) { res.innerHTML += `<div class="msg warn">💡 ${esc(M.indice)}</div>`; $("#sol", box).classList.remove("cache"); }
           }
         };
       });
@@ -340,29 +490,29 @@ for (const M of MISSIONS) {
   });
 }
 
-// ---------- 12. Le brawl ----------
+// ---------- 14. La séance ----------
 ETAPES.push({
-  court: "🏆", titre: "Le brawl en classe",
+  court: "🏆", titre: "C'est parti !",
   rendre(box) {
-    const pts = POINTS_RANG.slice(0, 6).map((p, i) => `<td><b>${i + 1}<sup>${i ? "e" : "er"}</sup></b><br>${p} pts</td>`).join("");
+    const pts = POINTS_RANG.slice(0, 5).map((p, i) => `<td><b>${i + 1}<sup>${i ? "e" : "er"}</sup></b><br>${p} pts</td>`).join("");
     box.innerHTML = `<div class="etape"><div class="texte">
-      <h2>🏆 Le brawl en classe</h2>
+      <h2>🏆 En classe</h2>
       <ol class="seance">
-        <li><b>🔑 Rejoins la salle</b> avec le code affiché au tableau et un <b>pseudo</b> (pas ton vrai nom).</li>
-        <li><b>⌨️ Programme ta tortue</b> (8 minutes). Teste-la autant que tu veux contre les tortues d'entraînement. Quand elle te plaît : <b>📤 Envoyer</b>. Tu peux renvoyer une meilleure version jusqu'à la fin du chrono.</li>
-        <li><b>🎬 Le brawl</b> : toutes les tortues de la classe dans le même lagon, projeté au tableau.</li>
-        <li><b>🔍 Le rapport</b> : sur ton écran, revois le match en suivant <b>ta</b> tortue, ligne par ligne. Pourquoi s'est-elle fait attraper ? Pourquoi n'a-t-elle pas pondu ?</li>
-        <li><b>🔁 Le rematch</b> : 6 minutes pour corriger… avec une <b>nouveauté</b> à chaque manche (invasion de plastique, requins affamés, nuits courtes…).</li>
-        <li><b>⛈️ Le duel des champions</b> : les 3 meilleurs de la classe s'affrontent dans la tempête.</li>
+        <li>🔑 Tape le <b>code</b> du tableau et un <b>pseudo</b>.</li>
+        <li>⌨️ <b>Améliore</b> ta tortue, <b>teste</b>-la, puis <b>📤 envoie</b>-la.</li>
+        <li>🎬 <b>Brawl</b> : toutes les tortues au tableau !</li>
+        <li>🔍 Revois <b>ta</b> tortue : que s'est-il passé ?</li>
+        <li>🔁 <b>Rematch</b> : corrige et recommence.</li>
       </ol>
+      <div class="msg warn">🐢 Au début, ta tortue mange… mais <b>ne pond jamais</b>. À toi de l'améliorer !</div>
     </div><div class="card">
-      <h3>🧮 Les points de chaque manche</h3>
-      <table class="scores pts"><tr>${pts}<td>…<br>1 pt min.</td></tr></table>
-      <div class="msg ok" style="margin-top:12px">📈 <b>Bonus progrès : +${BONUS_PROGRESSION} pts</b> si ta tortue pond plus de nids qu'à la manche d'avant. Même sans gagner, <b>améliorer ta tortue rapporte des points</b> !</div>
-      <div class="msg info">🐢 Au début, ta tortue sait manger… mais elle ne pond jamais. Si tu n'envoies rien, c'est elle qui joue !</div>
+      <h3>🧮 Les points</h3>
+      <table class="scores pts"><tr>${pts}<td>…</td></tr></table>
+      <div class="msg ok" style="margin-top:12px">📈 <b>+${BONUS_PROGRESSION} pts</b> si ta tortue pond plus de nids qu'à la manche d'avant.<br>Même sans gagner, <b>progresser rapporte des points</b> !</div>
+      <div class="msg info">💡 Bloqué ? Le bouton <b>Coup de pouce</b> te donne une idée de code.</div>
       <div class="row" style="margin-top:14px">
         <a class="btn vert big" href="index.html">🐢 Rejoindre la partie</a>
-        <a class="btn ghost" href="eleve.html?libre=1">🧪 Bac à sable</a>
+        <a class="btn ghost" href="eleve.html?libre=1">🧪 S'entraîner</a>
       </div>
     </div></div>`;
   },
@@ -375,18 +525,21 @@ let courant = 0, nettoyer = null;
 function majNav() {
   const nav = $("#nav"); nav.innerHTML = "";
   ETAPES.forEach((e, i) => {
-    const b = el("button", { title: e.titre, class: (i === courant ? "on " : "") + (e.mission && prog.missions.includes(e.mission) ? "fait" : "") + (e.mission ? " m" : "") }, e.mission && prog.missions.includes(e.mission) ? "✓" : e.court);
+    const ok = e.cle && prog.faits.includes(e.cle);
+    const b = el("button", { title: e.titre, class: (i === courant ? "on " : "") + (ok ? "fait " : "") + (e.court.length > 1 ? "m" : "") }, ok ? "✓" : e.court);
     b.addEventListener("click", () => aller(i));
     nav.append(b);
   });
-  $("#progression").textContent = `Étape ${courant + 1} / ${ETAPES.length} · Missions ${prog.missions.length} / ${MISSIONS.length}`;
+  const nbEx = ETAPES.filter((e) => e.cle).length, nbFaits = ETAPES.filter((e) => e.cle && prog.faits.includes(e.cle)).length;
+  $("#progression").textContent = `Étape ${courant + 1} / ${ETAPES.length} · ⭐ ${nbFaits} / ${nbEx}`;
   $("#prec").disabled = courant === 0;
   $("#suiv").classList.toggle("cache", courant === ETAPES.length - 1);
 }
 function aller(i) {
   i = Math.max(0, Math.min(ETAPES.length - 1, i));
   if (nettoyer) { try { nettoyer(); } catch { /* rien */ } nettoyer = null; }
-  courant = i; prog.vu = Math.max(prog.vu, i); sauver();
+  document.querySelectorAll("ul.ac").forEach((p) => p.remove());   // popups d'autocomplétion des éditeurs précédents
+  courant = i;
   const box = $("#etape"); box.innerHTML = "";
   nettoyer = ETAPES[i].rendre(box) || null;
   majNav();

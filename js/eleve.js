@@ -4,7 +4,9 @@
 import { db, MODE, synchroniserHorloge, secondesRestantes } from "./db.js";
 import { simulate, BOTS, CODE_DEPART, TWISTS, BONUS_PROGRESSION } from "./engine.js";
 import { check } from "./interp.js";
-import { CodeEditor } from "./editor.js";
+import { CodeEditor, boiteOutils } from "./editor.js";
+import { coupDePouceHTML } from "./pouce.js";
+import { RAPPELS } from "./primitives.js";
 import { MatchViewer, rapportHTML, tableauMatch } from "./viewer.js";
 import { lancerSimulation, codeDe, estBot, infosManche, classementCumule } from "./brawl.js";
 import { $, $$, el, esc, toast, store, mmss, AIDE_HTML, twistCarte } from "./common.js";
@@ -43,6 +45,22 @@ const ed = new CodeEditor($("#ed"), {
   value: store.get(cleCode) || CODE_DEPART,
   onChange: (v) => { store.set(cleCode, v); clearTimeout(minuterie); minuterie = setTimeout(verifier, 450); majEnvoi(); },
 });
+boiteOutils($("#outils"), ed);
+
+// coup de pouce : l'idée suivante, d'après ce qui manque dans le code
+const pouce = $("#pouce");
+$("#pouce-btn").addEventListener("click", () => {
+  if (!pouce.classList.contains("cache")) { pouce.classList.add("cache"); return; }
+  pouce.innerHTML = coupDePouceHTML(ed.value) + `<button class="btn small ghost" id="pouce-fermer">Fermer</button>`;
+  pouce.classList.remove("cache");
+  $("#pouce-fermer").addEventListener("click", () => pouce.classList.add("cache"));
+});
+
+// un rappel différent toutes les 15 secondes
+let iRappel = Math.floor(Math.random() * RAPPELS.length);
+const rappel = () => { $("#rappel").innerHTML = "🔁 <b>Rappel</b> · " + RAPPELS[iRappel % RAPPELS.length]; iRappel++; };
+rappel(); setInterval(rappel, 15000);
+
 function verifier() {
   const c = check(ed.value), st = $("#statut");
   if (!c.ok) {

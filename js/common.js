@@ -2,6 +2,7 @@
 //  Lagon Arena — petits outils partagés + aide-mémoire des règles
 // =====================================================================
 import { P, TWISTS } from "./engine.js";
+import { CAPTEURS, ACTIONS_INFO } from "./primitives.js";
 
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -40,38 +41,33 @@ export const mmss = (s) => { s = Math.max(0, Math.ceil(s)); return `${Math.floor
 export const heureTxt = (h) => `${h} h`;
 export const plural = (n, mot) => `${n} ${mot}${n > 1 ? "s" : ""}`;
 
-// ---------- aide-mémoire (affiché dans le tutoriel, l'écran élève…) ----------
+// ---------- aide-mémoire (onglet Aide de l'écran élève) ----------
+const ligneP = (p) => `<tr><td class="ic">${p.icone}</td><td><code>${p.nom}()</code></td><td>${esc(p.role)}</td></tr>`;
 export const AIDE_HTML = `
 <ol class="regles-or">
-  <li>À chaque tour, le jeu appelle ta fonction <code>tour()</code> : ta tortue fait <b>une seule action</b>.</li>
-  <li>Python lit tes <code>if</code> / <code>elif</code> de haut en bas : <b>le premier vrai gagne</b>, les suivants sont ignorés. L'ordre compte !</li>
-  <li>Pour marquer un point : <code>pondre()</code> <b>sur une plage</b>, <b>la nuit</b>, avec <b>au moins ${P.energiePonte} d'énergie</b>.</li>
+  <li>À chaque tour, le jeu lance <code>tour()</code> : ta tortue fait <b>un seul ordre</b>.</li>
+  <li>Python lit de <b>haut en bas</b> : il fait seulement le <b>premier <code>if</code> vrai</b>.</li>
+  <li>1 point = <code>pondre()</code> <b>sur la plage</b>, <b>la nuit</b>, avec <b>${P.energiePonte} ⚡ ou plus</b>.</li>
 </ol>
-<h3>🧭 Les capteurs (ce que ta tortue sait)</h3>
-<table>
-  <tr><td><code>requin_proche()</code></td><td><code>True</code> si un requin est à ${P.porteeRequin} cases ou moins</td></tr>
-  <tr><td><code>algue_ici()</code></td><td><code>True</code> si ta tortue est sur des algues</td></tr>
-  <tr><td><code>plastique_ici()</code></td><td><code>True</code> si un sac plastique est sur sa case</td></tr>
-  <tr><td><code>sur_plage()</code></td><td><code>True</code> si ta tortue est sur une plage</td></tr>
-  <tr><td><code>est_la_nuit()</code></td><td><code>True</code> la nuit (de 19 h à 6 h, sauf nouveauté)</td></tr>
-  <tr><td><code>energie()</code></td><td>un nombre de 0 à ${P.energieMax}</td></tr>
-  <tr><td><code>heure()</code></td><td>un nombre de 0 à 23</td></tr>
-</table>
-<h3>🐢 Les actions (une seule par tour)</h3>
-<table>
-  <tr><td><code>manger()</code></td><td>mange une algue : <b>+${P.gainAlgue}</b> d'énergie. Sur un sac plastique : <b>−${P.pertePlastique}</b> !</td></tr>
-  <tr><td><code>pondre()</code></td><td>pond un nid (<b>1 point</b>), coûte ${P.coutPonte} d'énergie</td></tr>
-  <tr><td><code>fuir()</code></td><td>s'éloigne d'une case du requin le plus proche</td></tr>
-  <tr><td><code>se_cacher()</code></td><td>ne bouge pas. Dans les algues, ta tortue est <b>invisible</b> pour les requins</td></tr>
-  <tr><td><code>aller_vers_algue()</code></td><td>avance d'une case vers les algues propres les plus proches</td></tr>
-  <tr><td><code>aller_vers_plage()</code></td><td>avance d'une case vers la plage la plus proche</td></tr>
-</table>
+<h3>❓ Les questions (capteurs) : réponse True ou False</h3>
+<table class="prims">${CAPTEURS.map(ligneP).join("")}</table>
+<h3>❗ Les ordres (actions) : un seul par tour</h3>
+<table class="prims">${ACTIONS_INFO.map(ligneP).join("")}</table>
+<h3>✍️ Le modèle à suivre</h3>
+<pre class="modele"><span class="tok-kw">def</span> tour():
+    <span class="tok-kw">if</span> <i>question</i>:          <span class="tok-com"># si…</span>
+        <i>ordre</i>()
+    <span class="tok-kw">elif</span> <i>autre question</i>:  <span class="tok-com"># sinon, si…</span>
+        <i>ordre</i>()
+    <span class="tok-kw">else</span>:                 <span class="tok-com"># sinon</span>
+        <i>ordre</i>()</pre>
+<p>Pour relier des questions : <code>and</code> (et), <code>or</code> (ou), <code>not</code> (pas). Pour comparer : <code>energie() >= 6</code>, <code>heure() < 19</code>…</p>
 <h3>⚠️ À savoir</h3>
 <ul>
-  <li>L'énergie baisse de 1 tous les ${P.perteEnergie} tours. À 0, ta tortue est <b>épuisée</b> : retour au départ, bloquée ${P.bloquee} tours.</li>
-  <li>Un requin qui touche ta tortue la renvoie au départ (bloquée ${P.bloquee} tours). Il ne va jamais sur la plage.</li>
-  <li>Dans les algues, ta tortue est cachée… <b>sauf quand elle mange</b> (ça fait bouger les algues !).</li>
-  <li>Un match dure 180 tours (3 jours et 3 nuits).</li>
+  <li>⚡ L'énergie baisse de 1 tous les ${P.perteEnergie} tours. À 0 : épuisée, retour au départ.</li>
+  <li>🦈 Attrapée par un requin : retour au départ et <b>−1 nid</b>. Refuges : la <b>plage</b> et les <b>algues</b> (sauf quand tu manges).</li>
+  <li>🛍️ Manger un sac plastique : <b>−${P.pertePlastique} ⚡</b>.</li>
+  <li>🕐 Un match = 180 tours = 3 jours. Nuit de 19 h à 6 h (sauf nouveauté).</li>
 </ul>`;
 
 export function twistCarte(key) {

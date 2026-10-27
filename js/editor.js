@@ -1,8 +1,16 @@
 // =====================================================================
-//  Lagon Arena — éditeur de code (coloration, indentation automatique)
-//  et vue « pensée de la tortue » (lignes exécutées, conditions vraies/fausses)
+//  Lagon Arena — éditeur de code pour grands débutants
+//   • coloration, numéros de ligne, indentation automatique (Tab, Entrée) ;
+//   • AUTOCOMPLÉTION : on tape le début d'un mot (ou un mot français :
+//     « si », « sinon », « nuit », « plage »…) et l'éditeur propose la suite,
+//     avec le rôle de chaque primitive ;
+//   • barre d'info : le rôle du mot sous le curseur ;
+//   • les deux-points oubliés après if / elif / else sont ajoutés à « Entrée ».
+//  + boîte à outils cliquable (capteurs, actions, mots-clés)
+//  + vue « pensée de la tortue » (lignes exécutées, conditions vraies/fausses)
 // =====================================================================
 import { SENSORS, ACTIONS } from "./interp.js";
+import { INFO, CAPTEURS, ACTIONS_INFO, MOTS } from "./primitives.js";
 import { esc } from "./common.js";
 
 const KW = new Set(["if", "elif", "else", "and", "or", "not", "def", "pass", "return"]);
@@ -31,26 +39,52 @@ export function colorer(code) {
   });
 }
 
+const sansAccent = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const AIDE_DEFAUT = "✍️ Tape le début d'un mot (ou en français : <i>si</i>, <i>sinon</i>, <i>nuit</i>…) : l'éditeur te propose la suite. <b>Entrée</b> pour choisir.";
+
+export function infoHTML(nom) {
+  const i = INFO[nom];
+  if (!i) return "";
+  if (i.type === "capteur") return `${i.icone} <code>${nom}()</code> <b>question</b> : ${esc(i.role)} <span class="muted">→ ${i.rep}</span>`;
+  if (i.type === "action") return `${i.icone} <code>${nom}()</code> <b>action</b> : ${esc(i.role)}`;
+  return `🔤 <code>${nom}</code> = « ${esc(i.fr)} » : ${esc(i.role)}`;
+}
+
 export class CodeEditor {
-  constructor(container, { value = "", onChange = () => {} } = {}) {
+  constructor(container, { value = "", onChange = () => {}, info = true } = {}) {
     this.onChange = onChange; this.errLine = null;
     container.innerHTML = "";
     this.root = document.createElement("div"); this.root.className = "editor";
     this.gutter = document.createElement("div"); this.gutter.className = "gutter";
-    const wrap = document.createElement("div"); wrap.className = "code-wrap";
+    const wrap = document.createElement("div"); wrap.className = "code-wrap"; this.wrap = wrap;
     this.pre = document.createElement("pre"); this.pre.className = "hl"; this.pre.setAttribute("aria-hidden", "true");
     this.ta = document.createElement("textarea");
     Object.assign(this.ta, { spellcheck: false, autocomplete: "off" });
-    this.ta.setAttribute("autocapitalize", "off"); this.ta.setAttribute("wrap", "off"); this.ta.setAttribute("aria-label", "Code de ta tortue");
+    this.ta.setAttribute("autocapitalize", "off"); this.ta.setAttribute("autocorrect", "off");
+    this.ta.setAttribute("wrap", "off"); this.ta.setAttribute("aria-label", "Code de ta tortue");
     wrap.append(this.pre, this.ta); this.root.append(this.gutter, wrap); container.append(this.root);
+    if (info) { this.barre = document.createElement("div"); this.barre.className = "editor-info"; this.barre.innerHTML = AIDE_DEFAUT; container.append(this.barre); }
+    this.popup = document.createElement("ul"); this.popup.className = "ac cache"; this.popup.setAttribute("role", "listbox");
+    document.body.append(this.popup);
+    this.choix = []; this.sel = 0;
     this.ta.value = value;
-    this.ta.addEventListener("input", () => { this.errLine = null; this.render(); this.onChange(this.ta.value); });
+    this.ta.addEventListener("input", (e) => {
+      this.errLine = null; this.render(); this.onChange(this.ta.value);
+      if (e.inputType === "insertText" && e.data && /[\wÀ-ÿ]/.test(e.data)) this.proposer();
+      else if (e.inputType === "deleteContentBackward" && this.ouvert()) this.proposer();
+      else this.fermer();
+    });
     this.ta.addEventListener("keydown", (e) => this.touche(e));
+    this.ta.addEventListener("blur", () => setTimeout(() => this.fermer(), 150));
+    for (const ev of ["click", "keyup"]) this.ta.addEventListener(ev, (e) => { if (!["ArrowUp", "ArrowDown"].includes(e.key) || this.popup.classList.contains("cache")) this.infoCurseur(); });
+    wrap.addEventListener("scroll", () => this.fermer());
+    window.addEventListener("resize", () => this.fermer());
     this.render();
   }
   get value() { return this.ta.value; }
-  set value(v) { this.ta.value = v; this.render(); }
+  set value(v) { this.ta.value = v; this.errLine = null; this.render(); }
   setErreur(n) { this.errLine = n; this.render(); }
+  focus() { this.ta.focus(); }
   render() {
     const lignes = colorer(this.ta.value);
     this.pre.innerHTML = lignes.map((l, i) => (i + 1 === this.errLine ? `<span class="ln-err">${l || " "}</span>` : l)).join("\n") + "\n";
@@ -59,12 +93,147 @@ export class CodeEditor {
     this.ta.style.minWidth = this.pre.style.minWidth = `calc(${maxLen + 3}ch + 28px)`;
     this.ta.style.height = "auto"; this.ta.style.height = this.ta.scrollHeight + "px";
   }
-  insere(txt, debut, fin) {
+  insere(txt, debut, fin, curseur = null) {
     this.ta.setRangeText(txt, debut, fin, "end");
+    if (curseur != null) this.ta.selectionStart = this.ta.selectionEnd = debut + curseur;
     this.ta.dispatchEvent(new Event("input"));
   }
+
+  // ---------- barre d'info ----------
+  montrerInfo(html) { if (this.barre) this.barre.innerHTML = html || AIDE_DEFAUT; }
+  infoCurseur() {
+    if (this.ouvert() || (this.garderInfo && Date.now() < this.garderInfo)) return;
+    const v = this.ta.value, s = this.ta.selectionStart;
+    const motEn = (p) => { let a = p, b = p; while (a > 0 && /\w/.test(v[a - 1])) a--; while (b < v.length && /\w/.test(v[b])) b++; return v.slice(a, b); };
+    let mot = motEn(s);
+    if (!mot) { let p = s, k = 0; while (p > 0 && /[():]/.test(v[p - 1]) && k < 4) { p--; k++; } if (k) mot = motEn(p); }
+    this.montrerInfo(INFO[mot] ? infoHTML(mot) : null);
+  }
+
+  // ---------- autocomplétion ----------
+  contexte(avant) {
+    const t = avant.trim();
+    if (t === "") return "debut";
+    if (/(^|\s)(if|elif|and|or|not)$/.test(t) || /[(=<>!]$/.test(t)) return "condition";
+    return "autre";
+  }
+  suggestions(mot, avant) {
+    const m = sansAccent(mot), ctx = this.contexte(avant);
+    const out = [];
+    for (const [nom, i] of Object.entries(INFO)) {
+      if (ctx === "condition" && i.type === "action") continue;           // une action n'est pas une question
+      if (ctx === "debut" && i.type === "capteur") continue;              // un capteur seul ne fait rien
+      if (ctx === "debut" && ["and", "or", "not", "True", "False"].includes(nom)) continue;
+      if (ctx === "condition" && ["if", "elif", "else"].includes(nom)) continue;
+      const n = sansAccent(nom), fr = i.fr ? sansAccent(i.fr) : "";
+      let score = null;
+      if (n.startsWith(m)) score = 0;
+      else if (fr && fr.startsWith(m)) score = 1;
+      else if (m.length >= 2 && n.includes(m)) score = 2;
+      else if (m.length >= 2 && fr && fr.includes(m)) score = 3;
+      if (score == null) continue;
+      if (nom === mot) continue;                                          // déjà écrit en entier
+      const bonus = (ctx === "condition" && i.type === "capteur") || (ctx === "debut" && i.type !== "capteur") ? -0.5 : 0;
+      out.push({ nom, i, score: score + bonus });
+    }
+    out.sort((a, b) => a.score - b.score || a.nom.length - b.nom.length);
+    return out.slice(0, 6);
+  }
+  motAvant() {
+    const v = this.ta.value, s = this.ta.selectionStart;
+    const debLigne = v.lastIndexOf("\n", s - 1) + 1;
+    const avantCurseur = v.slice(debLigne, s);
+    const m = avantCurseur.match(/[A-Za-zÀ-ÿ_][\wÀ-ÿ]*$/);
+    if (!m) return null;
+    return { mot: m[0], debut: s - m[0].length, avant: avantCurseur.slice(0, avantCurseur.length - m[0].length), debLigne };
+  }
+  proposer(force = false) {
+    const w = this.motAvant();
+    if (!w || (!force && w.mot.length < 1) || w.avant.includes("#")) return this.fermer();
+    const apres = this.ta.value.slice(this.ta.selectionStart);
+    if (/^[\w(]/.test(apres)) return this.fermer();                       // on est au milieu d'un mot
+    this.choix = this.suggestions(w.mot, w.avant);
+    if (!this.choix.length) return this.fermer();
+    this.sel = 0; this.mot = w;
+    this.dessinerPopup();
+  }
+  dessinerPopup() {
+    this.popup.innerHTML = "";
+    this.choix.forEach((c, k) => {
+      const li = document.createElement("li");
+      li.className = k === this.sel ? "on" : "";
+      const nom = c.i.type === "mot" ? c.nom : c.nom + "()";
+      li.innerHTML = `<span class="ic">${c.i.icone}</span><span class="nm">${nom}</span>` +
+        (c.i.type === "mot" ? `<span class="fr">${esc(c.i.fr)}</span>` : "") +
+        `<span class="rl">${esc(c.i.type === "mot" ? c.i.role : c.i.role)}</span>`;
+      li.addEventListener("mousedown", (e) => { e.preventDefault(); this.sel = k; this.accepter(); });
+      this.popup.append(li);
+    });
+    // position : sous le curseur (police à chasse fixe → calcul direct)
+    const cs = getComputedStyle(this.ta);
+    const mesure = document.createElement("span");
+    mesure.style.cssText = `position:absolute;visibility:hidden;white-space:pre;font-family:${cs.fontFamily};font-size:${cs.fontSize}`;
+    mesure.textContent = "M".repeat(20); document.body.append(mesure);
+    const cw = mesure.getBoundingClientRect().width / 20; mesure.remove();
+    const lh = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.55;
+    const v = this.ta.value, s = this.mot.debut;
+    const ligne = v.slice(0, s).split("\n").length - 1, col = s - (v.lastIndexOf("\n", s - 1) + 1);
+    const r = this.ta.getBoundingClientRect();
+    let x = r.left + parseFloat(cs.paddingLeft) + col * cw - 6, y = r.top + parseFloat(cs.paddingTop) + (ligne + 1) * lh + 2;
+    this.popup.classList.remove("cache");
+    const pw = this.popup.offsetWidth, ph = this.popup.offsetHeight;
+    x = Math.max(4, Math.min(x, window.innerWidth - pw - 4));
+    if (y + ph > window.innerHeight - 4) y = y - lh - ph - 4;
+    this.popup.style.left = x + "px"; this.popup.style.top = y + "px";
+    const c = this.choix[this.sel];
+    if (c) { this.montrerInfo(infoHTML(c.nom)); this.garderInfo = 0; }
+  }
+  fermer() { this.popup.classList.add("cache"); this.choix = []; }
+  ouvert() { return !this.popup.classList.contains("cache") && this.choix.length > 0; }
+
+  // texte à insérer pour une primitive (et position du curseur dans ce texte)
+  gabarit(nom, resteLigne) {
+    const i = INFO[nom];
+    const vide = resteLigne.trim() === "";
+    if (i.type === "capteur" || i.type === "action") return { txt: nom + "()" };
+    if ((nom === "if" || nom === "elif") && vide) return { txt: nom + " :", curseur: nom.length + 1 };
+    if (nom === "else" && vide) return { txt: "else:" };
+    if (["and", "or", "not"].includes(nom)) return { txt: nom + " " };
+    return { txt: nom + (["if", "elif"].includes(nom) ? " " : "") };
+  }
+  accepter() {
+    const c = this.choix[this.sel]; if (!c) return;
+    const fin = this.ta.selectionStart, v = this.ta.value;
+    const finLigne = v.indexOf("\n", fin) < 0 ? v.length : v.indexOf("\n", fin);
+    const g = this.gabarit(c.nom, v.slice(fin, finLigne));
+    this.fermer();
+    this.insere(g.txt, this.mot.debut, fin, g.curseur);
+    this.montrerInfo(infoHTML(c.nom));
+    this.ta.focus();
+  }
+  // insertion depuis la boîte à outils (au curseur)
+  insererPrimitive(nom) {
+    const v = this.ta.value;
+    let s = this.ta.selectionStart, f = this.ta.selectionEnd;
+    const finLigne = v.indexOf("\n", f) < 0 ? v.length : v.indexOf("\n", f);
+    const g = this.gabarit(nom, v.slice(f, finLigne));
+    let txt = g.txt, cur = g.curseur;
+    const prec = v[s - 1];
+    if (prec && /[\w)]/.test(prec)) { txt = " " + txt; if (cur != null) cur++; }  // espace avant si besoin
+    this.insere(txt, s, f, cur);
+    this.montrerInfo(infoHTML(nom));
+    this.ta.focus();
+  }
+
   touche(e) {
     const ta = this.ta, v = ta.value, s = ta.selectionStart, f = ta.selectionEnd;
+    if (this.ouvert()) {
+      if (e.key === "ArrowDown") { e.preventDefault(); this.sel = (this.sel + 1) % this.choix.length; this.dessinerPopup(); return; }
+      if (e.key === "ArrowUp") { e.preventDefault(); this.sel = (this.sel - 1 + this.choix.length) % this.choix.length; this.dessinerPopup(); return; }
+      if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); this.accepter(); return; }
+      if (e.key === "Escape") { e.preventDefault(); this.fermer(); return; }
+    }
+    if (e.key === " " && e.ctrlKey) { e.preventDefault(); this.proposer(true); return; }
     if (e.key === "Tab") {
       e.preventDefault();
       const deb = v.lastIndexOf("\n", s - 1) + 1;
@@ -75,10 +244,25 @@ export class CodeEditor {
       ta.setRangeText(nouveau, deb, fin, "select"); ta.dispatchEvent(new Event("input"));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      const deb = v.lastIndexOf("\n", s - 1) + 1, ligne = v.slice(deb, s);
+      const deb = v.lastIndexOf("\n", s - 1) + 1;
+      let finL = v.indexOf("\n", s); if (finL < 0) finL = v.length;
+      let pos = s;
+      // curseur juste avant « : » (gabarit « if : ») → on va en fin de ligne
+      if (/^\s*:?\s*$/.test(v.slice(s, finL)) || /^\)?:\s*$/.test(v.slice(s, finL))) pos = finL;
+      let ligne = v.slice(deb, pos);
+      let ajout = "";
+      // deux-points oubliés après if / elif / else : on les ajoute (et on le dit)
+      if (/^\s*(if|elif)\s+\S/.test(ligne) && !/:\s*(#.*)?$/.test(ligne) && !ligne.includes("#")) { ajout = ":"; }
+      else if (/^\s*else\s*$/.test(ligne)) { ajout = ":"; }
+      if (ajout) {
+        ligne = ligne.replace(/\s+$/, "") + ajout;
+        this.montrerInfo("✨ J'ai ajouté les <b>deux-points</b> <code>:</code> à la fin de la ligne : ils sont obligatoires après <code>if</code>, <code>elif</code> et <code>else</code>.");
+        this.garderInfo = Date.now() + 4000;
+      }
       let ind = ligne.match(/^ */)[0];
       if (/:\s*(#.*)?$/.test(ligne)) ind += "    ";
-      this.insere("\n" + ind, s, f);
+      ta.setRangeText(ligne + "\n" + ind, deb, pos, "end");
+      ta.dispatchEvent(new Event("input"));
     } else if (e.key === "Backspace" && s === f) {
       const deb = v.lastIndexOf("\n", s - 1) + 1, avant = v.slice(deb, s);
       if (avant.length >= 4 && /^ +$/.test(avant) && avant.length % 4 === 0) { e.preventDefault(); this.insere("", s - 4, s); }
@@ -86,6 +270,29 @@ export class CodeEditor {
   }
 }
 
+// ---------------------------------------------------------------------
+//  Boîte à outils : toutes les primitives, cliquables, avec leur rôle
+// ---------------------------------------------------------------------
+export function boiteOutils(container, editor, { capteurs = null, actions = null, mots = ["if", "elif", "else", "and", "not"], titre = true } = {}) {
+  const C = CAPTEURS.filter((c) => !capteurs || capteurs.includes(c.nom));
+  const A = ACTIONS_INFO.filter((a) => !actions || actions.includes(a.nom));
+  const M = MOTS.filter((m) => mots.includes(m.nom));
+  const chip = (nom, html, cls) => `<button type="button" class="chip ${cls}" data-p="${nom}" title="${esc(INFO[nom].type === "mot" ? INFO[nom].fr + " : " + INFO[nom].role : INFO[nom].role)}">${html}</button>`;
+  container.innerHTML = `<div class="outils">
+    ${titre ? `<div class="outils-titre">🧰 Clique pour insérer dans ton code :</div>` : ""}
+    ${M.length ? `<div class="outils-groupe"><span class="lab">Mots</span>${M.map((m) => chip(m.nom, `<code>${m.nom}</code> <small>${esc(m.fr)}</small>`, "c-mot")).join("")}</div>` : ""}
+    ${C.length ? `<div class="outils-groupe"><span class="lab">❓ Questions</span>${C.map((c) => chip(c.nom, `${c.icone} <code>${c.nom}()</code>`, "c-capt")).join("")}</div>` : ""}
+    ${A.length ? `<div class="outils-groupe"><span class="lab">❗ Ordres</span>${A.map((a) => chip(a.nom, `${a.icone} <code>${a.nom}()</code>`, "c-act")).join("")}</div>` : ""}
+  </div>`;
+  container.querySelectorAll("[data-p]").forEach((b) => {
+    b.addEventListener("mousedown", (e) => e.preventDefault());            // garder le curseur dans l'éditeur
+    b.addEventListener("click", () => editor.insererPrimitive(b.dataset.p));
+    b.addEventListener("mouseenter", () => editor.montrerInfo(infoHTML(b.dataset.p)));
+  });
+}
+
+// ---------------------------------------------------------------------
+//  Vue « pensée de la tortue »
 // ---------------------------------------------------------------------
 export class CodeView {
   constructor(container) { this.box = document.createElement("div"); this.box.className = "codeview"; container.innerHTML = ""; container.append(this.box); }
@@ -112,15 +319,14 @@ export class CodeView {
 }
 
 // tableau des capteurs vus par la tortue à un tour donné
-const NOMS_CAPTEURS = ["requin_proche", "algue_ici", "plastique_ici", "sur_plage", "est_la_nuit", "energie", "heure"];
 export function capteursHTML(rec, tick) {
   if (!rec) return "";
   if (rec.bloquee) return `<h4>Tour ${tick}</h4><p><b>💫 Bloquée</b> : la tortue vient d'être attrapée ou épuisée, elle attend.</p>`;
   if (!rec.capteurs) return `<h4>Tour ${tick}</h4><p class="effet mal">${esc(rec.erreur || "")}</p>`;
-  const rows = NOMS_CAPTEURS.map((k) => {
-    const v = rec.capteurs[k];
+  const rows = CAPTEURS.map((c) => {
+    const v = rec.capteurs[c.nom];
     const txt = typeof v === "boolean" ? (v ? "True" : "False") : v;
-    return `<tr><td><code>${k}()</code></td><td class="${typeof v === "boolean" ? "v-" + v : ""}">${txt}</td></tr>`;
+    return `<tr title="${esc(c.role)}"><td>${c.icone} <code>${c.nom}()</code></td><td class="${typeof v === "boolean" ? "v-" + v : ""}">${txt}</td></tr>`;
   }).join("");
   const mal = /refusé|plastique|ATTRAPÉE|ÉPUISÉE|rien|aucune|plus faim|il faudrait/.test(rec.effet || "");
   return `<h4>Tour ${tick} : ce que voit la tortue</h4><table>${rows}</table>` +

@@ -137,18 +137,30 @@ export class Lagon {
   draw(sim, f, opts = {}) {
     this.last = [sim, f, opts];
     const g = this.ctx, c = this.cell, d = this.dpr;
-    g.setTransform(d, 0, 0, d, 0, 0);
-    g.drawImage(this.bg, 0, 0, this.canvas.width / d, this.canvas.height / d);
     const n = sim.frames.length - 1;
     f = Math.max(0, Math.min(n, f));
     const k = Math.min(Math.floor(f), n), u = f - k, A = sim.frames[k], B = sim.frames[Math.min(k + 1, n)];
+    // zoom (facultatif) centré sur la tortue suivie
+    const z = opts.zoom && opts.focus ? opts.zoom : 1;
+    let tx = 0, ty = 0;
+    if (z > 1) {
+      const i = sim.tortues.findIndex((t) => t.id === opts.focus);
+      if (i >= 0) {
+        const a = A.tortues[i], b = B.tortues[i];
+        const fx = (lerp(a[0], b[0], u) + 0.5) * c, fy = (lerp(a[1], b[1], u) + 0.5) * c, Wp = W * c, Hp = H * c;
+        tx = Math.min(0, Math.max(Wp - Wp * z, Wp / 2 - fx * z));
+        ty = Math.min(0, Math.max(Hp - Hp * z, Hp / 2 - fy * z));
+      }
+    }
+    g.setTransform(d * z, 0, 0, d * z, tx * d, ty * d);
+    g.drawImage(this.bg, 0, 0, this.canvas.width / d, this.canvas.height / d);
     const temps = opts.temps ?? performance.now() / 1000;
 
     HERBIERS.forEach(([x, y], i) => { if (A.algues[i] > 0) this.algues(g, (x + 0.5) * c, (y + 0.5) * c, c, A.algues[i], temps); });
     // nids pondus jusqu'ici
     const parCase = {};
     for (const nd of sim.nids) {
-      if (nd.tick >= f) continue;
+      if (nd.tick >= f || (nd.perdu != null && nd.perdu < f)) continue;
       const key = nd.x + "," + nd.y, i = (parCase[key] = (parCase[key] || 0) + 1) - 1;
       const ox = ((i % 3) - 1) * 0.28, oy = (Math.floor(i / 3) % 3 - 1) * 0.28;
       const t = sim.tortues.find((t) => t.id === nd.id);
@@ -164,12 +176,14 @@ export class Lagon {
       const x = saut ? a[0] : lerp(a[0], b[0], u), y = saut ? a[1] : lerp(a[1], b[1], u);
       const px = (x + 0.5) * c, py = (y + 0.5) * c;
       const bloquee = a[4] > 0, immun = a[5] > 0 && !bloquee, cachee = a[7] === 1;
-      const alpha = bloquee ? 0.55 : cachee ? 0.6 : immun && Math.floor(temps * 6) % 2 ? 0.45 : 1;
+      let alpha = bloquee ? 0.55 : cachee ? 0.6 : immun && Math.floor(temps * 6) % 2 ? 0.45 : 1;
+      const gros = z > 1 && t.id === focus;   // en gros plan : tortue plus petite pour voir la case en dessous
       if (t.id === focus) {
         g.strokeStyle = "#fff"; g.lineWidth = Math.max(2, c * 0.08);
         g.beginPath(); g.arc(px, py, c * (0.5 + 0.05 * Math.sin(temps * 5)), 0, TAU); g.stroke();
       }
-      this.tortue(g, px, py, c, t.couleur, b[6] ?? a[6], { alpha, gris: bloquee });
+      if (gros) this.tortue(g, px - c * 0.22, py - c * 0.22, c * 0.55, t.couleur, b[6] ?? a[6], { alpha, gris: bloquee });
+      else this.tortue(g, px, py, c, t.couleur, b[6] ?? a[6], { alpha, gris: bloquee });
       if (bloquee) { g.font = `${Math.round(c * 0.4)}px sans-serif`; g.fillText("💫", px - c * 0.2, py - c * 0.3); }
       if (this.noms || t.id === focus) {
         const label = String(t.nom).slice(0, 12);
@@ -182,7 +196,7 @@ export class Lagon {
     A.requins.forEach((s, i) => {
       const e = B.requins[i] || s;
       const saut = Math.abs(s[0] - e[0]) + Math.abs(s[1] - e[1]) > 1;
-      const x = saut ? e[0] : lerp(s[0], e[0], u), y = saut ? e[1] : lerp(s[1], e[1], u);
+      const x = saut ? (u < 0.5 ? s[0] : e[0]) : lerp(s[0], e[0], u), y = saut ? (u < 0.5 ? s[1] : e[1]) : lerp(s[1], e[1], u);
       this.requin(g, (x + 0.5) * c, (y + 0.5) * c, c, e[3], e[4], s[2] > 0);
     });
     // nuit
@@ -209,9 +223,9 @@ export class Player {
     this.prev = ts;
     if (this.playing) {
       this.f += dt * this.vitesse;
-      if (this.f >= this.ticks) { this.f = this.ticks; this.playing = false; this.lagon.draw(this.sim, this.f, { focus: this.focus }); this.tick(); this.onEnd(); }
+      if (this.f >= this.ticks) { this.f = this.ticks; this.playing = false; this.lagon.draw(this.sim, this.f, { focus: this.focus, zoom: this.zoom }); this.tick(); this.onEnd(); }
     }
-    this.lagon.draw(this.sim, this.f, { focus: this.focus });
+    this.lagon.draw(this.sim, this.f, { focus: this.focus, zoom: this.zoom });
     this.tick();
     this.raf = requestAnimationFrame(this.loop);
   }

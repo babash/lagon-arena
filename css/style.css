@@ -117,7 +117,7 @@ input[type=text]:focus, select:focus { outline: none; border-color: var(--lagon)
 .tab .notif { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--corail); margin-left: 4px; vertical-align: 2px; }
 
 /* ---------- éditeur de code ---------- */
-.editor { display: grid; grid-template-columns: 42px 1fr; background: #0e2236; border-radius: 12px; overflow: hidden; font-size: 15px; line-height: 1.55; min-height: 330px; }
+.editor { display: grid; grid-template-columns: 42px 1fr; background: #0e2236; border-radius: 12px; overflow: hidden; font-size: 15px; line-height: 1.55; min-height: 230px; }
 .editor .gutter { background: #0a1a2a; color: #5f7a91; text-align: right; padding: 12px 8px 12px 0; user-select: none; font-family: var(--mono); white-space: pre; }
 .editor .gutter .errl { color: #fff; background: var(--corail-fonce); border-radius: 4px; display: inline-block; padding: 0 3px; }
 .editor .code-wrap { position: relative; overflow: auto; }
@@ -128,7 +128,7 @@ input[type=text]:focus, select:focus { outline: none; border-color: var(--lagon)
 .editor pre.hl { color: #e7eef5; pointer-events: none; position: absolute; inset: 0; min-width: max-content; }
 .editor textarea {
   position: relative; display: block; background: transparent; color: transparent; caret-color: #ffffff; resize: none; outline: none; height: 100%;
-  min-height: 330px; overflow: hidden;
+  min-height: 230px; overflow: hidden;
 }
 .editor textarea::selection { background: rgba(95, 211, 223, .35); color: transparent; }
 .editor .ln-err { background: rgba(255, 123, 92, .28); display: inline-block; min-width: 100%; }
@@ -402,3 +402,90 @@ table.pts td { text-align: center; border: 1px solid var(--gris-clair); padding:
 .card h2.titre-scene.gauche { font-size: 1.45rem; justify-content: flex-start; }
 .podium .marche { width: 200px; }
 .podium .nom { font-size: 1.15rem; overflow-wrap: anywhere; }
+
+/* =====================================================================
+   Éditeur pour débutants : barre d'info, autocomplétion, boîte à outils
+   ===================================================================== */
+.editor-info { margin-top: 6px; background: var(--lagon-pale); border-radius: 10px; padding: 7px 12px; font-size: .92rem; color: var(--ocean-800); height: calc(2.8em + 14px); overflow: auto; line-height: 1.4; }
+@media (max-width: 700px) { .editor-info { height: calc(4.2em + 14px); } }
+.editor-info code { background: #fff; }
+.ac { position: fixed; z-index: 300; list-style: none; margin: 0; padding: 4px; background: #fff; border-radius: 12px; box-shadow: 0 12px 34px rgba(6, 38, 61, .32); width: max-content; max-width: min(480px, 94vw); font-size: .92rem; border: 2px solid var(--lagon-pale); }
+.ac li { display: flex; gap: 8px; align-items: center; padding: 6px 9px; border-radius: 8px; cursor: pointer; }
+.ac li.on { background: var(--lagon-pale); }
+.ac li .ic { width: 1.6em; text-align: center; flex: none; }
+.ac li .nm { font-family: var(--mono); font-weight: 700; color: var(--ocean-800); white-space: nowrap; }
+.ac li .fr { background: var(--ocean-800); color: #fff; border-radius: 6px; padding: 0 6px; font-size: .78rem; font-weight: 800; white-space: nowrap; }
+.ac li .rl { color: var(--gris); font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; max-width: 300px; }
+.outils { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; background: #f7fafc; border-radius: 12px; padding: 8px 10px; }
+.outils-titre { font-weight: 800; color: var(--ocean-800); font-size: .88rem; }
+.outils-groupe { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.outils-groupe .lab { font-weight: 800; font-size: .78rem; color: var(--gris); width: 84px; flex: none; }
+.chip { font: inherit; font-size: .84rem; border: 0; border-radius: 999px; padding: 4px 10px; cursor: pointer; background: var(--gris-clair); color: var(--encre); display: inline-flex; gap: 4px; align-items: center; box-shadow: 0 1px 0 rgba(0,0,0,.12); }
+.chip code { background: none; padding: 0; font-weight: 700; font-size: .95em; }
+.chip small { color: var(--gris); font-weight: 700; }
+.chip.c-capt { background: #d9f4f8; } .chip.c-capt code { color: #08707f; }
+.chip.c-act { background: #ffefc2; } .chip.c-act code { color: #865500; }
+.chip.c-mot { background: #ffe0ef; } .chip.c-mot code { color: #b0236c; }
+.chip:hover { filter: brightness(.94); }
+.chip:active { transform: translateY(1px); }
+@media (max-width: 700px) { .outils-groupe .lab { width: 100%; } }
+
+/* =====================================================================
+   Tutoriel (version débutants)
+   ===================================================================== */
+.but { font-size: 1.35rem; background: var(--algue-pale); color: #1d5d32; border-radius: 14px; padding: 12px 16px; margin: 6px 0 12px; }
+.trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0 14px; }
+.trio > div { background: #fff; border-radius: 14px; box-shadow: var(--ombre); text-align: center; padding: 12px 6px; font-weight: 900; font-family: var(--titre); font-size: 1.15rem; color: var(--ocean-800); }
+.trio span { display: block; font-size: 2rem; }
+.trio small { font-family: "Nunito", sans-serif; font-weight: 600; color: var(--gris); font-size: .85rem; }
+.legende.grosse { font-size: 1.15rem; gap: 10px 14px; }
+.exemple-gros { font-size: 1.2rem; background: #fff; border-left: 6px solid var(--lagon); border-radius: 10px; padding: 12px 16px; margin: 8px 0 12px; box-shadow: var(--ombre); line-height: 1.7; }
+table.prims { border-collapse: collapse; width: 100%; font-size: .98rem; }
+table.prims td { padding: 5px 6px; border-bottom: 1px solid var(--gris-clair); vertical-align: middle; }
+table.prims td:first-child { font-size: 1.2rem; width: 2.2em; text-align: center; }
+table.prims td:nth-child(2) { white-space: nowrap; }
+.q-texte { font-size: 1.15rem; margin: 6px 0 10px; }
+.choix-rep .btn { font-size: 1rem; }
+.choix-rep .btn small { font-weight: 600; opacity: .8; }
+.phrase-fr { font-size: 1.25rem; background: #fffaf0; border-radius: 12px; padding: 10px 14px; border: 2px dashed var(--sable-fonce); }
+.anatomie { background: #0e2236; color: #e7eef5; border-radius: 14px; padding: 14px 16px; margin: 10px 0; }
+.anatomie .ligne-code { font-family: var(--mono); font-size: 1.6rem; line-height: 1.5; white-space: pre; }
+.anatomie .a { border-radius: 6px; padding: 0 3px; }
+.anatomie .a1 { background: #b0236c; color: #fff; }
+.anatomie .a2 { background: #08707f; color: #fff; }
+.anatomie .a3 { background: var(--corail); color: #fff; }
+.anatomie .a4 { background: #5a6b7d; color: #cfe; letter-spacing: .1em; }
+.anatomie .a5 { background: #b67b00; color: #fff; }
+.anatomie ol.leg { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 6px; font-size: .98rem; }
+.anatomie ol.leg .a { font-family: var(--mono); font-weight: 700; }
+ul.points { padding-left: 20px; } ul.points li { margin: 5px 0; }
+.bascules { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
+.exo h3 { margin-top: 0; }
+.exo .consigne { font-size: 1.1rem; background: var(--algue-pale); border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
+.exo .editor { min-height: 170px; }
+.exo .editor textarea { min-height: 170px; }
+table.cas { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: .95rem; }
+table.cas th { text-align: left; background: var(--ocean-800); color: #fff; padding: 6px 8px; }
+table.cas td { padding: 6px 8px; border-bottom: 1px solid var(--gris-clair); }
+table.cas tr.ok td { background: #f0fbf4; } table.cas tr.ko td { background: #fff1f1; }
+.sol-code, #solc { margin-top: 8px; }
+.regle { display: flex; gap: 12px; align-items: center; background: #fff; border-radius: 12px; padding: 10px 14px; margin: 8px 0; box-shadow: var(--ombre); font-size: 1.05rem; }
+.regle > span { font-size: 1.8rem; }
+.probleme { font-size: 1.15rem; font-weight: 700; margin: 8px 0; }
+ol.etapes-mini { list-style: none; padding: 0; display: flex; gap: 8px; flex-wrap: wrap; font-size: .92rem; margin: 6px 0 10px; }
+ol.etapes-mini li { background: var(--lagon-pale); border-radius: 999px; padding: 3px 12px; }
+.vue-mission .editor-info { display: none; }
+@media (max-width: 700px) { .anatomie .ligne-code { font-size: 1.2rem; } .trio { grid-template-columns: 1fr; } }
+
+/* coup de pouce, rappel, aide */
+.pouce { background: #fff8e1; border: 2px solid var(--or); border-radius: 14px; padding: 12px 14px; margin-top: 10px; }
+.pouce h3 { margin: 0; }
+.pouce-tete { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+.pouce p { margin: 6px 0; }
+.codeview .l.nouveau { background: rgba(61, 220, 132, .25); border-left-color: #3ddc84; }
+.codeview .l.nouveau .n { color: #3ddc84; font-weight: 900; }
+#pouce > .btn { margin-top: 6px; }
+.rappel { margin-top: 10px; font-size: .9rem; color: var(--ocean-800); background: #fffaf0; border-radius: 10px; padding: 7px 12px; border-left: 4px solid var(--or); }
+.aide table.prims td.ic { font-size: 1.2rem; width: 2em; text-align: center; }
+pre.modele { background: #0e2236; color: #e7eef5; border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.55; overflow: auto; }
+pre.modele i { color: #9fe3b5; }

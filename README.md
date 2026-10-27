@@ -18,30 +18,53 @@ Après chaque match, chaque élève revoit **sa** tortue ligne par ligne, compre
 | Page | Pour qui | Rôle |
 |---|---|---|
 | `index.html` | élèves | Accueil : tutoriel, rejoindre une salle (code + pseudo + couleur), bac à sable |
-| `tuto.html` | élèves | **Tutoriel** en 12 étapes : les règles avec des exemples à manipuler, puis 4 tortues en panne à réparer |
+| `tuto.html` | élèves | **Tutoriel** en 14 étapes courtes : un exemple à manipuler, puis un petit exercice vérifié tout de suite |
 | `eleve.html` | élèves | Programmer, tester, envoyer sa tortue ; résultats, rapport, « Et si… ? », classement, aide |
 | `eleve.html?libre=1` | élèves | Bac à sable seul, sans salle (pour s'entraîner à la maison) |
 | `prof.html` | enseignant | Créer la salle, lancer les manches, projeter les brawls, podium, export CSV |
 
-### Le tutoriel (`tuto.html`)
+### Le tutoriel (`tuto.html`) : pensé pour les grands débutants
 
-1. **Ta mission** : pondre un maximum de nids, avec un match de démonstration animé.
-2. **Le lagon** : la légende illustrée (algues, plage, requin, sac plastique, corail, nid, nuit).
-3. **L'énergie** : une jauge à manipuler (`manger()` +3, `pondre()` −4, −1 tous les 6 tours, épuisement).
-4. **Pondre** : un testeur avec des interrupteurs. `sur_plage() and est_la_nuit() and energie() >= 6` affiche True ou False pour chaque morceau.
-5. **Les dangers et les refuges** : les requins, la plage et les algues (cachée sauf quand elle mange), le plastique. Une tortue gourmande se fait attraper sous les yeux de l'élève.
-6. **Ton programme** : `tour()` est appelée à chaque tour, une seule action, « le premier vrai gagne ». On y trouve un explorateur de conditions et un mini-quiz « Devine l'action ».
-7. **L'aide-mémoire** : tous les capteurs et toutes les actions.
-8. **Les 4 missions de réparation**, une notion chacune, avec indice, rejeu tour par tour et « Ce que tu as appris » :
+Chaque étape montre **d'abord un exemple à manipuler**, avec très peu de texte, puis un **petit exercice vérifié tout de suite**. Une étoile ⭐ marque chaque exercice réussi.
+
+1. **Le jeu** : le but en une phrase et un match de démonstration animé.
+2. **Le lagon** : la légende illustrée.
+3. **Les questions (capteurs)** : la liste des capteurs. Un quiz en images montre une tortue en gros plan et demande : « Que répond `algue_ici()` ? True ou False ? »
+4. **Les ordres (actions)** : la liste des actions. Un quiz donne une situation et demande quel ordre donner.
+5. **Ton premier `if`** :
+   - un `if` décortiqué en couleurs (`if`, la question, les deux-points, les 4 espaces, l'ordre) ;
+   - un interrupteur True/False pour voir l'effet ;
+   - puis l'élève écrit son premier `if`, vérifié dans 2 situations.
+6. **`else`** : un exemple avec interrupteur, puis un exercice.
+7. **`elif`, le premier vrai gagne** : un exemple et un quiz « Devine ce que fait la tortue ».
+8. **`and`** : un testeur de ponte, puis un exercice.
+9. **Énergie et dangers** : une jauge à manipuler et 4 règles en une ligne chacune.
+10. à 13. **4 tortues à réparer** dans le lagon. Chacune vient avec un indice ; le bouton « Voir la solution » apparaît après 2 essais.
 
    | Mission | Notion | Ce qui ne va pas |
    |---|---|---|
    | 1 | `if` | La tortue va vers les algues mais ne mange jamais. |
    | 2 | ordre des `elif` | Elle mange alors qu'un requin arrive. |
    | 3 | `and` | Elle essaie de pondre en plein jour. |
-   | 4 (bonus) | `not` | Elle avale un sac plastique. |
+   | 4 | `not` | Elle avale un sac plastique. |
 
-9. **Le brawl en classe** : le déroulé de la séance et le barème des points.
+14. **En classe** : le déroulé de la séance et le barème des points.
+
+### Les aides pour les débutants (dans tous les éditeurs)
+
+- **Autocomplétion** :
+  - on tape le début d'un mot et l'éditeur propose la suite, avec le rôle de chaque primitive ;
+  - on peut aussi taper en français : *si*, *sinon*, *et*, *pas*, *nuit*, *plage*… ;
+  - les propositions tiennent compte de l'endroit : seulement des questions après un `if`, seulement des ordres en début de ligne.
+- **Boîte à outils** : toutes les primitives en boutons. Un clic insère le mot dans le code et rappelle son rôle.
+- **Barre d'info** sous l'éditeur : le rôle du mot sous le curseur.
+- **Deux-points ajoutés automatiquement** quand on oublie les `:` après `if`, `elif` ou `else` (l'éditeur le signale), et **indentation automatique**.
+- **💡 Coup de pouce** (écran élève) :
+  - il donne **l'idée suivante** d'après ce qui manque dans le code, en 5 paliers : pondre la nuit sur la plage, se méfier des requins, vérifier l'énergie, éviter le plastique, partir avant la nuit ;
+  - chaque palier montre un programme complet, les lignes à ajouter en vert ;
+  - l'élève les recopie lui-même.
+- **Rappels** : sous l'éditeur, une règle importante change toutes les 15 secondes.
+- **Rapport après chaque match**, avec des conseils qui donnent le code à écrire. Exemple : « Attrapée en train de manger ! Mets tout en haut : `if requin_proche():` puis `fuir()` ».
 
 ---
 
@@ -56,7 +79,7 @@ Après chaque match, chaque élève revoit **sa** tortue ligne par ligne, compre
   - `manger()` sur des algues : +3 ;
   - `manger()` sur un sac plastique : −3 ;
   - à 0, la tortue est **épuisée** : retour au départ et bloquée 5 tours.
-- **Les requins** voient à 4 cases et chassent la tortue la plus proche. Une tortue attrapée retourne au départ, bloquée 5 tours. Deux refuges :
+- **Les requins** voient à 4 cases et chassent la tortue la plus proche. Une tortue attrapée **perd 1 nid** (si elle en a), retourne au départ et reste bloquée 5 tours. Deux refuges :
   - **la plage**, où les requins ne vont jamais ;
   - **les algues** : la tortue y est invisible… **sauf quand elle mange**.
 
@@ -120,7 +143,11 @@ Conseils :
    - Choisissez une **région européenne** (par exemple *West EU (Paris)* ou *Central EU (Frankfurt)*), ce qui est préférable pour le RGPD.
    - Le mot de passe de la base ne servira pas ici.
 2. Ouvrez **SQL Editor → New query**. Copiez-collez **tout** le fichier `supabase.sql`, puis cliquez sur **Run**. Le script peut être relancé sans risque, par exemple après une mise à jour.
-3. Récupérez deux informations (bouton **Connect** en haut du tableau de bord, ou **Project Settings → API Keys / Data API**) :
+> ✅ **Déjà fait pour votre projet** : `js/config.js` contient l'URL et la clé de votre projet Supabase. Il reste seulement à exécuter `supabase.sql` (point 2) si ce n'est pas encore fait.
+> Pour vérifier : la page d'accueil du site doit afficher « 🟢 Connecté à la base de données de la classe ».
+> Si elle affiche « 🔴 La base de données n'est pas prête », exécutez `supabase.sql`.
+
+3. Pour un autre projet : récupérez deux informations (bouton **Connect** en haut du tableau de bord, ou **Project Settings → API Keys / Data API**) :
    - l'**URL du projet** : `https://xxxxxxxx.supabase.co` ;
    - la **clé publique** : la *Publishable key* (`sb_publishable_…`) ou, sur un ancien projet, la clé *anon* (`eyJ…`).
 4. Ouvrez `js/config.js` et recopiez-les :
@@ -206,7 +233,9 @@ js/engine.js     ← règles, carte, simulation déterministe, rapport et consei
 js/brawl.js      ← participants, scores, classement (partagé prof / élèves)
 js/db.js         ← accès Supabase (API REST) ou mode démo (localStorage)
 js/render.js     ← dessin du lagon (canvas) et lecteur de match
-js/editor.js     ← éditeur de code coloré, vue « pensée de la tortue »
+js/editor.js     ← éditeur de code coloré, autocomplétion, boîte à outils, vue « pensée de la tortue »
+js/primitives.js ← les capteurs, actions et mots-clés avec leur rôle (en mots simples)
+js/pouce.js      ← le « coup de pouce » gradué
 js/viewer.js     ← visionneuse réutilisable (lagon + frise + pensée)
 js/tuto.js  js/eleve.js  js/prof.js
 supabase.sql     ← tables, règles de sécurité et fonctions
