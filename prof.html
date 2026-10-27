@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lagon Arena · Enseignant</title>
+<link rel="icon" href="img/tortue.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Fira+Code:wght@400;600&family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<!-- QR code (facultatif : si le script ne charge pas, le QR code est simplement masqué) -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js" defer></script>
+</head>
+<body class="page-prof">
+<header class="topbar">
+  <a class="logo" href="index.html"><img src="img/tortue.svg" alt="">Lagon Arena</a>
+  <span class="pill">👩‍🏫 Enseignant</span>
+  <div class="info" id="info"></div>
+  <span class="spacer"></span>
+  <button class="btn small ghost clair" id="panneau" title="Masquer / afficher le panneau de gauche">◧ Panneau</button>
+  <button class="btn small ghost clair" id="plein" title="Plein écran pour le vidéoprojecteur">⛶ Plein écran</button>
+</header>
+<main class="wrap" id="main"></main>
+<script type="module" src="js/prof.js"></script>
+</body>
+</html>

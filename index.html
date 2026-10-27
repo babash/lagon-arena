@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lagon Arena</title>
+<meta name="description" content="Programme ta tortue avec des conditions Python et affronte ta classe dans le lagon.">
+<link rel="icon" href="img/tortue.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Fira+Code:wght@400;600&family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="hero">
+  <img src="img/tortue.svg" alt="" width="96" height="96">
+  <h1>Lagon Arena</h1>
+  <p>Programme ta tortue avec des <b>conditions Python</b>, ponds un maximum de nids… et survis aux requins !</p>
+  <p id="mode" class="petit" style="margin-top:12px"></p>
+  <svg class="vague" viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0 30 C 240 0, 480 60, 720 30 S 1200 0, 1440 30 V 60 H 0 Z" fill="#f2f7fa"/></svg>
+</header>
+
+<main class="choix">
+  <section class="card">
+    <div class="ico">📘</div>
+    <h2>1. Le tutoriel</h2>
+    <p>Les règles du jeu expliquées pas à pas, avec des exemples à manipuler, puis des tortues en panne à réparer.</p>
+    <p><b>Commence ici si tu n'as jamais joué !</b></p>
+    <a class="btn big" href="tuto.html">Commencer le tutoriel →</a>
+  </section>
+
+  <section class="card">
+    <div class="ico">🐢</div>
+    <h2>2. Rejoindre la partie</h2>
+    <form id="rejoindre" class="form-rejoindre">
+      <label class="champ">Code de la salle (affiché au tableau)
+        <input type="text" id="salle" maxlength="4" placeholder="ABCD" autocomplete="off" class="input-code" required>
+      </label>
+      <label class="champ"><span>Ton pseudo <span class="petit muted">(pas ton vrai nom)</span></span>
+        <input type="text" id="pseudo" maxlength="14" placeholder="ex. Tortue_Zen" autocomplete="off" required>
+      </label>
+      <div class="champ">Couleur de ta tortue <div class="palette" id="palette"></div></div>
+      <button class="btn big vert" type="submit">Plonger dans le lagon 🌊</button>
+      <div id="erreur" class="msg err cache"></div>
+    </form>
+  </section>
+</main>
+<div class="choix-bas">
+  <a class="mini" href="eleve.html?libre=1"><span class="ico">🧪</span><span><b>Bac à sable</b><br>Entraîne-toi seul contre les tortues d'entraînement.</span></a>
+  <a class="mini" href="prof.html"><span class="ico">👩‍🏫</span><span><b>Espace enseignant</b><br>Créer une salle, lancer les manches, projeter les brawls.</span></a>
+</div>
+
+<script type="module">
+import { db, MODE } from "./js/db.js";
+import { COULEURS } from "./js/engine.js";
+import { $, el, store, jeton } from "./js/common.js";
+
+$("#mode").innerHTML = MODE === "db"
+  ? "🟢 Connecté à la base de données de la classe"
+  : `<span class="pill mode-demo">Mode démo</span> la base de données n'est pas configurée : tout reste dans ce navigateur.`;
+
+let couleur = store.get("lagon:couleur") || COULEURS[Math.floor(Math.random() * COULEURS.length)];
+const pal = $("#palette");
+for (const c of COULEURS) {
+  const b = el("button", { type: "button", style: `background:${c}`, title: c, "aria-label": "couleur " + c });
+  if (c === couleur) b.classList.add("on");
+  b.addEventListener("click", () => { couleur = c; pal.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); });
+  pal.append(b);
+}
+const der = store.get("lagon:derniere");
+if (der) { $("#salle").value = der.salle; $("#pseudo").value = der.pseudo; }
+const q = new URLSearchParams(location.search);
+if (q.get("salle")) $("#salle").value = q.get("salle").toUpperCase();
+
+$("#rejoindre").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const salle = $("#salle").value.trim().toUpperCase(), pseudo = $("#pseudo").value.trim();
+  const cle = `lagon:jeton:${salle}:${pseudo}`;
+  const j = store.get(cle) || jeton();
+  $("#erreur").classList.add("cache");
+  try {
+    const p = await db.rejoindre(salle, pseudo, j, couleur);
+    store.set(cle, j); store.set("lagon:couleur", couleur); store.set("lagon:derniere", { salle, pseudo: p });
+    location.href = `eleve.html?salle=${encodeURIComponent(salle)}&pseudo=${encodeURIComponent(p)}`;
+  } catch (err) { $("#erreur").textContent = err.message; $("#erreur").classList.remove("cache"); }
+});
+</script>
+</body>
+</html>

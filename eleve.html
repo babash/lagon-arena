@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lagon Arena · Ma tortue</title>
+<link rel="icon" href="img/tortue.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Fira+Code:wght@400;600&family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="logo" href="index.html"><img src="img/tortue.svg" alt="">Lagon Arena</a>
+  <div class="info" id="info"></div>
+  <span class="spacer"></span>
+  <span class="pill chrono cache" id="chrono"></span>
+</header>
+<div id="bandeau" class="bandeau cache"></div>
+
+<main class="wrap">
+  <nav class="tabs" id="tabs">
+    <button class="tab on" data-t="prog">⌨️ Programmer</button>
+    <button class="tab salle-only" data-t="res">📊 Résultats</button>
+    <button class="tab salle-only" data-t="cls">🏆 Classement</button>
+    <button class="tab" data-t="aide">❓ Aide</button>
+  </nav>
+
+  <section id="t-prog">
+    <div class="grid2">
+      <div class="card">
+        <h2>⌨️ Ta tortue</h2>
+        <div id="twist"></div>
+        <div id="ed"></div>
+        <div id="statut" class="editor-status"></div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn vert" id="tester">▶ Tester dans le bac à sable</button>
+          <button class="btn corail salle-only" id="envoyer">📤 Envoyer ma tortue</button>
+          <button class="btn ghost salle-only cache" id="rejouer" title="Rejouer le dernier brawl avec ce code (Et si… ?)">🔁 Rejouer le dernier brawl</button>
+          <span class="spacer"></span>
+          <button class="btn ghost small" id="reinit" title="Revenir au code de départ">↺</button>
+        </div>
+        <div id="envoi" class="salle-only"></div>
+      </div>
+      <div class="card">
+        <h2>🧪 Bac à sable</h2>
+        <p class="petit muted" style="margin-top:0">Ta tortue contre les 5 tortues d'entraînement 🤖, <span id="sb-twist"></span>. Ça ne compte pas pour le classement : teste autant que tu veux !</p>
+        <div class="row">
+          <button class="btn small ghost" id="autre">🎲 Autre lagon</button>
+          <select id="sel-twist" class="libre-only"></select>
+        </div>
+        <div id="sb-vue" style="margin-top:10px"><div class="vide-vue"><div>Clique sur <b>▶ Tester</b> pour lancer ta tortue dans le lagon.</div></div></div>
+        <div id="sb-res"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="t-res" class="cache"></section>
+  <section id="t-cls" class="cache"></section>
+  <section id="t-aide" class="cache"><div class="card aide aide-large" id="aide"></div></section>
+</main>
+<div id="overlay"></div>
+<script type="module" src="js/eleve.js"></script>
+</body>
+</html>
