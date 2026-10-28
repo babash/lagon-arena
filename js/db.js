@@ -67,7 +67,22 @@ class Supabase {
   libererPseudo(code, secret, pseudo) { return this.rpc("liberer_pseudo", { p_code: code, p_secret: secret, p_pseudo: pseudo }); }
   definirConfig(code, secret, config) { return this.rpc("definir_config", { p_code: code, p_secret: secret, p_config: config }); }
   // l'accueil et le Panthéon
-  statistiques() { return this.rpc("statistiques"); }
+  // les chiffres de l'accueil. Si la base n'a pas encore la fonction (supabase.sql pas encore relancé),
+  // on les compte dans les tables publiques : les parties d'après le numéro de manche de chaque salle.
+  async statistiques() {
+    try { return await this.rpc("statistiques"); }
+    catch {
+      const salles = await this.get("salles", "select=manche,phase");
+      const parties = salles.reduce((n, s) => n + (["brawl", "resultats", "fin"].includes(s.phase) ? s.manche : Math.max(0, s.manche - 1)), 0);
+      return { parties, participants: await this.compter("joueurs"), pantheon: 0, approximatif: true };
+    }
+  }
+  // nombre de lignes d'une table publique (sans les télécharger)
+  async compter(table) {
+    const r = await fetch(`${this.base}/${table}?select=*`, { method: "HEAD", headers: { ...this.headers, Prefer: "count=exact", Range: "0-0" } });
+    const n = parseInt((r.headers.get("content-range") || "").split("/")[1], 10);
+    return Number.isFinite(n) ? n : 0;
+  }
   proposerPantheon({ pseudo, lycee, code, moyenne, banc, jeton }) {
     return this.rpc("proposer_pantheon", { p_pseudo: pseudo, p_lycee: lycee || null, p_code: code, p_moyenne: moyenne, p_banc: banc, p_jeton: jeton });
   }

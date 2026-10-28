@@ -21,13 +21,29 @@ if (MODE === "db") {
     .then(() => { $("#mode").textContent = "🟢 Connecté à la base de données de la classe"; })
     .catch((e) => { $("#mode").textContent = "🔴 " + e.message; });
   db.statistiques().then((s) => {
-    if (!s || !s.parties) return;
-    $("#compteurs").innerHTML = `<span>🎬 <b>${nombre(s.parties)}</b> partie${s.parties > 1 ? "s" : ""} jouée${s.parties > 1 ? "s" : ""}</span>
-      <span>🐢 <b>${nombre(s.participants)}</b> participant${s.participants > 1 ? "s" : ""}</span>
-      ${s.pantheon ? `<a href="pantheon.html">🏛️ <b>${nombre(s.pantheon)}</b> au Panthéon</a>` : ""}`;
-    $("#compteurs").classList.remove("cache");
-  }).catch(() => { /* base pas encore mise à jour : pas de compteurs */ });
+    if (!s || (!s.parties && !s.participants)) return;
+    const box = $("#compteurs");
+    box.innerHTML = `<div class="compteur"><b data-n="${s.parties}">0</b><span>🎬 partie${s.parties > 1 ? "s" : ""} jouée${s.parties > 1 ? "s" : ""}</span></div>
+      <div class="compteur"><b data-n="${s.participants}">0</b><span>🐢 joueur${s.participants > 1 ? "s" : ""}</span></div>
+      ${s.pantheon ? `<a class="compteur petit-compteur" href="pantheon.html"><b data-n="${s.pantheon}">0</b><span>🏛️ au Panthéon</span></a>` : ""}`;
+    box.classList.remove("cache");
+    defiler(box);
+  }).catch(() => { /* base injoignable : pas de compteurs */ });
 } else $("#mode").innerHTML = `<span class="pill mode-demo">Mode démo</span> la base de données n'est pas configurée : tout reste dans ce navigateur.`;
+
+// les compteurs défilent de 0 jusqu'à leur valeur (directement s'il faut éviter les animations)
+function defiler(box) {
+  const chiffres = [...box.querySelectorAll("[data-n]")];
+  const fin = (b) => { b.textContent = nombre(b.dataset.n); };
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { chiffres.forEach(fin); return; }
+  const t0 = performance.now(), duree = 1400;
+  const pas = (t) => {
+    const x = Math.min(1, (t - t0) / duree), e = 1 - Math.pow(1 - x, 3);   // départ rapide, arrivée en douceur
+    for (const b of chiffres) b.textContent = nombre(Math.round(Number(b.dataset.n) * e));
+    if (x < 1) requestAnimationFrame(pas); else chiffres.forEach(fin);
+  };
+  requestAnimationFrame(pas);
+}
 
 // ---------- élève ou enseignant ----------
 function montrer(profil) {

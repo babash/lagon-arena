@@ -663,9 +663,15 @@ a.niveau:hover { transform: translateY(-3px); }
 .ecart { color: var(--faux); }
 button.confirmer { background: var(--faux) !important; color: #fff !important; }
 /* ---------- accueil : élève / enseignant ---------- */
-.hero .compteurs { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 18px; margin-top: 14px; font-size: 1.05rem; }
-.hero .compteurs span, .hero .compteurs a { background: rgba(255,255,255,.12); border-radius: 999px; padding: 4px 14px; color: #fff; text-decoration: none; }
-.hero .compteurs a:hover { background: rgba(255,255,255,.22); }
+.hero .compteurs { display: flex; justify-content: center; align-items: stretch; flex-wrap: wrap; gap: 12px; margin: 18px auto 4px; }
+.hero .compteur { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 150px; padding: 10px 20px 8px;
+  border-radius: 16px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18); color: #fff; text-decoration: none; }
+.hero .compteur b { font-family: var(--titre); font-size: clamp(2rem, 5vw, 2.8rem); line-height: 1; font-variant-numeric: tabular-nums; }
+.hero .compteur span { font-size: .95rem; font-weight: 700; opacity: .92; margin-top: 4px; }
+.hero .petit-compteur { min-width: 120px; }
+.hero .petit-compteur b { font-size: clamp(1.4rem, 3.5vw, 1.9rem); }
+a.compteur:hover { background: rgba(255,255,255,.22); }
+@media (max-width: 480px) { .hero .compteur { min-width: 0; flex: 1 1 40%; padding: 8px 10px 6px; } }
 .profils { display: inline-flex; gap: 4px; margin-top: 18px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.14); position: relative; z-index: 2; }
 .profil { font: inherit; font-weight: 800; font-size: 1.05rem; border: 0; border-radius: 999px; padding: 9px 20px; cursor: pointer; background: transparent; color: #fff; }
 .profil[aria-selected="true"] { background: #fff; color: var(--ocean-800); box-shadow: 0 2px 8px rgba(0,0,0,.18); }
