@@ -20,11 +20,11 @@ export const CAPTEURS = [
   { nom: "tortue_a_cote", icone: "🐢🐢", role: "Une autre tortue est-elle collée à moi ?", rep: "True / False", avance: true },
   { nom: "requin_derriere_tortue", icone: "🐢🦈", role: "Si je pousse la tortue voisine, tombe-t-elle sur un requin ?", rep: "True / False", avance: true },
   // jeu en équipes (visibles pendant une manche en équipes, ou en mode avancé)
-  { nom: "mon_equipe", icone: "🏳️", role: "Mon équipe : 1 = 🔵 Bleue, 2 = 🔴 Rouge (0 = chacun pour soi)", rep: "un nombre", equipe: true },
+  { nom: "mon_equipe", icone: "🏳️", role: "Le numéro de mon équipe : 1 = 🔵 Bleue, 2 = 🔴 Rouge, 3 = 🟢 Verte, 4 = 🟡 Jaune… (0 = chacun pour soi)", rep: "un nombre", equipe: true },
   { nom: "mes_nids", icone: "🥚", role: "Combien de nids me reste-t-il ?", rep: "un nombre", equipe: true },
   { nom: "nids_voisine", icone: "🐢🥚", role: "Combien de nids a la tortue collée à moi ? (0 s'il n'y en a pas)", rep: "un nombre", equipe: true },
   { nom: "nids_equipe", icone: "🥚🥚", role: "Combien de nids a mon équipe en tout ?", rep: "un nombre", equipe: true },
-  { nom: "nids_adversaires", icone: "🥚⚔️", role: "Combien de nids ont les adversaires en tout ?", rep: "un nombre", equipe: true },
+  { nom: "nids_adversaires", icone: "🥚⚔️", role: "Combien de nids ont toutes les autres tortues (adversaires) en tout ?", rep: "un nombre", equipe: true },
   { nom: "equipiere_a_cote", icone: "🤝", role: "Une tortue de MON équipe est-elle collée à moi ?", rep: "True / False", equipe: true },
   { nom: "adversaire_a_cote", icone: "⚔️", role: "Une tortue ADVERSE est-elle collée à moi ?", rep: "True / False", equipe: true },
   { nom: "equipiere_fatiguee", icone: "🤝😓", role: `Une équipière collée à moi a-t-elle moins de ${P.energiePonte} ⚡ (pas assez pour pondre) ?`, rep: "True / False", equipe: true },

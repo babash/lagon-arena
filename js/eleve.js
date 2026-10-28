@@ -2,14 +2,14 @@
 //  Lagon Arena — écran élève : programmer, tester, envoyer, comprendre
 // =====================================================================
 import { db, MODE, synchroniserHorloge, secondesRestantes } from "./db.js";
-import { simulate, BOTS, BOT_PIRATE, CODE_DEPART, TWISTS, BONUS_PROGRESSION, EQUIPES } from "./engine.js";
+import { simulate, BOTS, BOT_PIRATE, CODE_DEPART, TWISTS, BONUS_PROGRESSION, styleEquipe } from "./engine.js";
 import { check } from "./interp.js";
 import { CodeEditor, boiteOutils } from "./editor.js";
 import { coupDePouceHTML } from "./pouce.js";
 import { RAPPELS, estAvance, setAvance, setEquipe, estEquipe } from "./primitives.js";
 import { MatchViewer, rapportHTML, tableauMatch } from "./viewer.js";
-import { lancerSimulation, codeDe, estBot, infosManche, classementCumule, POINTS_EQUIPE } from "./brawl.js";
-import { $, $$, el, esc, toast, store, mmss, AIDE_HTML, twistCarte, activerCopie } from "./common.js";
+import { lancerSimulation, codeDe, estBot, infosManche, classementCumule, baremeEquipes } from "./brawl.js";
+import { $, $$, el, esc, toast, store, mmss, AIDE_HTML, twistCarte, activerCopie, cartesEquipesHTML, nomEquipe, placeTxt } from "./common.js";
 
 const q = new URLSearchParams(location.search);
 const SALLE = (q.get("salle") || "").toUpperCase();
@@ -106,7 +106,11 @@ function tester() {
   const bots = estAvance() ? [...BOTS, BOT_PIRATE] : BOTS;   // en mode avancé, la Pirate pousse les autres tortues !
   const joueurs = [{ id: "moi", nom: LIBRE ? "Ta tortue" : PSEUDO, couleur, code: ed.value },
     ...bots.map((b, i) => ({ id: "Bot-" + b.nom, nom: b.nom + " 🤖", couleur: BOT_COUL[i % BOT_COUL.length], code: b.code }))];
-  if (estEquipe()) joueurs.forEach((j, i) => { j.equipe = i % 2 === 0 ? 1 : 2; });   // manche en équipes : on s'entraîne aussi en équipes
+  if (estEquipe()) {   // manche en équipes : on s'entraîne aussi en équipes (ma vraie équipe, et autant d'équipes que dans la manche)
+    const c = configActuelle() || configProchaine() || {};
+    const nb = Math.max(2, c.nbEquipes || 2), mienne = (c.equipes || {})[PSEUDO] || 1;
+    joueurs.forEach((j, i) => { j.equipe = ((mienne - 1 + i) % nb) + 1; });
+  }
   const sim = simulate({ joueurs, graine: graineSB, twist: twistActuel() });
   if (viewerSB) viewerSB.destroy();
   viewerSB = new MatchViewer($("#sb-vue"), { sim, focus: "moi", code: ed.value, vitesse: 5 });
@@ -290,15 +294,17 @@ function majCarteManche(annoncer = false) {
   let html = `<div class="carte-manche">${prochaine ? `<b>📣 Prochaine manche : ${esc(titreManche(c))}</b>` : ""}${morceaux.length ? `<div>${morceaux.join(" · ")}</div>` : ""}`;
   if (c.mode === "equipes") {
     const eq = c.equipes || {}, mienne = eq[PSEUDO];
-    const noms = (e) => Object.keys(eq).filter((p) => eq[p] === e && p !== PSEUDO).map(esc).join(", ") || "—";
+    const nums = [...new Set(Object.values(eq))].sort((a, b) => a - b);
+    const noms = (e) => Object.keys(eq).filter((p) => eq[p] === e && p !== PSEUDO).map(esc).join(", ") || "personne";
+    const autres = nums.filter((e) => e !== mienne).map((e) => `${nomEquipe(e)} : ${noms(e)}`).join(" · ");
     html += mienne
-      ? `<div class="mon-equipe eq${mienne}">👥 Tu es dans l'équipe <b>${EQUIPES[mienne].icone} ${EQUIPES[mienne].nom}</b> avec : <b>${noms(mienne)}</b>.<br>
-         Adversaires ${EQUIPES[3 - mienne].icone} : ${noms(3 - mienne)}.<br>
-         <span class="petit">Seul le <b>score de l'équipe</b> compte (moyenne des nids). Mettez-vous d'accord sur une stratégie ! Nouvelles primitives : <code>donner()</code>, <code>equipiere_fatiguee()</code>…</span></div>`
+      ? `<div class="mon-equipe" style="${styleEquipe(mienne)}">👥 ${noms(mienne) === "personne" ? `Tu es seul·e dans l'équipe <b>${nomEquipe(mienne)}</b>` : `Tu es dans l'équipe <b>${nomEquipe(mienne)}</b> avec : <b>${noms(mienne)}</b>`}.<br>
+         Adversaires (${nums.length - 1} équipe${nums.length > 2 ? "s" : ""}) : ${autres}.<br>
+         <span class="petit">Seul le <b>rang de ton équipe</b> compte (moyenne des nids). Mettez-vous d'accord sur une stratégie ! Nouvelles primitives : <code>donner()</code>, <code>equipiere_fatiguee()</code>…</span></div>`
       : c.participants && !c.participants.includes(PSEUDO)
-        ? `<div class="mon-equipe">👥 Manche en équipes : ${EQUIPES[1].icone} ${noms(1)} contre ${EQUIPES[2].icone} ${noms(2)}. Tu ne joues pas cette manche : observe leurs stratégies !</div>`
+        ? `<div class="mon-equipe">👥 Manche en équipes : ${nums.map((e) => `${nomEquipe(e)} (${noms(e)})`).join(" · ")}. Tu ne joues pas cette manche : observe leurs stratégies !</div>`
         : `<div class="mon-equipe">👥 Manche en équipes : ton enseignant va t'ajouter à une équipe.</div>`;
-    if (annoncer && mienne) toast(`👥 Tu es dans l'équipe ${EQUIPES[mienne].icone} ${EQUIPES[mienne].nom} !`);
+    if (annoncer && mienne) toast(`👥 Tu es dans l'équipe ${nomEquipe(mienne)} !`);
   }
   box.innerHTML = html + "</div>";
 }
@@ -344,11 +350,16 @@ function afficherResultats(info, scores, tortues, joueurs) {
 
   let bloc;
   if (joue && moi && E) {
-    const e = moi.equipe, res = E.gagnant === 0 ? "egalite" : E.gagnant === e ? "gagne" : "perd";
-    bloc = `<div class="mon-equipe eq${e}"><b>${res === "gagne" ? "🏆 Victoire" : res === "perd" ? "😕 Défaite" : "🤝 Égalité"}</b> de ton équipe ${EQUIPES[e].icone} ${EQUIPES[e].nom} !</div>
-      <div class="duel-eq" style="margin:10px 0">${[1, 2].map((k) => `<div class="e${k}">${EQUIPES[k].icone} ${EQUIPES[k].nom}<b>${E[k].nids} 🥚</b><small>moyenne ${E[k].moyenne.toFixed(2)}</small></div>`).join('<div class="vs">VS</div>')}</div>
+    const e = moi.equipe, x = E[e] || { rang: 0, exaequo: 1 };
+    const ne = `<b>${nomEquipe(e)}</b>`;
+    const verdict = x.rang === 1 && x.exaequo === 1 ? `🏆 Victoire de ton équipe ${ne} !`
+      : x.rang === 1 ? `🤝 Ton équipe ${ne} est à égalité en tête !`
+      : E.nb === 2 ? `😕 Défaite de ton équipe ${ne}…`
+      : `${["🥈", "🥉"][x.rang - 2] || "🏅"} Ton équipe ${ne} finit ${placeTxt(x.rang)}${x.exaequo > 1 ? " (ex æquo)" : ""} sur ${E.nb}.`;
+    bloc = `<div class="mon-equipe" style="${styleEquipe(e)}">${verdict}</div>
+      <div style="margin:10px 0">${cartesEquipesHTML(E, { moi: e })}</div>
       <div class="bigscore"><div class="bloc"><b>${moi.nids}</b>nid${moi.nids > 1 ? "s" : ""} pour ton équipe</div>${info.duel ? "" : `<div class="bloc"><b>+${moi.points}</b>points</div>`}</div>
-      <p class="petit muted">En équipes, chaque élève de l'équipe gagnante marque ${POINTS_EQUIPE.gagne} points (perdante : ${POINTS_EQUIPE.perd}, égalité : ${POINTS_EQUIPE.egalite}).</p>
+      <p class="petit muted">En équipes, chaque élève marque les points du rang de son équipe : ${baremeEquipes(E.nb).join(" / ")} (des équipes à égalité se partagent les points).</p>
       <h3>🔍 Ce qu'a fait ta tortue</h3>${rapportHTML(sim, PSEUDO)}`;
   } else if (joue && moi) {
     const prog = avant && !info.duel ? `<p class="progres">${moi.nids > avant.nids ? "📈" : moi.nids < avant.nids ? "📉" : "➖"} Manche ${avant.manche} : ${avant.nids} nid${avant.nids > 1 ? "s" : ""} → manche ${m} : <b>${moi.nids} nid${moi.nids > 1 ? "s" : ""}</b>${moi.bonus ? ` · <b>bonus progrès +${moi.bonus}</b> 🎉` : ""}</p>` : "";

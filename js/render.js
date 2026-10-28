@@ -1,7 +1,7 @@
 // =====================================================================
 //  Lagon Arena — dessin du lagon (canvas) et lecteur de match
 // =====================================================================
-import { MAP, W, H, tileAt } from "./engine.js";
+import { MAP, W, H, tileAt, rgbaEquipe } from "./engine.js";
 
 const TAU = Math.PI * 2;
 function hash(x, y, s = 0) { let h = (x * 374761393 + y * 668265263 + s * 1442695041) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
@@ -183,8 +183,8 @@ export class Lagon {
       const bloquee = a[4] > 0, immun = a[5] > 0 && !bloquee, cachee = a[7] === 1;
       let alpha = bloquee ? 0.55 : cachee ? 0.6 : immun && Math.floor(temps * 6) % 2 ? 0.45 : 1;
       const gros = z > 1 && t.id === focus;   // en gros plan : tortue plus petite pour voir la case en dessous
-      if (t.equipe) {   // halo de l'équipe (🔵 / 🔴)
-        g.fillStyle = t.equipe === 1 ? "rgba(47,111,219,.55)" : "rgba(229,72,77,.55)";
+      if (t.equipe) {   // halo de la couleur de l'équipe
+        g.fillStyle = rgbaEquipe(t.equipe, 0.6);
         g.beginPath(); g.arc(px, py, c * 0.44, 0, TAU); g.fill();
       }
       if (t.id === focus) {

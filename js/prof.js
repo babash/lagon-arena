@@ -3,10 +3,10 @@
 // =====================================================================
 import { db, MODE, synchroniserHorloge, secondesRestantes } from "./db.js";
 import { CONFIG } from "./config.js";
-import { TWISTS, TWIST_ORDER, TWIST_DUEL, BOTS, POINTS_RANG, BONUS_PROGRESSION, EQUIPES } from "./engine.js";
+import { TWISTS, TWIST_ORDER, TWIST_DUEL, BOTS, POINTS_RANG, BONUS_PROGRESSION, MAX_EQUIPES, equipeInfo, styleEquipe, resultatEquipes } from "./engine.js";
 import { MatchViewer, tableauMatch } from "./viewer.js";
-import { botsPourCompleter, lancerSimulation, calculerScores, classementCumule, meilleureProgression, estBot, infosManche, equipesCompletes, POINTS_EQUIPE } from "./brawl.js";
-import { $, $$, el, esc, toast, store, mmss, jeton, twistCarte } from "./common.js";
+import { botsPourCompleter, lancerSimulation, calculerScores, classementCumule, meilleureProgression, estBot, infosManche, equipesCompletes, baremeEquipes } from "./brawl.js";
+import { $, $$, el, esc, toast, store, mmss, jeton, twistCarte, cartesEquipesHTML, annonceEquipes, nomEquipe } from "./common.js";
 
 const main = $("#main");
 const mesSalles = () => store.get("lagon:prof", {});
@@ -244,7 +244,7 @@ async function lancerManche() {
 //  Les réglages sont publiés tout de suite : les élèves voient la nouveauté,
 //  les points… et leur équipe, pour préparer une stratégie AVANT la manche.
 // =====================================================================
-let prep = null, publierTimer = null, scoresPrep = [];
+let prep = null, publierTimer = null, scoresPrep = [], selection = null;
 const clePrep = () => "lagon:prep:" + CODE;
 const configActuelle = () => (salle && salle.config && salle.config.manche === salle.manche ? salle.config : null);
 function titreManche() {
@@ -254,14 +254,15 @@ function titreManche() {
 function prepDefaut(manche, scores) {
   const nb = new Set(scores.filter((x) => !x.duel).map((x) => x.manche)).size;
   return { manche, nouveaute: TWIST_ORDER[Math.min(TWIST_ORDER.length - 1, nb)], duree: manche === 1 ? reglages.duree1 : reglages.duree,
-    coef: 1, bots: reglages.min, qui: "tous", participants: [], mode: "solo", equipes: {}, titre: "" };
+    coef: 1, bots: reglages.min, qui: "tous", participants: [], mode: "solo", equipes: {}, nbEquipes: 2, titre: "" };
 }
 function chargerPrep(manche, scores) {
   scoresPrep = scores;
   const p = store.get(clePrep());
   prep = p && p.manche === manche ? p : prepDefaut(manche, scores);
+  prep.nbEquipes ||= 2;
 }
-const configDe = (p) => ({ manche: p.manche, mode: p.mode, equipes: p.mode === "equipes" ? p.equipes : null, coef: p.coef, bots: p.bots,
+const configDe = (p) => ({ manche: p.manche, mode: p.mode, equipes: p.mode === "equipes" ? p.equipes : null, nbEquipes: p.mode === "equipes" ? p.nbEquipes : null, coef: p.coef, bots: p.bots,
   titre: p.titre, nouveaute: p.nouveaute, participants: p.qui === "choix" ? p.participants : null });
 function publierPrep(immediat = false) {
   store.set(clePrep(), prep);
@@ -271,10 +272,17 @@ function publierPrep(immediat = false) {
   publierTimer = setTimeout(go, 400);
 }
 const joueursPrep = () => (prep.qui === "choix" ? prep.participants.filter((p) => joueurs.some((j) => j.pseudo === p)) : joueurs.map((j) => j.pseudo));
+// l'équipe qui a le moins d'élèves (parmi les équipes 1 à nb)
+function plusPetiteEquipe(eq, nb) {
+  const taille = (e) => Object.values(eq).filter((x) => x === e).length;
+  let best = 1;
+  for (let e = 2; e <= nb; e++) if (taille(e) < taille(best)) best = e;
+  return best;
+}
 function completerEquipes() {
-  const l = joueursPrep(), eq = {};
-  for (const p of l) if (prep.equipes[p]) eq[p] = prep.equipes[p];
-  for (const p of l) if (!eq[p]) { const n1 = Object.values(eq).filter((e) => e === 1).length, n2 = Object.values(eq).filter((e) => e === 2).length; eq[p] = n1 <= n2 ? 1 : 2; }
+  const l = joueursPrep(), eq = {}, nb = prep.nbEquipes;
+  for (const p of l) if (prep.equipes[p] >= 1 && prep.equipes[p] <= nb) eq[p] = prep.equipes[p];
+  for (const p of l) if (!eq[p]) eq[p] = plusPetiteEquipe(eq, nb);
   const change = JSON.stringify(eq) !== JSON.stringify(prep.equipes);
   prep.equipes = eq;
   return change;
@@ -282,13 +290,14 @@ function completerEquipes() {
 function equipesHasard() {
   const l = joueursPrep().slice();
   for (let i = l.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [l[i], l[j]] = [l[j], l[i]]; }
-  prep.equipes = Object.fromEntries(l.map((p, i) => [p, (i % 2) + 1]));
+  prep.equipes = Object.fromEntries(l.map((p, i) => [p, (i % prep.nbEquipes) + 1]));
 }
 function equipesEquilibrees() {
-  // les élèves rangés selon le classement, répartis en « serpent » : 1, 2, 2, 1, 1, 2, 2, 1…
+  // les élèves rangés selon le classement, répartis en « serpent » : 1, 2, 3, 3, 2, 1, 1, 2, 3…
   const cls = classementCumule(scoresPrep), rang = (p) => { const t = cls.find((x) => x.pseudo === p); return t ? t.rang : 999; };
   const l = joueursPrep().slice().sort((a, b) => rang(a) - rang(b) || a.localeCompare(b));
-  prep.equipes = Object.fromEntries(l.map((p, i) => [p, [1, 2, 2, 1][i % 4]]));
+  const nb = prep.nbEquipes;
+  prep.equipes = Object.fromEntries(l.map((p, i) => { const tour = Math.floor(i / nb), k = i % nb; return [p, tour % 2 ? nb - k : k + 1]; }));
 }
 // un élève qui arrive pendant une manche en équipes rejoint l'équipe la plus petite (et le voit tout de suite)
 function repartirRetardataires() {
@@ -301,19 +310,20 @@ function repartirRetardataires() {
     const l = salle.duel || joueurs.map((j) => j.pseudo);
     const eq = { ...(c.equipes || {}) };
     let change = false;
-    for (const p of l) if (!eq[p]) { const n1 = Object.values(eq).filter((e) => e === 1).length, n2 = Object.values(eq).filter((e) => e === 2).length; eq[p] = n1 <= n2 ? 1 : 2; change = true; }
-    if (change) { c.equipes = eq; db.definirConfig(CODE, SECRET, c).catch(() => {}); const r = $("#rosters"); if (r) r.innerHTML = rostersHTML(eq, l); }
+    for (const p of l) if (!eq[p]) { eq[p] = plusPetiteEquipe(eq, c.nbEquipes || 2); change = true; }
+    if (change) { c.equipes = eq; db.definirConfig(CODE, SECRET, c).catch(() => {}); const r = $("#rosters"); if (r) r.innerHTML = rostersHTML(eq, l, c.nbEquipes); }
   }
 }
-function rostersHTML(equipes, liste) {
-  const col = (e) => `<div class="eq eq${e}"><h4>${EQUIPES[e].icone} Équipe ${EQUIPES[e].nom} (${liste.filter((p) => equipes[p] === e).length})</h4>
+const numerosEquipes = (equipes, nb) => Array.from({ length: Math.max(2, nb || 0, ...Object.values(equipes || {})) }, (_, i) => i + 1);
+function rostersHTML(equipes, liste, nb) {
+  const col = (e) => `<div class="eq" style="${styleEquipe(e)}"><h4>${nomEquipe(e)} (${liste.filter((p) => equipes[p] === e).length})</h4>
     <div class="eq-noms">${liste.filter((p) => equipes[p] === e).map((p) => `<span class="eq-nom">${esc(p)}</span>`).join("") || '<span class="muted petit">personne</span>'}</div></div>`;
-  return `<div class="eq-cols">${col(1)}${col(2)}</div>`;
+  return `<div class="eq-cols">${numerosEquipes(equipes, nb).map(col).join("")}</div>`;
 }
 
 const PRESETS = {
   rematch: { label: "🔁 Rematch", titre: "", f: () => ({ mode: "solo", coef: 1, qui: "tous", titre: "", nouveaute: prepDefaut(prep.manche, scoresPrep).nouveaute, duree: prep.manche === 1 ? reglages.duree1 : reglages.duree }) },
-  equipes: { label: "👥 En équipes", f: () => ({ mode: "equipes", coef: 1, qui: "tous", titre: "Manche en équipes" }) },
+  equipes: { label: "👥 En équipes", f: () => ({ mode: "equipes", coef: 1, qui: "tous", titre: "Manche en équipes", nbEquipes: prep.nbEquipes || 2 }) },
   duel: { label: "⛈️ Duel des champions", f: () => ({ mode: "solo", coef: 0, qui: "choix", participants: classementCumule(scoresPrep).slice(0, 3).map((t) => t.pseudo), nouveaute: TWIST_DUEL, duree: reglages.dureeDuel, titre: "Duel des champions" }) },
   entrainement: { label: "🏋️ Entraînement", f: () => ({ coef: 0, titre: "Manche d'entraînement" }) },
 };
@@ -341,14 +351,17 @@ function panneauPrep(box, scores) {
     </div>
     <div class="prep-ligne"><b>👥 Mode</b>
       <label><input type="radio" name="mode" value="solo" ${prep.mode === "solo" ? "checked" : ""}> chacun pour soi</label>
-      <label><input type="radio" name="mode" value="equipes" ${prep.mode === "equipes" ? "checked" : ""}> deux équipes (seul le score de l'équipe compte)</label>
+      <label><input type="radio" name="mode" value="equipes" ${prep.mode === "equipes" ? "checked" : ""}> en équipes (seul le rang de l'équipe compte)</label>
     </div>
     ${prep.mode === "equipes" ? `<div class="prep-equipes">
-      <div class="row"><button class="btn small" data-eq="hasard">🎲 Au hasard</button><button class="btn small" data-eq="equilibre">⚖️ Équilibrées (classement)</button>
-      <span class="petit muted">Clique sur un nom pour le changer d'équipe.</span></div>
-      <div class="eq-cols">${[1, 2].map((e) => `<div class="eq eq${e}"><h4>${EQUIPES[e].icone} Équipe ${EQUIPES[e].nom} (${liste.filter((p) => prep.equipes[p] === e).length})</h4>
-        <div class="eq-noms">${liste.filter((p) => prep.equipes[p] === e).map((p) => `<button class="eq-nom" data-bascule="${esc(p)}">${esc(p)}</button>`).join("") || '<span class="muted petit">personne</span>'}</div></div>`).join("")}</div>
-      <p class="petit">Points : équipe gagnante <b>${POINTS_EQUIPE.gagne}</b> pts chacun, perdante <b>${POINTS_EQUIPE.perd}</b>, égalité <b>${POINTS_EQUIPE.egalite}</b> (× le coefficient). On compare la moyenne de nids par élève (utile si une équipe a un élève de plus). Les 🤖 ne sont dans aucune équipe : ce sont des concurrentes neutres.</p>
+      <div class="prep-nb"><b>Nombre d'équipes :</b>${Array.from({ length: MAX_EQUIPES - 1 }, (_, i) => i + 2).map((n) => `<button class="btn small ghost nb ${n === prep.nbEquipes ? "on" : ""}" data-nb="${n}">${n}</button>`).join("")}
+        <span class="petit muted">(${Array.from({ length: prep.nbEquipes }, (_, i) => equipeInfo(i + 1).icone).join(" ")} : la couleur est attribuée automatiquement)</span></div>
+      <div class="row" style="margin-top:8px"><button class="btn small" data-eq="hasard">🎲 Au hasard</button><button class="btn small" data-eq="equilibre">⚖️ Équilibrées (classement)</button>
+      <span class="petit muted">${selection ? `<b>${esc(selection)}</b> : clique sur l'équipe où le mettre.` : "À la main : clique sur un nom, puis sur son équipe (ou fais-le glisser)."}</span></div>
+      <div class="eq-cols">${Array.from({ length: prep.nbEquipes }, (_, i) => i + 1).map((e) => `<div class="eq ${selection ? "cible" : ""}" data-equipe="${e}" style="${styleEquipe(e)}"><h4>${nomEquipe(e)} (${liste.filter((p) => prep.equipes[p] === e).length})</h4>
+        <div class="eq-noms">${liste.filter((p) => prep.equipes[p] === e).map((p) => `<button class="eq-nom ${p === selection ? "sel" : ""}" draggable="true" data-bascule="${esc(p)}">${esc(p)}</button>`).join("") || '<span class="muted petit">personne</span>'}</div></div>`).join("")}</div>
+      ${(() => { const vides = Array.from({ length: prep.nbEquipes }, (_, i) => i + 1).filter((e) => !liste.some((p) => prep.equipes[p] === e)); return vides.length && liste.length ? `<div class="msg warn petit">⚠️ ${vides.map(nomEquipe).join(", ")} : personne dans cette équipe, elle ne jouera pas (sauf si un élève arrive en retard : il ira dans l'équipe la plus petite).</div>` : ""; })()}
+      <p class="petit">Points par élève selon le rang de son équipe : <b>${baremeEquipes(prep.nbEquipes).join(" / ")}</b> (× le coefficient ; des équipes à égalité se partagent les points). On classe les équipes selon la moyenne de nids par élève : les équipes peuvent avoir des tailles différentes. Les 🤖 ne sont dans aucune équipe : ce sont des concurrentes neutres.</p>
     </div>` : ""}
     <p class="petit ok-publie">📣 Publié : les élèves voient déjà ces réglages${prep.mode === "equipes" ? " et <b>leur équipe</b> (ils peuvent préparer une stratégie)" : ""}.</p>
     <div class="row"><button class="btn big corail" id="go">▶ Lancer la manche ${prep.manche}${prep.mode === "equipes" ? " 👥" : ""}${prep.coef === 2 ? " (×2)" : prep.coef === 0 ? " (hors classement)" : ""}</button></div>
@@ -368,7 +381,20 @@ function panneauPrep(box, scores) {
     const p = b.dataset.joueur; prep.participants = prep.participants.includes(p) ? prep.participants.filter((x) => x !== p) : [...prep.participants, p]; maj();
   }));
   box.querySelectorAll("[data-eq]").forEach((b) => b.addEventListener("click", () => { if (b.dataset.eq === "hasard") equipesHasard(); else equipesEquilibrees(); maj(); }));
-  box.querySelectorAll("[data-bascule]").forEach((b) => b.addEventListener("click", () => { const p = b.dataset.bascule; prep.equipes[p] = prep.equipes[p] === 1 ? 2 : 1; maj(); }));
+  // équipes à la main : clic sur un nom puis sur une équipe, ou glisser-déposer
+  const deplacer = (p, e) => { selection = null; if (prep.equipes[p] !== e) { prep.equipes[p] = e; maj(); } else panneauPrep(box, scores); };
+  box.querySelectorAll("[data-nb]").forEach((b) => b.addEventListener("click", () => { prep.nbEquipes = parseInt(b.dataset.nb, 10); selection = null; equipesHasard(); maj(); }));
+  box.querySelectorAll("[data-bascule]").forEach((b) => {
+    b.addEventListener("click", (ev) => { ev.stopPropagation(); const p = b.dataset.bascule; selection = selection === p ? null : p; panneauPrep(box, scores); });
+    b.addEventListener("dragstart", (ev) => { ev.dataTransfer.setData("text/plain", b.dataset.bascule); ev.dataTransfer.effectAllowed = "move"; });
+  });
+  box.querySelectorAll("[data-equipe]").forEach((z) => {
+    const e = parseInt(z.dataset.equipe, 10);
+    z.addEventListener("click", () => { if (selection) deplacer(selection, e); });
+    z.addEventListener("dragover", (ev) => { ev.preventDefault(); z.classList.add("survol"); });
+    z.addEventListener("dragleave", () => z.classList.remove("survol"));
+    z.addEventListener("drop", (ev) => { ev.preventDefault(); const p = ev.dataTransfer.getData("text/plain"); if (p && p in prep.equipes) deplacer(p, e); });
+  });
   $("#go", box).addEventListener("click", lancerManche);
   publierPrep();
 }
@@ -382,7 +408,7 @@ function scProg(st) {
     <h2 class="titre-scene">⌨️ ${esc(titreManche())} : programmez vos tortues !</h2>
     ${c.coef === 2 ? `<p class="consigne"><span class="pill or-pill">⭐ Points doubles</span></p>` : c.coef === 0 ? `<p class="consigne"><span class="pill sombre">Hors classement</span></p>` : ""}
     ${salle.duel ? `<p class="consigne">Jouent : <b>${salle.duel.map(esc).join(" · ")}</b></p>` : ""}
-    ${c.mode === "equipes" ? `<div id="rosters">${rostersHTML(c.equipes || {}, liste)}</div><p class="consigne">👥 Seul le <b>score de l'équipe</b> compte : mettez-vous d'accord !</p>` : ""}
+    ${c.mode === "equipes" ? `<div id="rosters">${rostersHTML(c.equipes || {}, liste, c.nbEquipes)}</div><p class="consigne">👥 Seul le <b>score de l'équipe</b> compte : mettez-vous d'accord !</p>` : ""}
     <div id="tw"></div>
     <div class="grand-chrono chrono" id="gc">--:--</div>
     <p class="consigne"><b id="nb-env">0</b> / <span id="nb-tot">0</span> tortues envoyées</p>
@@ -465,7 +491,7 @@ async function scBrawl(st) {
   let pseudos = participantsHumains();
   pseudos = [...pseudos, ...botsPourCompleter(pseudos.length, c.bots ?? reglages.min)];
   if (!pseudos.length) { toast("Aucune tortue dans le lagon !", "err"); return; }
-  const equipes = c.mode === "equipes" ? equipesCompletes(pseudos, c.equipes || {}) : null;
+  const equipes = c.mode === "equipes" ? equipesCompletes(pseudos, c.equipes || {}, c.nbEquipes) : null;
   const sim = lancerSimulation(salle, m, pseudos, joueurs, tortues, salle.nouveaute, null, equipes);
   const T = TWISTS[salle.nouveaute] || TWISTS.calme;
   st.innerHTML = `<div class="brawl-grid">
@@ -482,13 +508,10 @@ async function scBrawl(st) {
   const majDirect = (t) => {
     const cpt = {}; for (const n of sim.nids) if (n.tick <= t && !(n.perdu != null && n.perdu <= t)) cpt[n.id] = (cpt[n.id] || 0) + 1;
     const cl = sim.tortues.map((x) => ({ ...x, n: cpt[x.id] || 0 })).sort((a, b) => b.n - a.n || estBot(a.id) - estBot(b.id) || String(a.nom).localeCompare(String(b.nom))).slice(0, 10);
-    $("#live").innerHTML = cl.map((x) => `<li class="${estBot(x.id) ? "bot" : ""}">${x.equipe ? EQUIPES[x.equipe].icone : ""}<span class="swatch" style="background:${x.couleur}"></span>${esc(x.nom)}<span class="n">${x.n} 🥚</span></li>`).join("");
+    $("#live").innerHTML = cl.map((x) => `<li class="${estBot(x.id) ? "bot" : ""}">${x.equipe ? equipeInfo(x.equipe).icone : ""}<span class="swatch" style="background:${x.couleur}"></span>${esc(x.nom)}<span class="n">${x.n} 🥚</span></li>`).join("");
     if (equipes) {
-      const tot = { 1: 0, 2: 0 }, n = { 1: 0, 2: 0 };
-      for (const x of sim.tortues) { tot[x.equipe] += cpt[x.id] || 0; n[x.equipe]++; }
-      const moy = (e) => (n[e] ? tot[e] / n[e] : 0);
-      $("#score-eq").innerHTML = `<div class="duel-eq"><div class="e1">${EQUIPES[1].icone} ${EQUIPES[1].nom}<b>${tot[1]} 🥚</b><small>moy. ${moy(1).toFixed(1)}</small></div>
-        <div class="vs">VS</div><div class="e2">${EQUIPES[2].icone} ${EQUIPES[2].nom}<b>${tot[2]} 🥚</b><small>moy. ${moy(2).toFixed(1)}</small></div></div>`;
+      const E = resultatEquipes(sim.tortues.map((x) => ({ id: x.id, equipe: x.equipe, nids: cpt[x.id] || 0 })));
+      $("#score-eq").innerHTML = cartesEquipesHTML(E, { ordre: "numero", decimales: 1 });
     }
     if (t < dernier) $("#feed").innerHTML = "";
     const ev = sim.events.filter((e) => e.tick > dernier && e.tick <= t && (e.type === "nid" || !estBot(e.id)));
@@ -537,16 +560,15 @@ async function scResultats(st) {
   const cls = classementCumule(scores);
   const E = sim.equipes;
   const bandeauEquipes = E ? `<div class="resultat-equipes">
-      ${E.gagnant ? `<div class="gagnant">🏆 Victoire de l'équipe ${EQUIPES[E.gagnant].icone} <b>${EQUIPES[E.gagnant].nom}</b> !</div>` : `<div class="gagnant">🤝 Égalité parfaite !</div>`}
-      <div class="duel-eq">${[1, 2].map((e) => `<div class="e${e}">${EQUIPES[e].icone} ${EQUIPES[e].nom}<b>${E[e].nids} 🥚</b><small>${E[e].n} élève${E[e].n > 1 ? "s" : ""} · moyenne ${E[e].moyenne.toFixed(2)}</small>
-        <div class="petit">${E[e].membres.map((p) => esc(sim.tortues.find((t) => t.id === p).nom)).join(", ")}</div></div>`).join('<div class="vs">VS</div>')}</div></div>` : "";
+      <div class="gagnant">${annonceEquipes(E)}</div>
+      ${cartesEquipesHTML(E, { noms: (p) => esc(sim.tortues.find((t) => t.id === p).nom), points: info.duel ? null : (e) => (sm.find((x) => x.equipe === e) || { points: 0 }).points })}</div>` : "";
   st.innerHTML = `<h2 class="titre-scene">🏆 Résultats : ${esc(titreManche())} · ${T.icone}</h2>
     ${E ? bandeauEquipes : podium(sm.slice(0, 3).map((s) => ({ nom: s.pseudo, det: `${s.nids} 🥚${info.duel ? "" : ` · ${s.points + s.bonus} pts`}` })))}
     ${progres.length ? `<div class="msg ok centre-txt">📈 <b>Bonus progrès (+${BONUS_PROGRESSION})</b> : ${progres.map((s) => esc(s.pseudo)).join(", ")}</div>` : ""}
     <div class="grid2" style="margin-top:14px">
       <div><h3>Ce match</h3><table class="scores"><tr><th class="num">#</th><th>Élève</th><th class="num">🥚</th><th class="num">🦈</th><th class="num">Points</th></tr>
-        ${sm.map((s) => `<tr><td class="num">${E ? EQUIPES[s.equipe] ? EQUIPES[s.equipe].icone : "" : s.rang}</td><td><span class="swatch" style="background:${(joueurs.find((j) => j.pseudo === s.pseudo) || {}).couleur || "#ccc"}"></span>${esc(s.pseudo)}</td><td class="num">${s.nids}</td><td class="num">${cap[s.pseudo] ?? "–"}</td><td class="num">${info.duel ? "–" : s.points + (s.bonus ? ` <small class="bonus">+${s.bonus}</small>` : "")}</td></tr>`).join("")}
-        ${sim.resultats.filter((r) => estBot(r.id)).map((r) => `<tr class="bot"><td class="num">${r.equipe ? EQUIPES[r.equipe].icone : "🤖"}</td><td>${esc(r.nom)}</td><td class="num">${r.nids}</td><td class="num">${r.captures}</td><td class="num">–</td></tr>`).join("")}
+        ${sm.map((s) => `<tr><td class="num">${E ? s.equipe ? equipeInfo(s.equipe).icone : "" : s.rang}</td><td><span class="swatch" style="background:${(joueurs.find((j) => j.pseudo === s.pseudo) || {}).couleur || "#ccc"}"></span>${esc(s.pseudo)}</td><td class="num">${s.nids}</td><td class="num">${cap[s.pseudo] ?? "–"}</td><td class="num">${info.duel ? "–" : s.points + (s.bonus ? ` <small class="bonus">+${s.bonus}</small>` : "")}</td></tr>`).join("")}
+        ${sim.resultats.filter((r) => estBot(r.id)).map((r) => `<tr class="bot"><td class="num">${r.equipe ? equipeInfo(r.equipe).icone : "🤖"}</td><td>${esc(r.nom)}</td><td class="num">${r.nids}</td><td class="num">${r.captures}</td><td class="num">–</td></tr>`).join("")}
       </table></div>
       <div><h3>Classement de la séance</h3>${tableauCumule(cls, 12)}</div>
     </div>

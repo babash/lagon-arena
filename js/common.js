@@ -1,7 +1,7 @@
 // =====================================================================
 //  Lagon Arena — petits outils partagés + aide-mémoire des règles
 // =====================================================================
-import { P, TWISTS } from "./engine.js";
+import { P, TWISTS, equipeInfo, styleEquipe } from "./engine.js";
 import { CAPTEURS, ACTIONS_INFO } from "./primitives.js";
 
 export const $ = (sel, root = document) => root.querySelector(sel);
@@ -102,7 +102,7 @@ export const AIDE_HTML = `
   <li>☀️ Le jour, sur la plage, le soleil fatigue : l'énergie baisse plus vite.</li>
 </ul>
 <details class="aide-avancee aide-equipe"><summary>👥 Jouer en équipes</summary>
-<p>Pendant une manche en équipes, <b>seul le score de l'équipe compte</b> (moyenne des nids de ses tortues). Les tortues ont un halo 🔵 ou 🔴 ; les 🤖 ne sont dans aucune équipe. Deux équipières <b>collées</b> sont protégées des requins, et on ne peut pas pousser une équipière.</p>
+<p>Pendant une manche en équipes, <b>seul le score de l'équipe compte</b> (on classe les équipes selon la moyenne de nids de leurs tortues). Il peut y avoir 2 équipes ou plus (🔵 Bleue, 🔴 Rouge, 🟢 Verte, 🟡 Jaune…) : chaque tortue a un halo de la couleur de son équipe. Les 🤖 ne sont dans aucune équipe. Deux équipières <b>collées</b> sont protégées des requins, et on ne peut pas pousser une équipière.</p>
 <h3>❓ Questions d'équipe</h3>
 <table class="prims">${CAPTEURS.filter((c) => c.equipe).map(ligneP).join("")}</table>
 <h3>❗ Ordres d'équipe</h3>
@@ -124,3 +124,28 @@ export function twistCarte(key) {
 
 // petite icône de tortue (SVG) pour les titres
 export const TORTUE_SVG = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><ellipse cx="32" cy="11" rx="7" ry="6" fill="#7cc77f"/><ellipse cx="14" cy="22" rx="8" ry="5" fill="#7cc77f" transform="rotate(-35 14 22)"/><ellipse cx="50" cy="22" rx="8" ry="5" fill="#7cc77f" transform="rotate(35 50 22)"/><ellipse cx="16" cy="46" rx="7" ry="4.5" fill="#7cc77f" transform="rotate(35 16 46)"/><ellipse cx="48" cy="46" rx="7" ry="4.5" fill="#7cc77f" transform="rotate(-35 48 46)"/><ellipse cx="32" cy="34" rx="17" ry="20" fill="#2e8b57" stroke="#1d5d3a" stroke-width="3"/><path d="M32 18 L42 28 L38 44 L26 44 L22 28 Z" fill="#3fae6c" stroke="#1d5d3a" stroke-width="2"/><circle cx="29" cy="9" r="1.6" fill="#10233a"/><circle cx="35" cy="9" r="1.6" fill="#10233a"/></svg>`;
+
+// ---------------------------------------------------------------------
+//  Équipes : cartes de score (nombre d'équipes variable, couleur automatique)
+// ---------------------------------------------------------------------
+const MEDAILLES = ["🥇", "🥈", "🥉"];
+export const nomEquipe = (e) => `${equipeInfo(e).icone} ${equipeInfo(e).nom}`;
+export const placeTxt = (r) => (r === 1 ? "1re" : r + "e");
+//  E = résultat de resultatEquipes() ; ordre "rang" (résultats) ou "numero" (score en direct)
+export function cartesEquipesHTML(E, { ordre = "rang", noms = null, points = null, moi = 0, decimales = 2 } = {}) {
+  if (!E) return "";
+  const l = ordre === "rang" ? E.liste : E.liste.slice().sort((a, b) => a.e - b.e);
+  const tete = (x) => x.rang === 1 && E.nb > 1 && x.moyenne > 0;   // pas de couronne quand tout le monde est à 0
+  const carte = (x) => `<div class="eqb ${x.e === moi ? "moi" : ""} ${tete(x) ? "premier" : ""}" style="${styleEquipe(x.e)}">
+      <span class="eqb-nom">${ordre === "rang" ? (MEDAILLES[x.rang - 1] || placeTxt(x.rang)) + " " : tete(x) ? "👑 " : ""}${nomEquipe(x.e)}</span>
+      <b>${x.nids} 🥚</b><small>${x.n} élève${x.n > 1 ? "s" : ""} · moy. ${x.moyenne.toFixed(decimales)}</small>
+      ${points ? `<small class="eqb-pts">+${points(x.e)} pts chacun</small>` : ""}
+      ${noms ? `<div class="petit eqb-membres">${x.membres.map(noms).join(", ")}</div>` : ""}</div>`;
+  return `<div class="duel-eq ${E.nb > 2 ? "multi" : ""}">${l.map(carte).join(E.nb === 2 ? '<div class="vs">VS</div>' : "")}</div>`;
+}
+export function annonceEquipes(E) {
+  if (!E) return "";
+  if (E.gagnant) return `🏆 Victoire de l'équipe ${equipeInfo(E.gagnant).icone} <b>${equipeInfo(E.gagnant).nom}</b> !`;
+  const premiers = E.liste.filter((x) => x.rang === 1);
+  return premiers.length === E.liste.length ? "🤝 Égalité parfaite entre les équipes !" : `🤝 Égalité en tête : ${premiers.map((x) => nomEquipe(x.e)).join(", ")} !`;
+}

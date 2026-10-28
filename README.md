@@ -118,19 +118,19 @@ Il ne remplace pas le premier tutoriel : il ajoute des primitives **cachées par
 
 ### Les manches en équipes
 
-L'enseignant peut lancer une manche **🔵 Bleue contre 🔴 Rouge** (panneau « Préparer la manche », voir plus bas).
+L'enseignant peut lancer une manche **de 2 à 6 équipes** (panneau « Préparer la manche », voir plus bas). Chaque équipe reçoit **automatiquement** une couleur : 🔵 Bleue, 🔴 Rouge, 🟢 Verte, 🟡 Jaune, 🟣 Violette, 🟠 Orange.
 
-- **Seul le score de l'équipe compte** : on compare la **moyenne de nids par élève** de chaque équipe (une équipe peut avoir un élève de plus). Les tortues d'entraînement 🤖 ne sont dans **aucune équipe** : ce sont des concurrentes neutres.
+- **Seul le rang de l'équipe compte** : on classe les équipes selon leur **moyenne de nids par élève**, donc les équipes peuvent avoir des **tailles différentes**. Les tortues d'entraînement 🤖 ne sont dans **aucune équipe** : ce sont des concurrentes neutres.
 - Les élèves voient **avant la manche** leur équipe, leurs équipières et leurs adversaires (carte en haut de l'écran élève), pour se mettre d'accord sur une stratégie.
 - Ce qui rend l'entraide utile :
   - 🎁 `donner()` passe 3 ⚡ à une équipière collée (une équipière épuisée sur la plage peut alors pondre) ;
   - 🛡️ deux équipières **collées** sont protégées des requins ;
   - on ne peut pas pousser une équipière.
-- Pendant le brawl, les tortues ont un halo de la couleur de leur équipe, et le score des deux équipes s'affiche en direct.
+- Pendant le brawl, les tortues ont un halo de la couleur de leur équipe, et le score de chaque équipe s'affiche en direct (👑 sur l'équipe en tête).
 
 | Capteurs d'équipe | Actions d'équipe |
 |---|---|
-| `mon_equipe()` : 1 (Bleue) ou 2 (Rouge) | `donner()` : +3 ⚡ à une équipière collée |
+| `mon_equipe()` : numéro de l'équipe (1 Bleue, 2 Rouge, 3 Verte…) | `donner()` : +3 ⚡ à une équipière collée |
 | `mes_nids()`, `nids_voisine()`, `nids_equipe()`, `nids_adversaires()` | `aller_vers_equipiere()` : rejoindre l'équipière la plus proche |
 | `equipiere_a_cote()`, `adversaire_a_cote()`, `equipiere_fatiguee()` (moins de 6 ⚡) | |
 | `requin_derriere_adversaire()` : une adversaire collée peut être poussée sur un requin | |
@@ -155,7 +155,17 @@ Ces primitives apparaissent automatiquement dans l'autocomplétion et la boîte 
 - **+3 de bonus** si la tortue pond plus de nids qu'à la manche précédente. Un élève faible qui progresse marque donc aussi.
 - Les tortues d'entraînement 🤖 servent **uniquement à compléter le lagon jusqu'à 8 tortues** (réglable), y compris pendant le duel. Elles ne marquent pas de points.
 - Le **duel des champions** (les 3 premiers, complétés par des 🤖) est hors classement.
-- **En équipes** : chaque élève de l'équipe gagnante marque **20 points**, ceux de l'équipe perdante **10**, et **15** chacun en cas d'égalité.
+- **En équipes** : chaque élève marque les points du **rang de son équipe**, de 20 (1re) à 10 (dernière) :
+
+  | Équipes | Points par rang |
+  |---|---|
+  | 2 | 20 / 10 |
+  | 3 | 20 / 15 / 10 |
+  | 4 | 20 / 17 / 13 / 10 |
+  | 5 | 20 / 18 / 15 / 13 / 10 |
+  | 6 | 20 / 18 / 16 / 14 / 12 / 10 |
+
+  Des équipes à égalité se partagent les points de leurs places (2 équipes à égalité : 15 chacune).
 - L'enseignant peut aussi rendre une manche **à points doubles** (×2) ou **hors classement** (entraînement).
 
 ---
@@ -184,9 +194,10 @@ Avant chaque manche (dans la salle d'attente, puis sous les résultats de la man
 - **points** : normaux, doubles, ou hors classement ;
 - **nombre de tortues minimum** (complété par des 🤖, 0 pour aucune) ;
 - **qui joue** : toute la classe, ou seulement les élèves cochés ;
-- **mode** : chacun pour soi, ou deux équipes :
-  - 🎲 **Au hasard** ou ⚖️ **Équilibrées** (d'après le classement de la séance, en alternant les meilleurs) ;
-  - **à la main** : un clic sur un nom le fait changer d'équipe ;
+- **mode** : chacun pour soi, ou en équipes :
+  - **nombre d'équipes** de 2 à 6, la couleur de chaque équipe est attribuée automatiquement ;
+  - 🎲 **Au hasard** ou ⚖️ **Équilibrées** (d'après le classement de la séance, en « serpent » : les meilleurs sont répartis entre les équipes) ;
+  - **à la main** : cliquer sur un nom puis sur l'équipe où le mettre, ou le faire glisser ; les équipes peuvent avoir des tailles différentes ;
   - un élève qui arrive en retard rejoint automatiquement l'équipe la plus petite.
 
 Les réglages sont **publiés tout de suite** : les élèves voient la prochaine manche (et leur équipe) pendant qu'ils préparent leur tortue.

@@ -4,8 +4,22 @@
 // =====================================================================
 import { simulate, BOTS, CODE_DEPART, graineManche, pointsPourRang, BONUS_PROGRESSION, resultatEquipes } from "./engine.js";
 
-// Points d'une manche en équipes : chaque élève de l'équipe gagnante marque POINTS_EQUIPE.gagne…
-export const POINTS_EQUIPE = { gagne: 20, perd: 10, egalite: 15 };
+// Points d'une manche en équipes : chaque élève marque les points du RANG de son équipe,
+// de POINTS_EQUIPE.premier (1re équipe) à POINTS_EQUIPE.dernier (dernière), répartis régulièrement
+// (2 équipes : 20 / 10 ; 3 équipes : 20 / 15 / 10 ; 4 équipes : 20 / 17 / 13 / 10…).
+// Des équipes à égalité se partagent les points de leurs places (2 équipes à égalité : 15 chacune).
+export const POINTS_EQUIPE = { premier: 20, dernier: 10 };
+export function pointsPlaceEquipe(place, nb) {
+  return nb <= 1 ? POINTS_EQUIPE.premier : POINTS_EQUIPE.premier - ((place - 1) * (POINTS_EQUIPE.premier - POINTS_EQUIPE.dernier)) / (nb - 1);
+}
+export function pointsEquipe(R, e) {
+  const x = R[e];
+  if (!x) return 0;
+  let tot = 0;
+  for (let k = 0; k < x.exaequo; k++) tot += pointsPlaceEquipe(x.rang + k, R.nb);
+  return Math.round(tot / x.exaequo);
+}
+export const baremeEquipes = (nb) => Array.from({ length: Math.max(2, nb) }, (_, i) => Math.round(pointsPlaceEquipe(i + 1, Math.max(2, nb))));
 
 export const BOT_PREFIXE = "Bot-";
 const BOT_COULEURS = ["#c9d6df", "#9fb3c2", "#e0e6eb", "#b3c4d1", "#d6dee5"];
@@ -42,10 +56,12 @@ export function infosManche(scores, manche) {
 // (un élève arrivé en retard va dans l'équipe la plus petite). Les 🤖 restent NEUTRES (équipe 0) :
 // ce sont des concurrentes de tout le monde, et seuls les nids des élèves font le score des équipes
 // (sinon l'équipe complétée par des 🤖 serait avantagée face à des débutants).
-export function equipesCompletes(pseudos, equipesEleves) {
-  const res = {}, taille = { 1: 0, 2: 0 };
-  const plusPetite = () => (taille[1] <= taille[2] ? 1 : 2);
-  for (const p of pseudos) if (!estBot(p) && (equipesEleves || {})[p]) { res[p] = equipesEleves[p]; taille[res[p]]++; }
+export function equipesCompletes(pseudos, equipesEleves, nbEquipes = 0) {
+  const eq = equipesEleves || {};
+  const nb = Math.max(2, nbEquipes || 0, ...Object.values(eq).map(Number).filter((e) => e > 0));
+  const res = {}, taille = Object.fromEntries(Array.from({ length: nb }, (_, i) => [i + 1, 0]));
+  const plusPetite = () => Object.keys(taille).map(Number).sort((a, b) => taille[a] - taille[b] || a - b)[0];
+  for (const p of pseudos) if (!estBot(p) && eq[p]) { res[p] = eq[p]; taille[res[p]] = (taille[res[p]] || 0) + 1; }
   for (const p of pseudos) if (!estBot(p) && !res[p]) { res[p] = plusPetite(); taille[res[p]]++; }
   for (const p of pseudos) if (estBot(p)) res[p] = 0;
   return res;
@@ -68,7 +84,7 @@ export function lancerSimulation(salle, manche, pseudos, joueurs, tortues, twist
 
 // Scores de la manche.
 //  • chacun pour soi : rang parmi les élèves → points (25, 20, 16…), + bonus si progrès ;
-//  • en équipes : seul le résultat de l'équipe compte (POINTS_EQUIPE) ;
+//  • en équipes : seul le rang de l'équipe compte (POINTS_EQUIPE, rang = rang de l'équipe) ;
 //  • coef : 1 = normal, 2 = points doubles, 0 = hors classement.
 export function calculerScores(sim, manche, anciensScores, { coef = 1 } = {}) {
   const horsClassement = coef === 0;
@@ -80,8 +96,8 @@ export function calculerScores(sim, manche, anciensScores, { coef = 1 } = {}) {
     const key = r.nids + "/" + r.captures + "/" + r.energie;
     if (key !== prev) rang = i + 1; prev = key;
     if (eq) {
-      const res = eq.gagnant === 0 ? "egalite" : eq.gagnant === r.equipe ? "gagne" : "perd";
-      out.push({ pseudo: r.id, nids: r.nids, rang: res === "perd" ? 2 : 1, points: POINTS_EQUIPE[res] * coef, bonus: 0, equipe: r.equipe });
+      const x = eq[r.equipe];
+      out.push({ pseudo: r.id, nids: r.nids, rang: x ? x.rang : 0, points: pointsEquipe(eq, r.equipe) * coef, bonus: 0, equipe: r.equipe });
       return;
     }
     const avant = anciensScores.filter((s) => s.pseudo === r.id && s.manche < manche && !s.duel).sort((a, b) => b.manche - a.manche)[0];

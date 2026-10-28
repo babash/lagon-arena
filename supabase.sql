@@ -64,9 +64,9 @@ create table if not exists public.scores (
 -- (mise à jour d'une installation plus ancienne : on ajoute les colonnes manquantes)
 alter table public.scores add column if not exists nouveaute text not null default 'calme';
 alter table public.scores add column if not exists duel boolean not null default false;
-alter table public.scores add column if not exists equipe int not null default 0;    -- 0 = chacun pour soi, 1 = Bleue, 2 = Rouge
+alter table public.scores add column if not exists equipe int not null default 0;    -- 0 = chacun pour soi, sinon numéro d'équipe (1 = Bleue, 2 = Rouge, 3 = Verte…)
 -- réglages de la manche (préparés par l'enseignant, visibles par les élèves AVANT la manche) :
---   { "mode": "solo" | "equipes", "equipes": {"pseudo": 1|2}, "coef": 1|2|0, "bots": 8, "titre": "…" }
+--   { "mode": "solo" | "equipes", "nbEquipes": 2..6, "equipes": {"pseudo": 1..6}, "coef": 1|2|0, "bots": 8, "titre": "…" }
 alter table public.salles add column if not exists config jsonb;
 
 -- ---------- droits de lecture (Row Level Security) ----------

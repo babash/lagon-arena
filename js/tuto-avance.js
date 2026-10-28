@@ -180,8 +180,8 @@ ETAPES.push({
     box.innerHTML = `<div class="etape"><div class="texte">
       <h2>👥 Jouer en équipe</h2>
       <ul class="points">
-        <li>Ton enseignant peut lancer une manche <b>en équipes</b> : ${EQUIPES[1].icone} ${EQUIPES[1].nom} contre ${EQUIPES[2].icone} ${EQUIPES[2].nom}. Tu sais <b>avant la manche</b> avec qui tu joues.</li>
-        <li><b>Seul le score de l'équipe compte</b> (la moyenne des nids de ses tortues) : aider une équipière rapporte autant que pondre soi-même !</li>
+        <li>Ton enseignant peut lancer une manche <b>en équipes</b> : 2 équipes ou plus (${[1, 2, 3, 4].map((e) => `${EQUIPES[e].icone} ${EQUIPES[e].nom}`).join(", ")}…). Tu sais <b>avant la manche</b> avec qui tu joues.</li>
+        <li><b>Seul le rang de l'équipe compte</b> (on compare la moyenne des nids de ses tortues) : aider une équipière rapporte autant que pondre soi-même !</li>
         <li>🛡️ Deux équipières <b>collées</b> sont protégées des requins. On ne peut pas pousser une équipière.</li>
         <li>🎁 ${act("donner")} passe ${P.don} ⚡ à une équipière collée à toi.</li>
       </ul>
