@@ -2,6 +2,7 @@
 //  Lagon Arena — petits outils partagés + aide-mémoire des règles
 // =====================================================================
 import { P, TWISTS, equipeInfo, styleEquipe } from "./engine.js";
+import { CONFIG } from "./config.js";
 import { CAPTEURS, ACTIONS_INFO } from "./primitives.js";
 
 export const $ = (sel, root = document) => root.querySelector(sel);
@@ -62,6 +63,23 @@ export const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* stockage indisponible */ } },
   del(k) { try { localStorage.removeItem(k); } catch { /* rien */ } },
 };
+// ---------- liens à donner (élèves, enseignant, QR code) ----------
+//  Toujours vers l'adresse publique du site (CONFIG.URL_SITE), même si la page est ouverte ailleurs.
+//  En mode démo (sans base de données), tout reste dans ce navigateur : on garde l'adresse de la page.
+export function lienSite(chemin) {
+  const base = CONFIG.SUPABASE_URL && CONFIG.URL_SITE ? CONFIG.URL_SITE : location.href;
+  return new URL(chemin, base).href;
+}
+export const sansProtocole = (url) => url.replace(/^https?:\/\//, "");
+// un élève arrivé par un lien d'accès (index.html?salle=ABCD) : on garde la salle en mémoire
+// pour le ramener dans cette salle après le tutoriel
+export function salleInvitee() {
+  const q = new URLSearchParams(location.search).get("salle");
+  if (q) { try { localStorage.setItem("lagon:invitation", q.toUpperCase()); } catch { /* rien */ } return q.toUpperCase(); }
+  try { return localStorage.getItem("lagon:invitation") || ""; } catch { return ""; }
+}
+export const lienPartie = () => { const s = salleInvitee(); return "index.html" + (s ? "?salle=" + encodeURIComponent(s) : ""); };
+
 // ---------- code de session : pour reprendre son pseudo sur un autre ordinateur (à la maison…) ----------
 //  8 caractères faciles à recopier (sans I, L, O, 0, 1). Le jeton secret de l'élève en est tiré.
 const ALPHA_CODE = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -116,7 +134,7 @@ export const AIDE_HTML = `
   <li>🌿 Une touffe d'algues mangée jusqu'au bout disparaît : une nouvelle pousse ailleurs. Les sacs plastique dérivent et réapparaissent ailleurs.</li>
   <li>☀️ Le jour, sur la plage, le soleil fatigue : l'énergie baisse plus vite.</li>
 </ul>
-<details class="aide-avancee aide-equipe"><summary>👥 Jouer en équipes</summary>
+<details class="aide-avancee aide-equipe"><summary>👥 Jouer en équipes (<a href="tuto-avance.html?niveau=equipe">tutoriel 👥 Équipe</a>)</summary>
 <p>Pendant une manche en équipes, <b>seul le score de l'équipe compte</b> (on classe les équipes selon la moyenne de nids de leurs tortues). Il peut y avoir 2 équipes ou plus (🔵 Bleue, 🔴 Rouge, 🟢 Verte, 🟡 Jaune…) : chaque tortue a un halo de la couleur de son équipe. Les 🤖 ne sont dans aucune équipe. Deux équipières <b>collées</b> sont protégées des requins, et on ne peut pas pousser une équipière.</p>
 <h3>❓ Questions d'équipe</h3>
 <table class="prims">${CAPTEURS.filter((c) => c.equipe).map(ligneP).join("")}</table>
@@ -127,7 +145,10 @@ export const AIDE_HTML = `
 </details>
 <details class="aide-avancee"><summary>🚀 Niveau avancé (voir le <a href="tuto-avance.html">tutoriel avancé</a>)</summary>
 <h3>❓ Questions avancées</h3>
-<table class="prims">${CAPTEURS.filter((c) => c.avance).map(ligneP).join("")}</table>
+<table class="prims">${CAPTEURS.filter((c) => c.avance && !c.groupe).map(ligneP).join("")}</table>
+<h3>🌿 Choisir ses algues (<a href="tuto-avance.html?niveau=expert">tutoriel 🥇 Expert</a>)</h3>
+<table class="prims">${CAPTEURS.filter((c) => c.groupe === "algues").map(ligneP).join("")}</table>
+<p>Exemple : <code>if requins_autour() >= 2 and not sur_plage():</code> puis <code>aller_vers_plage()</code> (zone dangereuse : direction le refuge).</p>
 <h3>❗ Ordres avancés</h3>
 <table class="prims">${ACTIONS_INFO.filter((a) => a.avance).map(ligneP).join("")}</table>
 <p>Combiner : <code>if distance_requin() <= 2 or energie() < 3:</code> · <code>if not tortue_a_cote():</code> · <code>if est_la_nuit() and (sur_plage() or distance_plage() <= 1):</code></p>

@@ -19,6 +19,13 @@ export const CAPTEURS = [
   { nom: "distance_requin", icone: "📏🦈", role: "À combien de cases est le requin le plus proche ?", rep: "un nombre", avance: true },
   { nom: "tortue_a_cote", icone: "🐢🐢", role: "Une autre tortue est-elle collée à moi ?", rep: "True / False", avance: true },
   { nom: "requin_derriere_tortue", icone: "🐢🦈", role: "Si je pousse la tortue voisine, tombe-t-elle sur un requin ?", rep: "True / False", avance: true },
+  // avancé : choisir ses algues (lire le lagon autour de soi)
+  { nom: "requins_autour", icone: "🦈🔢", role: `Combien de requins à ${P.zone} cases ou moins de moi ? (zone dangereuse ?)`, rep: "un nombre", avance: true, groupe: "algues" },
+  { nom: "algues_autour", icone: "🌿🔢", role: `Combien de touffes d'algues propres à ${P.zone} cases ou moins de moi ? (zone riche ?)`, rep: "un nombre", avance: true, groupe: "algues" },
+  { nom: "requins_pres_algue", icone: "🌿🦈", role: `Combien de requins à ${P.dangerAlgue} cases ou moins des algues les plus proches ?`, rep: "un nombre", avance: true, groupe: "algues" },
+  { nom: "distance_algue_sure", icone: "📏🌿🛡️", role: `À combien de cases sont les algues SANS requin autour (à ${P.dangerAlgue} cases) ? (99 = aucune)`, rep: "un nombre", avance: true, groupe: "algues" },
+  { nom: "algue_pres_plage", icone: "🌿🏖️", role: `Les algues les plus proches sont-elles à ${P.plageProche} cases ou moins d'une plage ?`, rep: "True / False", avance: true, groupe: "algues" },
+  { nom: "portions_algue", icone: "🌿🍽️", role: `Combien de repas reste-t-il dans les algues les plus proches ? (${P.portionsHerbier} au départ, 0 = aucune)`, rep: "un nombre", avance: true, groupe: "algues" },
   // jeu en équipes (visibles pendant une manche en équipes, ou en mode avancé)
   { nom: "mon_equipe", icone: "🏳️", role: "Le numéro de mon équipe : 1 = 🔵 Bleue, 2 = 🔴 Rouge, 3 = 🟢 Verte, 4 = 🟡 Jaune… (0 = chacun pour soi)", rep: "un nombre", equipe: true },
   { nom: "mes_nids", icone: "🥚", role: "Combien de nids me reste-t-il ?", rep: "un nombre", equipe: true },

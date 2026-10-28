@@ -48,6 +48,18 @@ const leger = JSON.stringify(simulate({ joueurs, graine: 9, leger: true }).resul
 console.log(`   ${leger ? "✔" : "✘"} mode léger (estimation du bac à sable) = même résultat que la partie complète`);
 ok &&= leger;
 
+console.log("2 bis. Capteurs « choisir ses algues » (lagon construit à la main)");
+{
+  const sim = simulate({ joueurs: [{ id: "t", nom: "t", couleur: "#f00", code: "def tour():\n    se_cacher()\n" }], graine: 1,
+    scenario: { energie: 8, requins: [[14, 6]], requinsFixes: true, plastiques: [], heureDepart: 8, ticks: 1, repousse: false,
+      herbes: [[12, 6, 3], [6, 6, 5], [3, 3, 4]], spawns: { t: [10, 6] } } });
+  const c = sim.traces.t[0].capteurs;
+  const attendu = { requins_autour: 1, algues_autour: 2, requins_pres_algue: 1, distance_algue_sure: 4, algue_pres_plage: false, portions_algue: 3 };
+  const faux = Object.entries(attendu).filter(([k, v]) => c[k] !== v).map(([k, v]) => `${k} = ${c[k]} au lieu de ${v}`);
+  console.log(`   ${faux.length ? "✘ " + faux.join(", ") : "✔ requins_autour, algues_autour, requins_pres_algue, distance_algue_sure, algue_pres_plage, portions_algue"}`);
+  ok &&= !faux.length;
+}
+
 console.log("3. Cartes aléatoires : 3000 cartes (1 à 32 tortues) sans blocage, puis 400 parties jouées");
 {
   let invalides = 0, replis = 0, mauvaisDeparts = 0;

@@ -9,7 +9,7 @@ import { icone } from "./render.js";
 import { CodeView } from "./editor.js";
 import { MatchViewer, tableauMatch } from "./viewer.js";
 import { CAPTEURS as TOUS_CAPTEURS, ACTIONS_INFO as TOUTES_ACTIONS } from "./primitives.js";
-import { $, esc } from "./common.js";
+import { $, esc, lienPartie } from "./common.js";
 import { bascule, vf, capt, act, exemple, phrase, exercice, quiz, etapeMission, demarrer, fait } from "./tutokit.js";
 
 // le tutoriel débutant ne montre que les primitives de base
@@ -349,7 +349,7 @@ ETAPES.push({
       <div class="msg ok" style="margin-top:12px">📈 <b>+${BONUS_PROGRESSION} pts</b> si ta tortue pond plus de nids qu'à la manche d'avant.<br>Même sans gagner, <b>progresser rapporte des points</b> !</div>
       <div class="msg info">💡 Bloqué ? Le bouton <b>Coup de pouce</b> te donne une idée de code.</div>
       <div class="row" style="margin-top:14px">
-        <a class="btn vert big" href="index.html">🐢 Rejoindre la partie</a>
+        <a class="btn vert big" href="${lienPartie()}">🐢 Rejoindre la partie</a>
         <a class="btn ghost" href="eleve.html?libre=1">🧪 S'entraîner</a>
         <a class="btn ghost" href="tuto-avance.html">🚀 Tutoriel avancé</a>
       </div>

@@ -126,7 +126,7 @@ export function coupDePouce(code, { equipe = false } = {}) {
 export function coupDePouceHTML(code, opts = {}) {
   const p = coupDePouce(code, opts);
   if (!p) return `<div class="pouce"><h3>🌟 Ta tortue utilise déjà toutes les idées !</h3>
-    <p>Pour aller plus loin : fais le <a href="tuto-avance.html" target="_blank"><b>🚀 tutoriel avancé</b></a> (distances, algues libres, pousser une tortue sur un requin…), puis active les <b>primitives avancées</b> sous l'éditeur.</p></div>`;
+    <p>Pour aller plus loin : fais le <a href="tuto-avance.html" target="_blank"><b>🚀 tutoriel avancé</b></a> : 🥈 intermédiaire (distances, pousser une tortue sur un requin…), 🥇 expert (choisir ses algues), 👥 équipe. Puis active les <b>primitives avancées</b> sous l'éditeur.</p></div>`;
   const lignes = p.code.split("\n");
   const brut = lignes.map((l) => l.replace(/^\+/, ""));
   const col = colorer(brut.join("\n"));

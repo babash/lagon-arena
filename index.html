@@ -19,13 +19,14 @@
   <svg class="vague" viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0 30 C 240 0, 480 60, 720 30 S 1200 0, 1440 30 V 60 H 0 Z" fill="#f2f7fa"/></svg>
 </header>
 
+<div id="invitation" class="invitation cache"></div>
 <main class="choix">
   <section class="card">
     <div class="ico">📘</div>
     <h2>1. Le tutoriel</h2>
     <p>Pas besoin de savoir programmer : des exemples à manipuler, puis tes premiers <code>if</code>, pas à pas.</p>
     <p><b>Commence ici si tu n'as jamais joué !</b></p>
-    <a class="btn big" href="tuto.html">Commencer le tutoriel →</a>
+    <a class="btn big" href="tuto.html" id="lien-tuto">Commencer le tutoriel →</a>
   </section>
 
   <section class="card">
@@ -53,14 +54,14 @@
 </main>
 <div class="choix-bas">
   <a class="mini" href="eleve.html?libre=1"><span class="ico">🧪</span><span><b>Bac à sable</b><br>Entraîne-toi seul contre les tortues d'entraînement.</span></a>
-  <a class="mini" href="tuto-avance.html"><span class="ico">🚀</span><span><b>Tutoriel avancé</b><br>Distances, algues libres, pousser une tortue… pour aller plus loin.</span></a>
+  <a class="mini" href="tuto-avance.html"><span class="ico">🚀</span><span><b>Tutoriel avancé</b><br>3 niveaux : 🥈 intermédiaire (pousser…), 🥇 expert (choisir ses algues), 👥 équipe.</span></a>
   <a class="mini" href="prof.html"><span class="ico">👩‍🏫</span><span><b>Espace enseignant</b><br>Créer une salle, lancer les manches, projeter les brawls.</span></a>
 </div>
 
 <script type="module">
 import { db, MODE } from "./js/db.js";
 import { COULEURS } from "./js/engine.js";
-import { $, el, store, nouveauCodePerso, normaliserCode, codeValide, jetonDuCode, cleJeton, cleCodePerso } from "./js/common.js";
+import { $, el, store, salleInvitee, nouveauCodePerso, normaliserCode, codeValide, jetonDuCode, cleJeton, cleCodePerso } from "./js/common.js";
 
 if (MODE === "db") {
   $("#mode").textContent = "⏳ Connexion à la base de données…";
@@ -80,7 +81,18 @@ for (const c of COULEURS) {
 const der = store.get("lagon:derniere");
 if (der) { $("#salle").value = der.salle; $("#pseudo").value = der.pseudo; }
 const q = new URLSearchParams(location.search);
-if (q.get("salle")) $("#salle").value = q.get("salle").toUpperCase();
+if (q.get("salle")) {   // arrivé·e par le lien d'accès donné par l'enseignant
+  const s = q.get("salle").toUpperCase();
+  $("#salle").value = s;
+  salleInvitee();   // (gardée en mémoire pour revenir ici après le tutoriel)
+  $("#lien-tuto").href = "tuto.html?salle=" + encodeURIComponent(s);
+  $("#invitation").innerHTML = `<div class="card"><h2>🔗 Tu es invité·e dans la salle <span class="gros-code">${s.replace(/[^A-Z0-9]/g, "")}</span></h2>
+    <ol><li>Tu n'as jamais joué ? Commence par le <a href="tuto.html?salle=${encodeURIComponent(s)}"><b>tutoriel</b></a> (tu reviendras ici à la fin).</li>
+    <li>Choisis un <b>pseudo</b> (pas ton vrai nom) et une couleur, puis <b>plonge dans le lagon</b>.</li>
+    <li>Note ton <b>code de session</b> (bouton « 🏠 Mon code de session ») pour revenir depuis un autre ordinateur.</li></ol></div>`;
+  $("#invitation").classList.remove("cache");
+  if (!$("#pseudo").value) setTimeout(() => $("#pseudo").focus(), 300);
+}
 if (q.get("pseudo")) $("#pseudo").value = q.get("pseudo");
 // lien personnel (…#code=K7PQ2XMA) : le code de session est déjà rempli
 const h = new URLSearchParams(location.hash.slice(1));

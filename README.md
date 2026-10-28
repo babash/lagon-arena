@@ -51,22 +51,43 @@ Chaque étape montre **d'abord un exemple à manipuler**, avec très peu de text
 
 14. **En classe** : le déroulé de la séance et le barème des points.
 
-### Le tutoriel avancé (`tuto-avance.html`) : pour les élèves à l'aise
+### Le tutoriel avancé (`tuto-avance.html`) : trois niveaux, pour les élèves à l'aise
 
-Il ne remplace pas le premier tutoriel : il ajoute des primitives **cachées par défaut** pour ne pas noyer les débutants.
+Il ne remplace pas le premier tutoriel : il ajoute des primitives **cachées par défaut**, pour ne pas noyer les débutants. La page d'accueil du tutoriel avancé propose trois niveaux. On peut les faire dans l'ordre ou choisir directement ; chaque niveau a sa progression (⭐).
+
+**🥈 Intermédiaire** (`tuto-avance.html?niveau=moyen`)
 
 | Étape | Contenu |
 |---|---|
-| 1 | Le lagon bouge : les touffes d'algues se vident puis repoussent ailleurs, les sacs plastique dérivent, le soleil fatigue sur la plage, on peut pousser |
-| 2 | Les distances : `distance_algue()`, `distance_plage()`, `distance_requin()`, avec des curseurs et un quiz « vrai ou faux » sur `<`, `<=`, `==`, `!=` |
-| 3 | `or` et `not` (et les parenthèses), suivis d'un exercice |
+| 1 | Le lagon bouge : un lagon différent à chaque partie, algues qui se vident et repoussent ailleurs, sacs qui dérivent, soleil sur la plage |
+| 2 | Les distances : `distance_algue()`, `distance_plage()`, `distance_requin()`, avec des curseurs et un quiz « vrai ou faux » |
+| 3 | `or` et `not` (et les parenthèses), puis un exercice |
 | M1 | Mission « Le buffet est pris » : `aller_vers_algue_libre()` |
-| 4 | Pousser : `pousser()` (−2 ⚡), `tortue_a_cote()`, `requin_derriere_tortue()`, suivis d'un exercice |
-| M2 | Mission « La pirate » : pousser une rivale sur un requin, en testant le bon capteur en premier |
+| 4 | Pousser : `pousser()` (−2 ⚡), `tortue_a_cote()`, `requin_derriere_tortue()`, puis un exercice |
+| M2 | Mission « La pirate » : pousser une rivale sur un requin |
 | 5 | Anticiper la nuit avec `heure()` et `distance_plage()` |
-| 6 | Jouer en équipe : `donner()`, `equipiere_fatiguee()`, `requin_derriere_adversaire()`…, suivis d'un exercice |
-| M3 | Mission « La nourrice » : donner de l'énergie à une équipière épuisée sur la plage pour que l'équipe ponde |
-| 🏆 | Le défi : lire le code de la tortue **Pirate** 🤖 et activer le mode avancé |
+| 🏆 | Le défi : lire le code de la **Pirate** 🤖 et la battre (vérifier avec 📊 Estimer) |
+
+**🥇 Expert** (`tuto-avance.html?niveau=expert`) : lire le lagon, choisir ses algues
+
+| Étape | Contenu |
+|---|---|
+| 1 | Lire le lagon : les 6 capteurs « choisir ses algues », avec des curseurs |
+| 2 | Comparer deux choix (quiz) : `distance_algue_sure() <= distance_algue() + 3`, zone à quitter… |
+| 3 | La zone dangereuse : `requins_autour()`, `requins_pres_algue()` (exercice) |
+| 4 | Le bon repas : `portions_algue()`, `algues_autour()` (exercice) |
+| 5 | Dîner près de la plage : `algue_pres_plage()` et `heure()` (exercice) |
+| 🏆 | Le défi : une stratégie d'expert (elle bat la Championne en moyenne) à améliorer avec 📊 Estimer |
+
+**👥 Équipe** (`tuto-avance.html?niveau=equipe`)
+
+| Étape | Contenu |
+|---|---|
+| 1 | Jouer en équipe : les règles, `donner()`, `aller_vers_equipiere()`, la protection à deux |
+| 2 | S'entraider (exercice) : `equipiere_fatiguee()`, `requin_derriere_adversaire()` |
+| M | Mission « La nourrice » : donner de l'énergie à une équipière épuisée pour que l'équipe ponde |
+| 3 | Plusieurs équipes, l'équipe rivale : `rang_equipe()`, `equipe_en_tete()`, `rivale_a_cote()`… (exercice) |
+| 🏆 | Une stratégie d'équipe, et des conseils pour se répartir les rôles |
 
 **Mode avancé** : sous l'éditeur de l'écran élève, l'interrupteur « 🚀 Primitives avancées » ajoute les nouvelles primitives à l'autocomplétion, à la boîte à outils et à l'aide. Dans le bac à sable, la tortue Pirate 🤖 rejoint alors les tortues d'entraînement. Le jeu accepte toujours toutes les primitives : l'interrupteur ne change que ce qui est proposé.
 
@@ -86,6 +107,7 @@ Il ne remplace pas le premier tutoriel : il ajoute des primitives **cachées par
   - chaque palier montre un programme complet, les lignes à ajouter en vert ;
   - l'élève les recopie lui-même.
 - **Rappels** : sous l'éditeur, une règle importante change toutes les 15 secondes.
+- **Panneau « Ta tortue » réductible** : le bouton **◀ Réduire** replie l'éditeur ; le lagon du bac à sable prend alors toute la largeur, et les boutons Tester / Envoyer restent visibles.
 - **Bac à sable** :
   - chaque **▶ Tester** se joue dans un **nouveau lagon** ; « 🔁 Rejouer ce lagon » rejoue le même (pour vérifier une correction) ;
   - **📊 Estimer** : la tortue joue 10, 20 ou 50 parties **sans les afficher**. L'élève obtient son **nombre d'œufs moyen**, de la pire à la meilleure partie, la part des parties sans œuf, ses captures, et la moyenne de chaque tortue d'entraînement. Ce sont toujours les mêmes lagons : l'élève compare ses versions (« Estimation précédente : 1,2 → maintenant 2,8 »).
@@ -214,6 +236,15 @@ Avant chaque manche (dans la salle d'attente, puis sous les résultats de la man
 
 Les réglages sont **publiés tout de suite** : les élèves voient la prochaine manche (et leur équipe) pendant qu'ils préparent leur tortue.
 
+### Devoir à la maison (salle créée hors cours)
+
+Sur l'accueil enseignant, **📚 Créer un devoir** crée une salle dont la **manche 1 démarre tout de suite, sans limite de temps**. Une fenêtre donne :
+
+- le **lien d'accès** à donner aux élèves (`https://babash.github.io/lagon-arena/index.html?salle=ABCD`), avec son QR code ;
+- un **message prêt à envoyer** (messagerie de l'établissement, cahier de textes…), modifiable, avec le lien et les consignes.
+
+Un élève qui ouvre le lien arrive sur l'accueil avec la salle déjà remplie et un encadré « Tu es invité·e » : tutoriel d'abord s'il n'a jamais joué (il revient ensuite dans la salle), puis pseudo. À sa première visite, son **code de session** s'affiche tout de suite. Vous lancez le brawl quand vous voulez, en classe ou de chez vous (« 🏠 Autre ordinateur »). Le bouton **🔗 Lien d'accès élèves** de la salle redonne le lien et le message à tout moment (pour une séance en classe aussi). L'adresse du site utilisée dans les liens est réglée dans `js/config.js` (`URL_SITE`).
+
 ### Manche longue : continuer à la maison
 
 - Cochez **♾️ temps illimité** (ou le raccourci ♾️ Manche longue) : la manche reste ouverte, sans chrono, **jusqu'à ce que vous lanciez le brawl**, par exemple au cours suivant. Les élèves programment, testent et renvoient leur tortue quand ils veulent, y compris depuis chez eux. Au moment voulu, « ⏱️ Chrono de 5 min » remet un compte à rebours, ou lancez directement le brawl.
@@ -325,23 +356,40 @@ python3 -m http.server 8000
 ## 7. Organisation du code
 
 ```
-index.html  tuto.html  eleve.html  prof.html
+index.html  tuto.html  tuto-avance.html  eleve.html  prof.html
 css/style.css
-js/config.js     ← à remplir (URL + clé Supabase)
-js/interp.js     ← mini-interpréteur Python (conditions uniquement), messages d'erreur en français
-js/engine.js     ← règles, carte, simulation déterministe, rapport et conseils, missions du tutoriel
-js/brawl.js      ← participants, scores, classement (partagé prof / élèves)
-js/db.js         ← accès Supabase (API REST) ou mode démo (localStorage)
-js/render.js     ← dessin du lagon (canvas) et lecteur de match
-js/editor.js     ← éditeur de code coloré, autocomplétion, boîte à outils, vue « pensée de la tortue »
-js/primitives.js ← les capteurs, actions et mots-clés avec leur rôle (en mots simples)
-js/pouce.js      ← le « coup de pouce » gradué
-js/tutokit.js    ← composants communs aux deux tutoriels (exemples, exercices, quiz, missions)
-js/tuto-avance.js ← le tutoriel avancé (avec tuto-avance.html)
-js/viewer.js     ← visionneuse réutilisable (lagon + frise + pensée)
-js/tuto.js  js/eleve.js  js/prof.js
-supabase.sql     ← tables, règles de sécurité et fonctions
-outils/verifier.mjs
+js/config.js       ← URL + clé Supabase, adresse publique du site (URL_SITE), durées
+js/engine.js       ← point d'entrée du MOTEUR (aucun accès à la page) ; le code est dans js/moteur/ :
+  moteur/hasard.js       hasard reproductible (graines)
+  moteur/regles.js       réglages, nouveautés de manche, heures, points
+  moteur/carte.js        grille, distances, carte classique, cartes aléatoires sans blocage
+  moteur/equipes.js      équipes (couleurs) et résultat des équipes
+  moteur/tortues.js      tortue de départ, tortues d'entraînement 🤖
+  moteur/monde.js        l'état d'une partie et les questions qu'on se pose dessus
+  moteur/capteurs.js     les capteurs (questions du programme de l'élève)
+  moteur/actions.js      les actions (une par tour)
+  moteur/requins.js      chasse, patrouille et captures
+  moteur/simulation.js   la boucle des tours : simulate()
+  moteur/rapport.js      le rapport de match et les conseils
+  moteur/missions.js     les missions des tutoriels
+js/interp.js       ← mini-interpréteur Python (conditions uniquement), messages d'erreur en français
+js/brawl.js        ← participants, équipes, scores, classement (partagé prof / élèves)
+js/db.js           ← accès Supabase (API REST) ou mode démo (localStorage)
+js/render.js       ← dessin du lagon (canvas) et lecteur de match
+js/viewer.js       ← visionneuse réutilisable (lagon + frise + pensée)
+js/editor.js       ← éditeur coloré, autocomplétion, boîte à outils, « pensée de la tortue »
+js/primitives.js   ← capteurs, actions et mots-clés avec leur rôle (en mots simples)
+js/common.js       ← petits outils de page, liens à donner, code de session, aide-mémoire
+js/pouce.js        ← le « coup de pouce » gradué
+js/tutokit.js      ← composants des tutoriels (exemples, exercices, quiz, missions, navigation)
+js/tuto.js         ← le tutoriel débutant
+js/tuto-avance/    ← le tutoriel avancé : main.js (choix du niveau), commun.js, moyen.js, expert.js, equipe.js
+js/eleve/          ← l'écran élève : main.js (démarrage), etat.js, ui.js, editeur.js, bac.js (bac à sable,
+                     estimation), envoi.js, session.js (code de session), manche.js (suivre la salle), resultats.js
+js/prof/           ← l'écran enseignant : main.js (démarrage), etat.js (état, pilotage), accueil.js, salle.js,
+                     scenes.js (ce qui est projeté), preparer.js (préparer la manche), liens.js, demo.js
+supabase.sql       ← tables, règles de sécurité et fonctions
+outils/verifier.mjs ← vérification du moteur (missions, déterminisme, cartes sans blocage, capteurs, équilibrage)
 ```
 
 Le langage accepté par l'interpréteur :

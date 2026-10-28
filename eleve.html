@@ -27,13 +27,13 @@
   </nav>
 
   <section id="t-prog">
-    <div class="grid2">
-      <div class="card">
-        <h2>⌨️ Ta tortue</h2>
+    <div class="grid2" id="prog-grid">
+      <div class="card carte-tortue">
+        <h2 class="titre-tortue"><span>⌨️ Ta tortue</span> <button class="btn small ghost" id="reduire" title="Réduire ce panneau pour agrandir le lagon">◀ Réduire</button></h2>
         <div id="twist"></div>
         <div id="ed"></div>
         <div id="statut" class="editor-status"></div>
-        <div class="row" style="margin-top:8px">
+        <div class="row actions-tortue" style="margin-top:8px">
           <button class="btn vert" id="tester">▶ Tester</button>
           <button class="btn corail salle-only" id="envoyer">📤 Envoyer ma tortue</button>
           <button class="btn or" id="pouce-btn">💡 Coup de pouce</button>
@@ -73,6 +73,6 @@
   <section id="t-aide" class="cache"><div class="card aide aide-large" id="aide"></div></section>
 </main>
 <div id="overlay"></div>
-<script type="module" src="js/eleve.js"></script>
+<script type="module" src="js/eleve/main.js"></script>
 </body>
 </html>

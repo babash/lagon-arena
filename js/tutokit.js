@@ -80,6 +80,7 @@ export const SITUATION_BASE = {
   mon_equipe: 1, mes_nids: 0, nids_voisine: 0, equipiere_a_cote: false, adversaire_a_cote: false, equipiere_fatiguee: false,
   requin_derriere_adversaire: false, nids_equipe: 0, nids_adversaires: 0,
   rang_equipe: 1, equipe_en_tete: true, equipe_rivale: 2, rivale_a_cote: false,
+  requins_autour: 0, algues_autour: 2, requins_pres_algue: 0, distance_algue_sure: 4, algue_pres_plage: false, portions_algue: 5,
 };
 export function unTour(compiled, sit) {
   const base = { ...SITUATION_BASE, ...sit };
