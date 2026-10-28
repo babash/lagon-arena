@@ -51,8 +51,10 @@ La tortue fournie au départ sait manger… mais **ne pond jamais** : sans rien 
 | **Un devoir à la maison** | **📚 Créer un devoir** : choisissez la nouveauté, lancez, envoyez le lien aux élèves. Ils programment de chez eux ; vous lancez le brawl quand vous voulez. |
 | **Une manche sur plusieurs cours** | ♾️ Temps illimité : chaque élève reprend sa tortue sur n'importe quel ordinateur avec son **code de session**. |
 | **En équipes** | 2 à 6 équipes, équilibrées d'après le classement : seul le rang de l'équipe compte, et l'entraide devient une stratégie. |
+| **Un lagon sur mesure** | La nouveauté de manche (calme, plastique, tempête…), puis, si vous voulez, le détail : nombre de requins, leur vitesse, le plastique, les heures de nuit, le corail, les algues. |
 | **Pour les élèves les plus à l'aise** | Un [tutoriel avancé](https://babash.github.io/lagon-arena/tuto-avance.html) en trois niveaux : 🥈 intermédiaire, 🥇 expert (choisir ses algues), 👥 équipe. |
 | **Pour s'entraîner seul** | Le [bac à sable](https://babash.github.io/lagon-arena/eleve.html?libre=1), contre 5 tortues d'entraînement, avec une estimation sur 50 parties. |
+| **Le Panthéon** | Les [100 meilleures tortues de tous les temps](https://babash.github.io/lagon-arena/pantheon.html), toutes jugées sur les mêmes 20 lagons ; classement par lycée. Le programme des tortues reste secret. |
 
 ## Pourquoi ça marche
 
@@ -75,15 +77,12 @@ Les principes, les limites (franchement) et un argumentaire pour présenter le j
 
 ## Feuille de route
 
-En préparation :
+Pistes pour la suite :
 
-- les **100 meilleures tortues de tous les temps** (et, plus tard, jouer contre la championne) ;
-- le **nombre de parties jouées** et de participants sur l'accueil ;
-- une **page d'accueil** pensée pour chaque public (élève / enseignant) ;
-- une **aide en deux onglets**, *Règles* et *Conseils* ;
-- les ordres et les questions **rangés par catégories** ;
-- des **lagons personnalisables** (calme, tempête… ou nombre de requins, de coraux, d'algues) ;
-- le **ménage automatique** des vieilles parties.
+- **défier les champions** du Panthéon (top 1 à top 100) sans révéler leur programme : il faudra faire jouer ces matchs par le serveur ;
+- **classer une manche sur plusieurs lagons** pour réduire la part de chance d'un seul brawl ;
+- une fiche **« de la tortue à Python »** pour réinvestir les conditions hors du jeu ;
+- des **tests de bout en bout** dans le dépôt, et un audit d'**accessibilité**.
 
 ## Contact
 

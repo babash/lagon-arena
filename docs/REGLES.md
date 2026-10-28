@@ -107,6 +107,24 @@ En équipes : on ne pousse **jamais une équipière**, et `pousser()` vise **d'a
 | 🏆 Finale | **5 rapides, vision 5** | 6 sacs | **20 h – 5 h** | manche 3 |
 | ⛈️ Tempête | **5 rapides, vision 5** | **22 sacs, sur les algues** | **20 h – 5 h** | duel des champions |
 
+### Un lagon personnalisé
+
+Par-dessus la nouveauté, l'enseignant peut régler le lagon d'une manche (panneau « Préparer la manche ») :
+
+| Réglage | Valeurs |
+|---|---|
+| 🦈 Requins | 0 à 6 |
+| 💨 Requins rapides | oui / non |
+| 👁️ Vue des requins | 2 à 7 cases |
+| 🛍️ Sacs plastique | 0 à 40 |
+| 🌿 Plastique surtout sur les algues | oui / non |
+| 🌙 Début de la nuit | 17 h à 23 h |
+| 🌅 Fin de la nuit | 3 h à 8 h |
+| 🪸 Massifs de corail | 0 à 14 (5 à 8 d'habitude) |
+| 🌿 Touffes d'algues | 8 à 35 (19 à 23 d'habitude) |
+
+Un réglage laissé vide garde la valeur de la nouveauté. La carte est toujours vérifiée sans blocage (le vérificateur teste les valeurs extrêmes). Le lagon personnalisé est enregistré avec les scores : la manche se rejoue à l'identique.
+
 ## 8. Les tortues d'entraînement 🤖
 
 Elles complètent le lagon s'il y a moins de tortues que le minimum réglé (8 par défaut). Elles **ne marquent jamais de points** et ne sont dans **aucune équipe**.
@@ -155,6 +173,16 @@ Ce qui rend l'entraide utile :
 
 Les couleurs sont attribuées automatiquement : 🔵 Bleue, 🔴 Rouge, 🟢 Verte, 🟡 Jaune, 🟣 Violette, 🟠 Orange.
 
+### Le Panthéon
+
+Le Panthéon classe les tortues de tous les temps sur un **banc d'essai** identique pour toutes (`js/pantheon.js`) :
+
+- **20 parties** « chacun pour soi », lagon calme, contre les 5 tortues d'entraînement ;
+- toujours **les mêmes 20 lagons** (graines fixes) : le calcul est reproductible, l'administrateur peut le refaire pour vérifier un score ;
+- le score est la **moyenne de nids**, arrondie au centième ; à égalité, la première arrivée passe devant.
+
+Sur ce banc, les tortues d'entraînement font : Championne 5,50 · Maline 4,25 · Prudente 2,05 · Gourmande 1,35 · Bulle 0.
+
 ---
 
 ## 10. Toutes les primitives
@@ -166,6 +194,8 @@ Les primitives sont rangées par niveau. Le jeu les accepte **toutes**, toujours
 - **équipe** : proposées automatiquement dès qu'une manche en équipes est annoncée.
 
 Une **question** (capteur) répond `True`/`False` ou un nombre ; un **ordre** (action) fait agir la tortue (un seul par tour).
+
+Dans la boîte à outils et dans l'aide, les primitives sont aussi rangées par **thème** : questions 🦈 les requins, 🌿 les algues, 🏖️ la plage et l'heure, ⚡ moi, 🐢 les tortues autour, 👥 mon équipe ; ordres 🥚 manger et pondre, 🧭 se déplacer, 🛡️ se protéger, 🤝 agir sur les autres (`CATEGORIES` dans `js/primitives.js`).
 
 #### Débutant
 

@@ -39,14 +39,15 @@ Pour qui veut comprendre, relire, corriger ou faire évoluer le code. Pour **uti
 ## 3. Arborescence
 
 ```
-index.html  tuto.html  tuto-avance.html  eleve.html  prof.html
+index.html  tuto.html  tuto-avance.html  eleve.html  prof.html  pantheon.html
 css/style.css
 img/                  ← icône (tortue.svg)
 docs/                 ← documentation (et docs/img : captures d'écran)
 js/config.js          ← URL + clé publique Supabase, adresse publique du site (URL_SITE), durées
 js/engine.js          ← point d'entrée du MOTEUR (réexporte js/moteur/*)
   moteur/hasard.js        hasard reproductible (mulberry32), graine d'une manche
-  moteur/regles.js        réglages P, nouveautés TWISTS, heures, barème des points
+  moteur/regles.js        réglages P, nouveautés TWISTS, lagon personnalisé (LAGON_REGLAGES, reglesManche),
+                          heures, barème des points
   moteur/carte.js         grille, distances (BFS), carte classique, cartes aléatoires sans blocage
   moteur/equipes.js       équipes (couleurs) et résultat des équipes
   moteur/tortues.js       tortue de départ, tortues d'entraînement 🤖
@@ -58,20 +59,26 @@ js/engine.js          ← point d'entrée du MOTEUR (réexporte js/moteur/*)
   moteur/rapport.js       le rapport de match et les conseils
   moteur/missions.js      les missions des tutoriels (scénarios fixes)
 js/interp.js          ← mini-interpréteur Python (conditions), messages d'erreur en français
-js/primitives.js      ← capteurs, actions, mots-clés et leur rôle en mots simples (source unique de l'aide)
+js/primitives.js      ← capteurs, actions, mots-clés, leur rôle en mots simples et leur catégorie (source unique)
 js/brawl.js           ← participants, équipes, lancement d'une manche, scores, classement (partagé prof / élèves)
 js/db.js              ← accès Supabase (API REST) ou mode démo (localStorage), même interface
+js/stockage.js        ← stockage local avec durée de vie (1 jour pour l'élève, 60 jours pour l'enseignant)
 js/render.js          ← dessin du lagon (canvas)
 js/viewer.js          ← visionneuse de match (lagon + frise + « pensée » de la tortue)
 js/editor.js          ← éditeur coloré, autocomplétion, boîte à outils, indentation visible
 js/pouce.js           ← le « coup de pouce » gradué
-js/common.js          ← outils de page, liens à donner, code de session, aide-mémoire
+js/common.js          ← outils de page, liens à donner, code de session
+js/aide.js            ← l'aide de l'écran élève : 📜 Règles et 💡 Conseils
+js/accueil.js         ← la page d'accueil (vues élève / enseignant, compteurs, rejoindre une salle)
+js/pantheon.js        ← le banc d'essai du Panthéon (20 parties fixes), repères, programmes déjà connus
+js/pantheon/          ← la page du Panthéon : main.js (classement, lycées, ma tortue), admin.js (vérifier, retirer)
 js/tutokit.js         ← composants des tutoriels (exemples, exercices, quiz, missions, navigation)
 js/tuto.js            ← le tutoriel débutant
-js/tuto-avance/       ← main.js (choix du niveau), commun.js, moyen.js, expert.js, equipe.js
+js/tuto-avance/       ← main.js (choix du niveau), commun.js, moyen.js, expert.js, equipe.js,
+                        strategies.js (les stratégies complètes données en exemple)
 js/eleve/             ← main.js, etat.js (état partagé S), ui.js, editeur.js, bac.js (bac à sable,
                         estimation), envoi.js, session.js (code de session), manche.js (suivre la salle),
-                        resultats.js
+                        resultats.js, pantheon.js (proposer sa tortue au Panthéon)
 js/prof/              ← main.js, etat.js (état partagé S, piloter), accueil.js, salle.js, scenes.js
                         (ce qui est projeté), preparer.js (préparer la manche), liens.js, demo.js
 supabase.sql          ← tables, règles de sécurité (RLS) et fonctions ; relançable sans risque
@@ -82,7 +89,7 @@ Les écrans `eleve/` et `prof/` suivent le même schéma : un état partagé `S`
 
 ## 4. Le moteur
 
-`simulate({ joueurs, graine, twist, ticks, scenario, version, leger })` (`js/moteur/simulation.js`) :
+`simulate({ joueurs, graine, twist, ticks, scenario, version, leger, lagon })` (`js/moteur/simulation.js`) :
 
 1. `creerMonde` prépare la partie : la carte (classique ou tirée de la graine), les tortues, les requins, les algues, les sacs.
 2. À chaque tour :
@@ -109,6 +116,7 @@ Les règles et la carte ont évolué : une manche jouée il y a un mois doit pou
 
 - La version est **enregistrée avec les scores**, dans la colonne `scores.nouveaute` : `"calme"` pour la version 1, `"calme|v2"` pour la version 2 (`nouveauteAvecVersion` / `lireNouveaute` dans `js/brawl.js`). Cela évite d'ajouter une colonne et reste lisible par une ancienne page.
 - Les tutoriels utilisent toujours la version 1 (missions sur carte classique).
+- Un **lagon personnalisé** (réglages fins par-dessus la nouveauté) est enregistré avec les scores dans `scores.lagon` (JSON) : `infosManche` le relit pour rejouer la manche. Sans réglage, la carte et la partie sont exactement les mêmes qu'avant : le nombre de massifs de corail et de touffes d'algues n'est tiré au hasard que s'il n'est pas imposé.
 - **Pour changer une règle sans casser les anciennes manches** : conditionnez-la à `m.version >= 3`, passez `VERSION_CARTE` à 3 dans `js/moteur/carte.js`, et ajoutez un contrôle dans `outils/verifier.mjs`.
 
 ## 6. L'interpréteur (`js/interp.js`)
@@ -129,7 +137,10 @@ Un mini-Python écrit pour l'occasion, en trois temps : découpage en mots (*tok
 | `joueurs` | pseudo, couleur | publique |
 | `joueurs_secret` | jeton de chaque élève | personne |
 | `tortues` | code envoyé par manche | **seulement après le brawl** de la manche (politique RLS) |
-| `scores` | nids, rang, points, bonus, nouveauté (+ version), duel, équipe | publique |
+| `scores` | nids, rang, points, bonus, nouveauté (+ version), duel, équipe, lagon personnalisé | publique |
+| `compteurs` | compteurs de l'accueil (parties, participants, salles), gardés à part pour que le ménage ne les fasse pas baisser | personne (fonction `statistiques`) |
+| `pantheon` | pseudo, lycée, moyenne, version du banc, **programme**, empreinte du programme, jeton (code Panthéon), vérifié | personne (fonctions ci-dessous) |
+| `admin_secret` | le mot de passe de l'administrateur du Panthéon | personne |
 
 | Fonction | Qui | Rôle |
 |---|---|---|
@@ -144,10 +155,20 @@ Un mini-Python écrit pour l'occasion, en trois temps : découpage en mots (*tok
 | `changer_jeton`, `ma_tortue` | élève | passer à un code de session ; retrouver sa dernière tortue |
 | `etat_depots(salle, manche)` | tous | qui a envoyé (sans le code) |
 | `heure_serveur()` | tous | pour synchroniser les chronos |
+| `statistiques()` | tous | les chiffres de l'accueil (et lance le ménage, au plus une fois par heure) |
+| `proposer_pantheon(pseudo, lycée, code, moyenne, banc, jeton)` | élève | entrer au Panthéon, ou améliorer sa tortue (gardée si elle fait mieux) |
+| `pantheon_top(limite, lycée)`, `pantheon_lycees()`, `ma_tortue_pantheon(jeton)` | tous | le classement **sans les programmes** |
+| `pantheon_admin`, `pantheon_valider`, `pantheon_retirer` | administrateur | lire les programmes, corriger un score recalculé, retirer une tortue |
 
 **Le code de session** d'un élève (8 caractères, sans lettres ambiguës) *est* son jeton : `jeton = "perso-" + CODE + "-lagon"`. Le retaper sur un autre ordinateur suffit donc à reprendre son pseudo, sans compte.
 
-**Stockage local** (navigateur) : jetons et codes de session (`lagon:jeton:…`, `lagon:codeperso:…`), programme en cours d'écriture (`lagon:code:…`), dernier envoi, préférences d'affichage, progression des tutoriels (`lagon:tuto…`), salles de l'enseignant et leur secret (`lagon:prof`). Le mode démo garde toute sa « base » dans `lagon-demo-v1`.
+**Le ménage** (`menage()`, appelée par `creer_salle` et `statistiques`, au plus une fois par heure) supprime les séances terminées depuis 7 jours, les salles jamais commencées depuis 7 jours, et les salles sans activité depuis 60 jours (l'activité compte aussi les élèves qui rejoignent ou envoient leur tortue).
+
+**Le Panthéon.** Le navigateur de l'élève calcule la moyenne sur le banc d'essai et l'envoie avec le programme. La base ne peut pas refaire le calcul : un score envoyé à la main peut donc être faux. D'où : le programme est gardé (illisible par le public), l'empreinte refuse deux fois le même programme (sans commentaires ni espaces), et l'**administrateur** recalcule les scores dans son navigateur (`pantheon.html?admin`, recalcul déterministe) puis les valide (⏳ → ✔). Au-delà de 1 000 tortues, les moins bonnes sont effacées.
+
+**Défier les champions** (piste) : faire jouer un élève contre une tortue du Panthéon sans révéler son programme suppose que le match soit joué **par le serveur** (par exemple une fonction Supabase Edge, qui peut importer les modules du moteur tels quels) et que seules les images du match soient renvoyées.
+
+**Stockage local** (navigateur, `js/stockage.js`) : chaque valeur est enregistrée avec sa date d'expiration, effacée au chargement des pages une fois dépassée. **Un jour** pour ce qui est à l'élève (postes partagés) : jetons et codes de session (`lagon:jeton:…`, `lagon:codeperso:…`), programme en cours (`lagon:code:…`), dernier envoi, préférences, progression des tutoriels (`lagon:tuto…`), code Panthéon. **60 jours** pour l'enseignant : ses salles et leur secret (`lagon:prof`), ses réglages, ses préparations de manche, le mode démo (`lagon-demo-v1`). La durée repart à chaque écriture, pas à la lecture.
 
 ## 8. Vérifier
 
@@ -155,7 +176,7 @@ Un mini-Python écrit pour l'occasion, en trois temps : découpage en mots (*tok
 node outils/verifier.mjs
 ```
 
-Sans navigateur, il vérifie les missions des tutoriels, le déterminisme (y compris les anciennes manches et le mode léger), les capteurs experts sur des lagons construits à la main, 3 000 cartes aléatoires et 400 parties, et affiche l'équilibrage des tortues d'entraînement.
+Sans navigateur, il vérifie les missions des tutoriels, le déterminisme (y compris les anciennes manches et le mode léger), les capteurs experts sur des lagons construits à la main, 3 000 cartes aléatoires et 400 parties, les lagons personnalisés (réglages appliqués, valeurs extrêmes sans blocage, partie normale inchangée), le banc d'essai du Panthéon et le refus des copies, la catégorie de chaque primitive, et affiche l'équilibrage des tortues d'entraînement.
 
 Les parcours dans le navigateur (créer une salle, faire jouer des élèves, manches longues, équipes, devoir…) ont été testés avec Playwright pendant le développement, contre une copie locale de la base (PostgreSQL + PostgREST). Ces scripts ne sont pas encore dans le dépôt (voir la feuille de route du README).
 
@@ -189,6 +210,8 @@ Avec `?demo`, tout reste dans le navigateur (le mode est mémorisé pour l'ongle
 **Après une modification du moteur** : `node outils/verifier.mjs`. Changer une règle change le résultat des anciennes manches quand on les rejoue : voir la [compatibilité des anciennes séances](#5-compatibilité-des-anciennes-séances).
 
 **Réglages** (`js/config.js`) : adresse publique du site (`URL_SITE`, utilisée dans tous les liens donnés aux élèves), durées de programmation par défaut, nombre minimum de tortues. La clé de la base qui y figure est une clé **publique**, faite pour être visible : la sécurité repose sur les règles de `supabase.sql`. Une clé secrète ne doit jamais y être placée.
+
+**Le Panthéon** : pour l'administrer, choisir un mot de passe d'au moins 12 caractères et l'enregistrer une fois dans l'éditeur SQL (`insert into public.admin_secret (secret) values ('…') on conflict (id) do update set secret = excluded.secret;`), puis ouvrir `pantheon.html?admin`. Si les règles du moteur changent, le banc d'essai doit changer de version (`BANC.version` dans `js/pantheon.js`, et la version acceptée dans `proposer_pantheon`) et les tortues doivent être revérifiées.
 
 **Bon à savoir** :
 

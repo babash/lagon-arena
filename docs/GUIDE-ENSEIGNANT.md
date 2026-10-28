@@ -10,12 +10,13 @@ Tout ce qu'il faut pour mener une séance, donner un devoir ou laisser les élè
 
 | Page | Pour qui | Rôle |
 |---|---|---|
-| `index.html` | élèves | Accueil : tutoriel, rejoindre une salle (code + pseudo + couleur), bac à sable |
+| `index.html` | tous | Accueil en deux vues : **🐢 élève** (rejoindre une salle, tutoriel, bac à sable, Panthéon) et **👩‍🏫 enseignant** (le jeu en bref, créer une salle ou un devoir, mode démo, documentation), avec le nombre de parties jouées et de participants |
 | `tuto.html` | élèves débutants | **Tutoriel** en 14 étapes courtes : un exemple à manipuler, puis un petit exercice vérifié tout de suite |
 | `tuto-avance.html` | élèves à l'aise | **Tutoriel avancé** en 3 niveaux : 🥈 intermédiaire, 🥇 expert, 👥 équipe |
 | `eleve.html` | élèves | Programmer, tester, envoyer sa tortue ; résultats, rapport, « Et si… ? », classement, aide |
 | `eleve.html?libre=1` | élèves | **Bac à sable** seul, sans salle (pour s'entraîner n'importe quand) |
 | `prof.html` | enseignant | Créer une salle ou un devoir, lancer les manches, projeter les brawls, podium, export CSV |
+| `pantheon.html` | tous | Le **Panthéon** : les 100 meilleures tortues de tous les temps, classement par lycée |
 
 ![Le tutoriel : un exemple à manipuler, puis un exercice](img/tutoriel.webp)
 
@@ -49,6 +50,7 @@ Avant chaque manche (dans la salle d'attente, puis sous les résultats de la man
 - **raccourcis** : 🔁 Rematch (manche suivante classique), 👥 En équipes, ⛈️ Duel des champions, 🏋️ Entraînement (hors classement), ♾️ Manche longue ;
 - **titre** de la manche (affiché aux élèves et sur l'écran projeté) ;
 - **nouveauté** : lagon calme, plastique, requins affamés, nuits courtes, finale, tempête (voir [REGLES.md](REGLES.md#7-les-nouveautés-de-manche)) ;
+- **🗺️ Personnaliser le lagon** (facultatif) : en partant de la nouveauté, réglez le nombre de requins (0 à 6), leur vitesse et leur vue, le nombre de sacs plastique et leur place, les heures de nuit, le nombre de massifs de corail et de touffes d'algues. Une case vide garde la valeur de la nouveauté (affichée en gris). La carte reste toujours vérifiée sans blocage ; les élèves voient ce lagon et s'y entraînent dans leur bac à sable ;
 - **durée de programmation**, ou **♾️ temps illimité** (voir plus bas) ;
 - **points** : normaux, doubles, ou hors classement ;
 - **nombre de tortues minimum** (complété par des 🤖 ; 0 pour aucune) ;
@@ -67,7 +69,7 @@ Les réglages sont **publiés tout de suite** : les élèves voient la prochaine
 
 Sur l'accueil enseignant, **📚 Créer un devoir** crée une salle « hors cours » :
 
-1. La salle s'ouvre avec la **manche 1 déjà préparée en temps illimité** (titre « Devoir »). Choisissez la **nouveauté** (calme, plastique, tempête…), éventuellement les **équipes**, les points…
+1. La salle s'ouvre avec la **manche 1 déjà préparée en temps illimité** (titre « Devoir »). Choisissez la **nouveauté** (calme, plastique, tempête…), éventuellement un **lagon personnalisé**, les **équipes**, les points…
 2. Cliquez sur **▶ Lancer le devoir**. Une fenêtre donne :
    - le **lien d'accès** à donner aux élèves (`https://babash.github.io/lagon-arena/index.html?salle=ABCD`), avec son QR code ;
    - un **message prêt à envoyer** (messagerie de l'établissement, cahier de textes…), modifiable, avec le lien et les consignes.
@@ -85,7 +87,20 @@ Le bouton **🔗 Lien d'accès élèves** de la salle redonne le lien et le mess
 - **Vous aussi, depuis un autre ordinateur** : le bouton **🏠 Autre ordinateur** de la salle donne un **lien enseignant** à ouvrir chez vous. Ne le donnez pas aux élèves : il permet de piloter la salle.
 - Une salle est gardée **60 jours** après sa dernière utilisation.
 
-## 6. Ce que voit l'élève
+## 6. Le Panthéon
+
+Le [Panthéon](https://babash.github.io/lagon-arena/pantheon.html) classe les **100 meilleures tortues de tous les temps**, toutes classes confondues. Depuis son bac à sable, un élève clique sur **🏛️ Proposer au Panthéon** :
+
+- sa tortue joue **20 parties** dans le lagon calme contre les 5 tortues d'entraînement, sur **les mêmes 20 lagons pour tout le monde** : son score est sa **moyenne de nids** ;
+- il choisit un pseudo et, s'il le veut, son **lycée** (on peut ensuite afficher le classement d'un seul lycée) ;
+- il reçoit un **code Panthéon** pour améliorer sa tortue plus tard : la nouvelle version remplace l'ancienne si elle fait mieux ;
+- son **programme est gardé mais jamais lisible** ; on ne peut pas entrer deux fois avec le même programme, ni avec une tortue d'entraînement ou une stratégie des tutoriels recopiée telle quelle.
+
+Les tortues d'entraînement apparaissent dans le classement comme **repères** (la Championne fait 5,5 nids en moyenne sur ce banc d'essai). Chaque score est **recalculé** par l'administrateur du site (⏳ puis ✔), qui peut aussi retirer une tortue au pseudo ou au lycée inapproprié.
+
+C'est un bon objectif pour les élèves rapides, ou pour prolonger le travail à la maison : « Entrez au Panthéon, et battez la Championne ! »
+
+## 7. Ce que voit l'élève
 
 ![L'écran élève : l'éditeur et le bac à sable](img/eleve.webp)
 
@@ -95,12 +110,13 @@ Le bouton **🔗 Lien d'accès élèves** de la salle redonne le lien et le mess
   - l'élève tape le début d'un mot et l'éditeur propose la suite, avec le rôle de chaque primitive ;
   - on peut aussi taper en français : *si*, *sinon*, *et*, *pas*, *nuit*, *plage*… ;
   - les propositions tiennent compte de l'endroit : des questions après un `if`, des ordres en début de ligne.
-- **Boîte à outils** : toutes les primitives en boutons. Un clic insère le mot et rappelle son rôle.
+- **Boîte à outils** : toutes les primitives en boutons, rangées par thème quand elles sont nombreuses (🦈 requins, 🌿 algues, 🏖️ plage et heure, ⚡ moi, 🐢 tortues autour, 👥 équipe ; 🥚 manger et pondre, 🧭 se déplacer, 🛡️ se protéger, 🤝 agir sur les autres). Un clic insère le mot et rappelle son rôle. L'autocomplétion trouve aussi par thème (« danger », « nourriture »…).
 - **Barre d'info** : le rôle du mot sous le curseur.
 - **Indentation visible** : un trait vertical coloré par niveau. Sur un `if`, un `elif` ou un `else`, les mots-clés qui vont ensemble sont surlignés (« Ce `else` va avec le `if` de la ligne 5 »).
 - **Deux-points ajoutés automatiquement** quand on les oublie après `if`, `elif` ou `else` (l'éditeur le signale), et **indentation automatique**.
 - **💡 Coup de pouce** : l'idée suivante d'après ce qui manque dans le code, en 5 paliers (pondre la nuit sur la plage, se méfier des requins, vérifier l'énergie, éviter le plastique, partir avant la nuit ; en équipes, « Aide ton équipe ! »). Chaque palier montre un programme complet, les lignes à ajouter en vert : l'élève les recopie lui-même.
 - **Rappels** : sous l'éditeur, une règle importante change toutes les 15 secondes.
+- **❓ Aide**, en deux onglets : **📜 Règles** et **💡 Conseils**. Chacun commence par **l'essentiel en 5 lignes**, puis des sections à déplier pour les plus acharnés (toutes les règles ; construire sa tortue pas à pas, comprendre pourquoi ça ne marche pas, erreurs fréquentes, conseils par niveau et par nouveauté).
 - **◀ Réduire** replie l'éditeur : le lagon du bac à sable prend toute la largeur, les boutons Tester / Envoyer restent visibles.
 - **🚀 Primitives avancées** : ajoute les primitives des niveaux intermédiaire et expert à l'autocomplétion, à la boîte à outils et à l'aide ; la tortue Pirate 🤖 rejoint le bac à sable.
 
@@ -118,7 +134,7 @@ Le bouton **🔗 Lien d'accès élèves** de la salle redonne le lien et le mess
 - le **rejeu du match en suivant sa tortue**, avec une frise des moments importants et **« Dans la tête de ta tortue »** : à chaque tour, les conditions vraies en vert, les fausses en rouge, l'action exécutée en jaune ;
 - **🤔 Et si… ?** : rejouer **exactement le même match** avec son code corrigé, pour vérifier que la correction marche.
 
-## 7. Les tutoriels
+## 8. Les tutoriels
 
 ### Le tutoriel débutant (`tuto.html`)
 
@@ -182,19 +198,21 @@ Il ne remplace pas le premier : il ajoute des primitives **cachées par défaut*
 | 3 | Plusieurs équipes, l'équipe rivale : `rang_equipe()`, `equipe_en_tete()`, `rivale_a_cote()`… (exercice) |
 | 🏆 | Une stratégie d'équipe, et des conseils pour se répartir les rôles |
 
-## 8. Conseils pratiques
+## 9. Conseils pratiques
 
 - À 0 au chrono, les tortues modifiées mais non envoyées partent automatiquement (si le code est correct).
 - Un élève qui n'envoie rien joue avec sa dernière tortue envoyée, ou avec la tortue de départ.
 - « Terminer le chrono » laisse 5 secondes aux élèves ; « +1 min » rallonge le temps.
 - **◧ Panneau** masque la colonne de gauche (elle est masquée automatiquement pendant le brawl). **⛶ Plein écran** sert pour le vidéoprojecteur.
-- La salle est pilotée **depuis le navigateur qui l'a créée** : le jeton enseignant y est enregistré. On la reprend plus tard depuis « Reprendre une salle », ou depuis un autre ordinateur avec le lien enseignant.
+- La salle est pilotée **depuis le navigateur qui l'a créée** : le jeton enseignant y est enregistré (60 jours). On la reprend plus tard depuis « Reprendre une salle », ou depuis un autre ordinateur avec le lien enseignant.
+- **Postes partagés** : ce qu'un élève laisse dans le navigateur (pseudo, programme, progression des tutoriels) est effacé **au bout d'un jour**. Pour revenir le lendemain, il lui suffit de son **code de session** : rappelez-leur de le noter.
+- **Ménage automatique** : une séance terminée (« Terminer la séance ») est effacée au bout de **7 jours** (le temps d'exporter le CSV), une salle jamais commencée aussi, et une salle sans aucune activité au bout de **60 jours**.
 - **Arriver en cours de partie** : un élève peut rejoindre la salle à tout moment avec le code. L'écran projeté l'annonce (« 🆕 … rejoint la partie ») et sa tortue joue au brawl suivant.
 - **Changer d'ordinateur** : l'élève se reconnecte avec son **code de session**. S'il l'a perdu, cliquez sur 🔓 à côté de son nom : il pourra reprendre son pseudo sans code, avec ses tortues et ses points.
 - Le bouton ✕ retire un élève et ses tortues (pseudo inapproprié, doublon). Faites-le de préférence avant le premier brawl.
 - **Pendant le rapport** (2-3 minutes après chaque brawl), circulez : demandez à un élève de vous **expliquer** ce qu'a fait sa tortue à un moment de la frise. C'est là que se joue l'apprentissage.
 
-## 9. Le mode démo : découvrir seul
+## 10. Le mode démo : découvrir seul
 
 Ouvrez [l'espace enseignant en mode démo](https://babash.github.io/lagon-arena/prof.html?demo) : tout reste dans votre navigateur, rien n'est enregistré en ligne.
 
