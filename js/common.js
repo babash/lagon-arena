@@ -3,6 +3,7 @@
 // =====================================================================
 import { P, TWISTS, equipeInfo, styleEquipe } from "./engine.js";
 import { CONFIG } from "./config.js";
+import { MODE } from "./db.js";
 import { CAPTEURS, ACTIONS_INFO } from "./primitives.js";
 
 export const $ = (sel, root = document) => root.querySelector(sel);
@@ -67,7 +68,7 @@ export const store = {
 //  Toujours vers l'adresse publique du site (CONFIG.URL_SITE), même si la page est ouverte ailleurs.
 //  En mode démo (sans base de données), tout reste dans ce navigateur : on garde l'adresse de la page.
 export function lienSite(chemin) {
-  const base = CONFIG.SUPABASE_URL && CONFIG.URL_SITE ? CONFIG.URL_SITE : location.href;
+  const base = MODE === "db" && CONFIG.URL_SITE ? CONFIG.URL_SITE : location.href;
   return new URL(chemin, base).href;
 }
 export const sansProtocole = (url) => url.replace(/^https?:\/\//, "");
