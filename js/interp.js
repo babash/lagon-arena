@@ -18,6 +18,7 @@ export const SENSORS = {
   // jeu en équipes
   mon_equipe: "nombre", mes_nids: "nombre", nids_voisine: "nombre", nids_equipe: "nombre", nids_adversaires: "nombre",
   equipiere_a_cote: "booléen", adversaire_a_cote: "booléen", equipiere_fatiguee: "booléen", requin_derriere_adversaire: "booléen",
+  rang_equipe: "nombre", equipe_en_tete: "booléen", equipe_rivale: "nombre", rivale_a_cote: "booléen",
 };
 export const ACTIONS = ["manger", "pondre", "fuir", "se_cacher", "aller_vers_algue", "aller_vers_plage",
   /* niveau avancé */ "aller_vers_algue_libre", "pousser",

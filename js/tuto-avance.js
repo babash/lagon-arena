@@ -16,7 +16,7 @@ const table = (l) => `<table class="prims">${l.map((p) => `<tr><td>${p.icone}</t
 let demo = null;
 const COUL = ["#ff7b5c", "#ffc93c", "#4363d8", "#f032e6", "#3cb44b", "#111111"];
 const matchDemo = () => demo ||= simulate({
-  joueurs: [...BOTS, BOT_PIRATE].map((b, i) => ({ id: b.nom, nom: b.nom, couleur: COUL[i], code: b.code })), graine: 77, twist: "calme",
+  joueurs: [...BOTS, BOT_PIRATE].map((b, i) => ({ id: b.nom, nom: b.nom, couleur: COUL[i], code: b.code })), graine: 77, twist: "calme", version: 1,   // tutoriel : la carte classique
 });
 
 const ETAPES = [];
@@ -184,6 +184,7 @@ ETAPES.push({
         <li><b>Seul le rang de l'équipe compte</b> (on compare la moyenne des nids de ses tortues) : aider une équipière rapporte autant que pondre soi-même !</li>
         <li>🛡️ Deux équipières <b>collées</b> sont protégées des requins. On ne peut pas pousser une équipière.</li>
         <li>🎁 ${act("donner")} passe ${P.don} ⚡ à une équipière collée à toi.</li>
+        <li>🎯 Plus de 2 équipes ? L'équipe <b>rivale</b> est la meilleure des autres : ${capt("rang_equipe")}, ${capt("equipe_en_tete")}, ${capt("rivale_a_cote")}… et ${act("pousser")} la vise en premier.</li>
       </ul>
       ${table(EQ_C)}${table(EQ_A)}
     </div><div>

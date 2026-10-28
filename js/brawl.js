@@ -2,7 +2,7 @@
 //  Lagon Arena — logique commune d'un brawl (utilisée par le prof ET par les élèves,
 //  pour que chacun puisse rejouer exactement le même match sur son poste).
 // =====================================================================
-import { simulate, BOTS, CODE_DEPART, graineManche, pointsPourRang, BONUS_PROGRESSION, resultatEquipes } from "./engine.js";
+import { simulate, BOTS, CODE_DEPART, graineManche, pointsPourRang, BONUS_PROGRESSION, resultatEquipes, VERSION_CARTE } from "./engine.js";
 
 // Points d'une manche en équipes : chaque élève marque les points du RANG de son équipe,
 // de POINTS_EQUIPE.premier (1re équipe) à POINTS_EQUIPE.dernier (dernière), répartis régulièrement
@@ -43,13 +43,23 @@ export function codeDe(pseudo, manche, tortues) {
   return mes.length ? mes[0].code : CODE_DEPART;
 }
 
-// Une manche déjà jouée, retrouvée grâce aux scores (bots compris) : participants, nouveauté, duel.
+// La nouveauté enregistrée avec les scores porte aussi la version de la carte :
+//  « calme » = manche jouée sur la carte classique (avant les cartes aléatoires),
+//  « calme|v2 » = carte aléatoire. Ainsi les manches déjà jouées se rejouent à l'identique.
+export const nouveauteAvecVersion = (twist, version) => (version >= 2 ? `${twist}|v${version}` : twist);
+export function lireNouveaute(txt) {
+  const [twist, v] = String(txt || "calme").split("|");
+  return { twist: twist || "calme", version: v ? parseInt(v.slice(1), 10) || 1 : 1 };
+}
+
+// Une manche déjà jouée, retrouvée grâce aux scores (bots compris) : participants, nouveauté, carte, duel.
 // Cela permet à chaque élève de rejouer exactement le même match sur son poste.
 export function infosManche(scores, manche) {
   const l = scores.filter((s) => s.manche === manche);
   if (!l.length) return null;
   const equipes = l.some((s) => s.equipe > 0) ? Object.fromEntries(l.map((s) => [s.pseudo, s.equipe || 0])) : null;
-  return { manche, pseudos: l.map((s) => s.pseudo), twist: l[0].nouveaute || "calme", duel: !!l[0].duel, equipes };
+  const { twist, version } = lireNouveaute(l[0].nouveaute);
+  return { manche, pseudos: l.map((s) => s.pseudo), twist, version, duel: !!l[0].duel, equipes };
 }
 
 // Équipes de TOUS les participants d'un brawl : les élèves selon la composition choisie
@@ -76,10 +86,11 @@ export function construireJoueurs(pseudos, joueurs, tortues, manche, equipes = n
   });
 }
 
-export function lancerSimulation(salle, manche, pseudos, joueurs, tortues, twist, remplacer = null, equipes = null) {
+// version : la carte (1 = classique pour les manches déjà jouées avant, 2 = aléatoire) ; nouvelle manche = VERSION_CARTE
+export function lancerSimulation(salle, manche, pseudos, joueurs, tortues, twist, remplacer = null, equipes = null, version = VERSION_CARTE) {
   const liste = construireJoueurs(pseudos, joueurs, tortues, manche, equipes);
   if (remplacer) for (const j of liste) if (j.id === remplacer.pseudo) j.code = remplacer.code;
-  return simulate({ joueurs: liste, graine: graineManche(salle.graine, manche), twist });
+  return simulate({ joueurs: liste, graine: graineManche(salle.graine, manche), twist, version });
 }
 
 // Scores de la manche.
@@ -105,7 +116,7 @@ export function calculerScores(sim, manche, anciensScores, { coef = 1 } = {}) {
     out.push({ pseudo: r.id, nids: r.nids, rang, points: pointsPourRang(rang) * coef, bonus, equipe: 0 });
   });
   for (const r of sim.resultats.filter((r) => estBot(r.id))) out.push({ pseudo: r.id, nids: r.nids, rang: 0, points: 0, bonus: 0, equipe: r.equipe || 0 });
-  for (const o of out) { o.nouveaute = sim.twist; o.duel = horsClassement; }
+  for (const o of out) { o.nouveaute = nouveauteAvecVersion(sim.twist, sim.version || 1); o.duel = horsClassement; }
   return out;
 }
 

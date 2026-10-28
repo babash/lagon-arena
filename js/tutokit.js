@@ -79,6 +79,7 @@ export const SITUATION_BASE = {
   distance_algue: 4, distance_plage: 6, distance_requin: 9, tortue_a_cote: false, requin_derriere_tortue: false,
   mon_equipe: 1, mes_nids: 0, nids_voisine: 0, equipiere_a_cote: false, adversaire_a_cote: false, equipiere_fatiguee: false,
   requin_derriere_adversaire: false, nids_equipe: 0, nids_adversaires: 0,
+  rang_equipe: 1, equipe_en_tete: true, equipe_rivale: 2, rivale_a_cote: false,
 };
 export function unTour(compiled, sit) {
   const base = { ...SITUATION_BASE, ...sit };

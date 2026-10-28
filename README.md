@@ -86,6 +86,9 @@ Il ne remplace pas le premier tutoriel : il ajoute des primitives **cachées par
   - chaque palier montre un programme complet, les lignes à ajouter en vert ;
   - l'élève les recopie lui-même.
 - **Rappels** : sous l'éditeur, une règle importante change toutes les 15 secondes.
+- **Bac à sable** :
+  - chaque **▶ Tester** se joue dans un **nouveau lagon** ; « 🔁 Rejouer ce lagon » rejoue le même (pour vérifier une correction) ;
+  - **📊 Estimer** : la tortue joue 10, 20 ou 50 parties **sans les afficher**. L'élève obtient son **nombre d'œufs moyen**, de la pire à la meilleure partie, la part des parties sans œuf, ses captures, et la moyenne de chaque tortue d'entraînement. Ce sont toujours les mêmes lagons : l'élève compare ses versions (« Estimation précédente : 1,2 → maintenant 2,8 »).
 - **Rapport après chaque match**, avec des conseils qui donnent le code à écrire. Exemple : « Attrapée en train de manger ! Mets tout en haut : `if requin_proche():` puis `fuir()` ».
 
 ---
@@ -93,6 +96,13 @@ Il ne remplace pas le premier tutoriel : il ajoute des primitives **cachées par
 ## 2. Les règles du jeu (résumé pour l'enseignant)
 
 - Un match dure **180 tours**, soit 3 jours et 3 nuits (1 journée = 60 tours). Il commence à 8 h ; la nuit va de 19 h à 6 h.
+- **Un lagon différent à chaque partie** : le corail, les algues et les départs des tortues et des requins sont tirés au hasard ; les plages ne bougent pas. Chaque carte est vérifiée avant de jouer, pour qu'il n'y ait **aucune situation de blocage** :
+  - pas de zone fermée : une tortue peut aller partout (algues, plages), un requin peut patrouiller partout ;
+  - pas de cul-de-sac ;
+  - les tortues partent sur l'eau libre, ni trop près ni trop loin d'une plage ;
+  - les requins partent **au large** (bords du lagon), loin des plages et des tortues ; après une capture, un requin repart au départ de requin le plus éloigné de la tortue attrapée.
+
+  Le vérificateur (`node outils/verifier.mjs`) teste 3 000 cartes et 400 parties. Les tutoriels gardent la carte classique, et les manches jouées **avant** cette mise à jour se rejouent à l'identique, sur l'ancienne carte.
 - À chaque tour, le jeu appelle la fonction `tour()` de l'élève. La tortue fait **une seule action** : la première rencontrée.
 - **Pour marquer 1 point** : appeler `pondre()` **sur une plage**, **la nuit**, avec **au moins 6 d'énergie**. Pondre coûte 4 d'énergie.
 - **L'énergie** :
@@ -105,7 +115,7 @@ Il ne remplace pas le premier tutoriel : il ajoute des primitives **cachées par
 - **Les sacs plastique** dérivent, coulent au bout de 30 à 60 tours, puis réapparaissent ailleurs.
 - **Le soleil** : le jour, une tortue qui reste sur la plage perd 1 ⚡ de plus tous les 3 tours.
 - **Pousser** (primitive avancée) : `pousser()` coûte 2 ⚡ et pousse une tortue voisine d'une case. Si un requin attend derrière elle, elle est attrapée.
-- **Les requins** voient à 4 cases et chassent la tortue la plus proche. Une tortue attrapée **perd 1 nid** (si elle en a), retourne au départ et reste bloquée 5 tours. Deux refuges :
+- **Les requins** voient à 4 cases et chassent la tortue la plus proche. Une tortue attrapée **perd 1 nid** (si elle en a), retourne au départ et reste bloquée 5 tours. Deux refuges (`fuir()` choisit la plage en premier) :
   - **la plage**, où les requins ne vont jamais ;
   - **les algues** : la tortue y est invisible… **sauf quand elle mange**.
 
@@ -131,7 +141,9 @@ L'enseignant peut lancer une manche **de 2 à 6 équipes** (panneau « Préparer
 | Capteurs d'équipe | Actions d'équipe |
 |---|---|
 | `mon_equipe()` : numéro de l'équipe (1 Bleue, 2 Rouge, 3 Verte…) | `donner()` : +3 ⚡ à une équipière collée |
-| `mes_nids()`, `nids_voisine()`, `nids_equipe()`, `nids_adversaires()` | `aller_vers_equipiere()` : rejoindre l'équipière la plus proche |
+| `mes_nids()`, `nids_voisine()`, `nids_equipe()` | `aller_vers_equipiere()` : rejoindre l'équipière la plus proche |
+| `rang_equipe()` : place de mon équipe en ce moment ; `equipe_en_tete()` | `pousser()` (avancé) : jamais une équipière, l'équipe rivale en premier |
+| `equipe_rivale()` : la meilleure des **autres** équipes ; `nids_adversaires()` : ses nids ; `rivale_a_cote()` | |
 | `equipiere_a_cote()`, `adversaire_a_cote()`, `equipiere_fatiguee()` (moins de 6 ⚡) | |
 | `requin_derriere_adversaire()` : une adversaire collée peut être poussée sur un requin | |
 
@@ -187,10 +199,10 @@ Ces primitives apparaissent automatiquement dans l'autocomplétion et la boîte 
 
 Avant chaque manche (dans la salle d'attente, puis sous les résultats de la manche précédente), le panneau **⚙️ Préparer la manche** permet de tout régler :
 
-- **Raccourcis** : 🔁 Rematch (manche suivante classique), 👥 En équipes, ⛈️ Duel des champions, 🏋️ Entraînement (hors classement) ;
+- **Raccourcis** : 🔁 Rematch (manche suivante classique), 👥 En équipes, ⛈️ Duel des champions, 🏋️ Entraînement (hors classement), ♾️ Manche longue ;
 - **titre** de la manche (affiché aux élèves et sur l'écran projeté) ;
 - **nouveauté** (lagon calme, plastique, requins affamés, nuits courtes, finale, tempête) ;
-- **durée de programmation** ;
+- **durée de programmation**, ou **♾️ temps illimité** (voir « Manche longue » ci-dessous) ;
 - **points** : normaux, doubles, ou hors classement ;
 - **nombre de tortues minimum** (complété par des 🤖, 0 pour aucune) ;
 - **qui joue** : toute la classe, ou seulement les élèves cochés ;
@@ -202,6 +214,13 @@ Avant chaque manche (dans la salle d'attente, puis sous les résultats de la man
 
 Les réglages sont **publiés tout de suite** : les élèves voient la prochaine manche (et leur équipe) pendant qu'ils préparent leur tortue.
 
+### Manche longue : continuer à la maison
+
+- Cochez **♾️ temps illimité** (ou le raccourci ♾️ Manche longue) : la manche reste ouverte, sans chrono, **jusqu'à ce que vous lanciez le brawl**, par exemple au cours suivant. Les élèves programment, testent et renvoient leur tortue quand ils veulent, y compris depuis chez eux. Au moment voulu, « ⏱️ Chrono de 5 min » remet un compte à rebours, ou lancez directement le brawl.
+- **Code de session** : chaque élève a un code de 8 caractères (ex. `R8GS-Z4AN`), visible avec le bouton **🏠 Mon code de session** de sa page. Sur un autre ordinateur, il tape la salle, son pseudo, puis ce code dans « 🏠 Tu reviens depuis un autre ordinateur ? ». Il retrouve sa dernière tortue envoyée et ses points. Le bouton **🔑 Codes de session** de la salle vous donne la liste (imprimable), si un élève a oublié le sien.
+- **Vous aussi, depuis un autre ordinateur** : le bouton **🏠 Autre ordinateur** de la salle donne un **lien enseignant** à ouvrir chez vous (ne le donnez pas aux élèves).
+- Une salle est gardée **60 jours** après sa dernière utilisation.
+
 Conseils :
 
 - À 0 au chrono, les tortues modifiées mais non envoyées partent automatiquement (si le code est correct).
@@ -210,7 +229,7 @@ Conseils :
 - Le bouton **◧ Panneau** masque la colonne de gauche. Elle est masquée automatiquement pendant le brawl. **⛶ Plein écran** sert pour le vidéoprojecteur.
 - La salle est pilotée **depuis le navigateur qui l'a créée** : le jeton enseignant y est enregistré. On peut la reprendre plus tard depuis « Mes salles ».
 - **Arriver en cours de partie** : un élève peut rejoindre la salle à tout moment avec le code. L'écran projeté l'annonce (« 🆕 … rejoint la partie »), et sa tortue joue au brawl suivant.
-- **Changer d'ordinateur** : si un élève doit continuer sur un autre poste, son pseudo est refusé (il est protégé). Cliquez sur 🔓 à côté de son nom : il pourra le reprendre, avec ses tortues et ses points.
+- **Changer d'ordinateur** : l'élève se reconnecte avec son **code de session** (voir ci-dessus). S'il l'a perdu, cliquez sur 🔓 à côté de son nom : il pourra reprendre son pseudo sans code, avec ses tortues et ses points.
 - Le bouton ✕ retire un élève et ses tortues (pseudo inapproprié, doublon). Faites-le de préférence avant le premier brawl.
 
 ---
@@ -222,7 +241,7 @@ Conseils :
 1. Créez un compte sur <https://supabase.com>, puis **New project**.
    - Choisissez une **région européenne** (par exemple *West EU (Paris)* ou *Central EU (Frankfurt)*), ce qui est préférable pour le RGPD.
    - Le mot de passe de la base ne servira pas ici.
-2. Ouvrez **SQL Editor → New query**. Copiez-collez **tout** le fichier `supabase.sql`, puis cliquez sur **Run**. Le script peut être relancé sans risque. **Relancez-le après chaque mise à jour du site** (la version « équipes » ajoute par exemple la colonne `config` des salles et la fonction `definir_config`).
+2. Ouvrez **SQL Editor → New query**. Copiez-collez **tout** le fichier `supabase.sql`, puis cliquez sur **Run**. Le script peut être relancé sans risque. **Relancez-le après chaque mise à jour du site** (la version « équipes » ajoute par exemple la colonne `config` des salles ; la version « manches longues » ajoute les codes de session et garde les salles 60 jours). Les salles et les scores existants sont conservés.
 > ✅ **Déjà fait pour votre projet** : `js/config.js` contient l'URL et la clé de votre projet Supabase. Il reste seulement à exécuter `supabase.sql` (point 2).
 > ⚠️ **À refaire après chaque mise à jour du site** : le script peut être relancé sans risque. La dernière version ajoute le déblocage de pseudo 🔓.
 > Pour vérifier : la page d'accueil du site doit afficher « 🟢 Connecté à la base de données de la classe ».
@@ -255,7 +274,7 @@ Conseils :
 ### Bon à savoir
 
 - **Pause du projet gratuit** : un projet Supabase gratuit est mis en pause après environ une semaine sans activité. Avant le cours, ouvrez le tableau de bord Supabase et cliquez sur **Restore project** si besoin.
-- **Ménage automatique** : les salles de plus de 7 jours sont supprimées automatiquement, avec leurs joueurs, leurs tortues et leurs scores.
+- **Ménage automatique** : les salles inutilisées depuis 60 jours sont supprimées automatiquement, avec leurs joueurs, leurs tortues et leurs scores.
 - **Faible charge** : la base ne stocke que du texte (le code des tortues et les scores). La simulation est **déterministe** : chaque navigateur recalcule lui-même le match à partir des codes. 20 élèves interrogent la base toutes les 2 secondes, ce qui reste très loin des limites de l'offre gratuite.
 - **Sécurité** :
   - le code des autres élèves est invisible pendant la phase de programmation, et devient lisible après le brawl ;

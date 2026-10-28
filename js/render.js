@@ -1,18 +1,19 @@
 // =====================================================================
 //  Lagon Arena — dessin du lagon (canvas) et lecteur de match
 // =====================================================================
-import { MAP, W, H, tileAt, rgbaEquipe } from "./engine.js";
+import { MAP, W, H, rgbaEquipe } from "./engine.js";
 
 const TAU = Math.PI * 2;
 function hash(x, y, s = 0) { let h = (x * 374761393 + y * 668265263 + s * 1442695041) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
 const lerp = (a, b, u) => a + (b - a) * u;
+const TUILES = { "#": "corail", P: "plage" };   // tout le reste est de l'eau
 
 // ---------------------------------------------------------------------
 export class Lagon {
   constructor(canvas, { noms = true } = {}) {
     this.canvas = canvas; this.ctx = canvas.getContext("2d"); this.noms = noms;
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
-    this.cell = 0; this.bg = null;
+    this.cell = 0; this.bg = null; this.carte = MAP;   // la carte du match affiché (chaque partie a la sienne)
     this.resize();
     this._ro = new ResizeObserver(() => { const old = this.cell; this.resize(); if (this.cell !== old && this.last) this.draw(...this.last); });
     this._ro.observe(canvas.parentElement);
@@ -28,6 +29,7 @@ export class Lagon {
 
   // ---------- décor fixe ----------
   fond() {
+    const L = this.carte, tileAt = (x, y) => TUILES[L[y][x]] || "eau";
     const c = this.cell, off = document.createElement("canvas");
     off.width = this.canvas.width; off.height = this.canvas.height;
     const g = off.getContext("2d"); g.scale(this.dpr, this.dpr);
@@ -136,6 +138,8 @@ export class Lagon {
   // ---------- image complète à l'instant f (nombre de tours, à virgule) ----------
   draw(sim, f, opts = {}) {
     this.last = [sim, f, opts];
+    const carte = sim.carte || MAP;
+    if (carte !== this.carte) { this.carte = carte; this.bg = this.fond(); }
     const g = this.ctx, c = this.cell, d = this.dpr;
     const n = sim.frames.length - 1;
     f = Math.max(0, Math.min(n, f));

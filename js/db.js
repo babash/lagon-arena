@@ -56,6 +56,9 @@ class Supabase {
   rejoindre(code, pseudo, jeton, couleur) { return this.rpc("rejoindre", { p_salle: code, p_pseudo: pseudo, p_jeton: jeton, p_couleur: couleur }); }
   deposer(code, pseudo, jeton, manche, src) { return this.rpc("deposer_tortue", { p_salle: code, p_pseudo: pseudo, p_jeton: jeton, p_manche: manche, p_code: src }); }
   depots(code, manche) { return this.rpc("etat_depots", { p_salle: code, p_manche: manche }); }
+  changerJeton(code, pseudo, ancien, nouveau) { return this.rpc("changer_jeton", { p_salle: code, p_pseudo: pseudo, p_ancien: ancien, p_nouveau: nouveau }); }
+  async maTortue(code, pseudo, jeton) { const r = await this.rpc("ma_tortue", { p_salle: code, p_pseudo: pseudo, p_jeton: jeton }); return (r && r[0]) || null; }
+  codesSession(code, secret) { return this.rpc("codes_session", { p_code: code, p_secret: secret }); }
   tortues(code) { return this.get("tortues", `salle=eq.${encodeURIComponent(code)}&select=pseudo,manche,code`); }
   enregistrerScores(code, secret, manche, scores) { return this.rpc("enregistrer_scores", { p_code: code, p_secret: secret, p_manche: manche, p_scores: scores }); }
   scores(code) { return this.get("scores", `salle=eq.${encodeURIComponent(code)}&select=*&order=manche,rang`); }
@@ -124,6 +127,25 @@ class Demo {
     if (t) { t.code = src; t.depose_le = now; } else s.tortues.push({ salle: code, pseudo, manche, code: src, depose_le: now });
     this.save(s);
     return now;
+  }
+  async changerJeton(code, pseudo, ancien, nouveau) {
+    await this.pause();
+    const s = this.load();
+    if (!s.jetons[code] || s.jetons[code][pseudo] !== ancien) throw new Error("Joueur inconnu : reconnecte-toi à la salle.");
+    s.jetons[code][pseudo] = nouveau; this.save(s);
+  }
+  async codesSession(code, secret) {
+    await this.pause();
+    const s = this.load(); this.verifProf(s, code, secret);
+    return Object.entries(s.jetons[code] || {}).map(([pseudo, j]) => ({ pseudo, code: /^perso-[A-Z0-9]{8}-lagon$/.test(j || "") ? j.slice(6, 14) : null }))
+      .sort((a, b) => a.pseudo.localeCompare(b.pseudo));
+  }
+  async maTortue(code, pseudo, jeton) {
+    await this.pause();
+    const s = this.load();
+    if (!s.jetons[code] || s.jetons[code][pseudo] !== jeton) throw new Error("Joueur inconnu : reconnecte-toi à la salle.");
+    const l = s.tortues.filter((t) => t.salle === code && t.pseudo === pseudo).sort((a, b) => b.manche - a.manche);
+    return l.length ? { manche: l[0].manche, code: l[0].code, depose_le: l[0].depose_le } : null;
   }
   async depots(code, manche) { await this.pause(); return this.load().tortues.filter((t) => t.salle === code && t.manche === manche).map(({ pseudo, depose_le }) => ({ pseudo, depose_le })); }
   async tortues(code) {

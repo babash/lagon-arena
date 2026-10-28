@@ -113,8 +113,8 @@ declare
   lettres constant text := 'ABCDEFGHJKLMNPQRSTUVWXYZ';
   v_code text; v_secret text; i int;
 begin
-  -- ménage : les salles de plus de 7 jours sont supprimées
-  delete from salles where cree_le < now() - interval '7 days';
+  -- ménage : les salles inutilisées depuis 60 jours sont supprimées (séances longues : plusieurs semaines possibles)
+  delete from salles where greatest(cree_le, maj) < now() - interval '60 days';
   loop
     v_code := '';
     for i in 1..4 loop
@@ -225,6 +225,37 @@ begin
   return now();
 end $$;
 
+-- l'élève remplace son jeton (ex. : par celui de son « code perso », pour continuer sur un autre ordinateur)
+create or replace function public.changer_jeton(p_salle text, p_pseudo text, p_ancien text, p_nouveau text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if length(coalesce(p_nouveau, '')) < 16 then raise exception 'Jeton invalide.'; end if;
+  update joueurs_secret set jeton = p_nouveau where salle = upper(p_salle) and pseudo = p_pseudo and jeton = p_ancien;
+  if not found then raise exception 'Joueur inconnu : reconnecte-toi à la salle.'; end if;
+end $$;
+
+-- l'enseignant voit le code de session de chaque élève (pour le lui redonner s'il l'a oublié)
+create or replace function public.codes_session(p_code text, p_secret text)
+returns table (pseudo text, code text)
+language plpgsql security definer set search_path = public as $$
+begin
+  perform verifier_prof(p_code, p_secret);
+  return query select j.pseudo, case when j.jeton ~ '^perso-[A-Z0-9]{8}-lagon$' then substr(j.jeton, 7, 8) else null end
+    from joueurs_secret j where j.salle = p_code order by j.pseudo;
+end $$;
+
+-- la dernière tortue envoyée par l'élève (même celle de la manche en cours) : pour la retrouver sur un autre ordinateur
+create or replace function public.ma_tortue(p_salle text, p_pseudo text, p_jeton text)
+returns table (manche int, code text, depose_le timestamptz)
+language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from joueurs_secret j where j.salle = p_salle and j.pseudo = p_pseudo and j.jeton = p_jeton) then
+    raise exception 'Joueur inconnu : reconnecte-toi à la salle.';
+  end if;
+  return query select t.manche, t.code, t.depose_le from tortues t
+    where t.salle = p_salle and t.pseudo = p_pseudo order by t.manche desc limit 1;
+end $$;
+
 -- qui a verrouillé sa tortue (sans montrer le code)
 create or replace function public.etat_depots(p_salle text, p_manche int)
 returns table (pseudo text, depose_le timestamptz)
@@ -251,5 +282,6 @@ grant execute on function public.heure_serveur(), public.creer_salle(),
   public.retirer_joueur(text, text, text), public.liberer_pseudo(text, text, text), public.definir_config(text, text, jsonb),
   public.rejoindre(text, text, text, text),
   public.deposer_tortue(text, text, text, int, text), public.etat_depots(text, int),
+  public.changer_jeton(text, text, text, text), public.ma_tortue(text, text, text), public.codes_session(text, text),
   public.enregistrer_scores(text, text, int, jsonb)
 to anon, authenticated;

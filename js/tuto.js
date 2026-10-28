@@ -21,7 +21,7 @@ const GRAINE_MISSION = 7;
 let demo = null;
 const COUL = ["#ff7b5c", "#ffc93c", "#4363d8", "#f032e6", "#3cb44b"];
 const matchDemo = () => demo ||= simulate({
-  joueurs: BOTS.map((b, i) => ({ id: b.nom, nom: b.nom, couleur: COUL[i], code: b.code })), graine: 2024, twist: "calme",
+  joueurs: BOTS.map((b, i) => ({ id: b.nom, nom: b.nom, couleur: COUL[i], code: b.code })), graine: 2024, twist: "calme", version: 1,   // tutoriel : la carte classique (exemples choisis à l'avance)
 });
 
 

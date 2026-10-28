@@ -39,6 +39,13 @@
         <input type="text" id="pseudo" maxlength="14" placeholder="ex. Tortue_Zen" autocomplete="off" required>
       </label>
       <div class="champ">Couleur de ta tortue <div class="palette" id="palette"></div></div>
+      <details class="reprise" id="reprise">
+        <summary>🏠 Tu reviens depuis un autre ordinateur (à la maison…) ?</summary>
+        <label class="champ"><span>Ton <b>code de session</b> <span class="petit muted">(dans ta page élève : bouton 🏠 Mon code de session)</span></span>
+          <input type="text" id="codeperso" maxlength="12" placeholder="ex. K7PQ-2XMA" autocomplete="off" class="input-code" spellcheck="false">
+        </label>
+        <p class="petit muted">Avec la même salle, le même pseudo et ton code de session, tu retrouves ta tortue et tes points.</p>
+      </details>
       <button class="btn big vert" type="submit">Plonger dans le lagon 🌊</button>
       <div id="erreur" class="msg err cache"></div>
     </form>
@@ -53,7 +60,7 @@
 <script type="module">
 import { db, MODE } from "./js/db.js";
 import { COULEURS } from "./js/engine.js";
-import { $, el, store, jeton } from "./js/common.js";
+import { $, el, store, nouveauCodePerso, normaliserCode, codeValide, jetonDuCode, cleJeton, cleCodePerso } from "./js/common.js";
 
 if (MODE === "db") {
   $("#mode").textContent = "⏳ Connexion à la base de données…";
@@ -74,18 +81,35 @@ const der = store.get("lagon:derniere");
 if (der) { $("#salle").value = der.salle; $("#pseudo").value = der.pseudo; }
 const q = new URLSearchParams(location.search);
 if (q.get("salle")) $("#salle").value = q.get("salle").toUpperCase();
+if (q.get("pseudo")) $("#pseudo").value = q.get("pseudo");
+// lien personnel (…#code=K7PQ2XMA) : le code de session est déjà rempli
+const h = new URLSearchParams(location.hash.slice(1));
+if (h.get("code")) { $("#codeperso").value = h.get("code"); $("#reprise").open = true; history.replaceState(null, "", location.pathname + location.search); }
 
 $("#rejoindre").addEventListener("submit", async (e) => {
   e.preventDefault();
   const salle = $("#salle").value.trim().toUpperCase(), pseudo = $("#pseudo").value.trim();
-  const cle = `lagon:jeton:${salle}:${pseudo}`;
-  const j = store.get(cle) || jeton();
+  const saisi = normaliserCode($("#codeperso").value);
+  const erreur = (t) => { $("#erreur").innerHTML = t; $("#erreur").classList.remove("cache"); };
   $("#erreur").classList.add("cache");
+  if (saisi && !codeValide(saisi)) return erreur("Code de session incorrect : 8 lettres ou chiffres, par exemple <b>K7PQ-2XMA</b>.");
+  // le jeton : celui du code de session tapé, sinon celui déjà connu sur ce poste, sinon un nouveau code de session
+  let code = saisi || store.get(cleCodePerso(salle, pseudo)), j;
+  if (code) j = jetonDuCode(code);
+  else if (store.get(cleJeton(salle, pseudo))) j = store.get(cleJeton(salle, pseudo));   // (ancien jeton, sans code perso)
+  else { code = nouveauCodePerso(); j = jetonDuCode(code); }
   try {
     const p = await db.rejoindre(salle, pseudo, j, couleur);
-    store.set(cle, j); store.set("lagon:couleur", couleur); store.set("lagon:derniere", { salle, pseudo: p });
+    store.set(cleJeton(salle, p), j); if (code) store.set(cleCodePerso(salle, p), code);
+    store.set("lagon:couleur", couleur); store.set("lagon:derniere", { salle, pseudo: p });
     location.href = `eleve.html?salle=${encodeURIComponent(salle)}&pseudo=${encodeURIComponent(p)}`;
-  } catch (err) { $("#erreur").textContent = err.message; $("#erreur").classList.remove("cache"); }
+  } catch (err) {
+    if (/déjà pris/.test(err.message)) {
+      erreur(saisi ? "Ce code de session ne correspond pas à ce pseudo. Vérifie la salle, le pseudo et le code (ou demande à ton enseignant de débloquer ton pseudo)."
+        : "Ce pseudo est déjà pris dans cette salle. <b>Si c'est le tien</b> (tu viens d'un autre ordinateur), ouvre « 🏠 Tu reviens depuis un autre ordinateur ? » et tape ton <b>code de session</b>. Sinon, choisis un autre pseudo.");
+      if (!saisi) $("#reprise").open = true;
+    } else erreur(err.message);
+  }
 });
 </script>
 </body>

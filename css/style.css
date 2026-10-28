@@ -570,3 +570,39 @@ span.eq-nom { cursor: default; }
 .carte-manche { background: #fffaf0; border: 2px dashed var(--sable-fonce); border-radius: 12px; padding: 8px 12px; margin: 4px 0 12px; font-weight: 700; }
 .mon-equipe { border-radius: 10px; padding: 8px 12px; margin-top: 6px; background: var(--lagon-pale); font-weight: 600; }
 .mon-equipe[style] { background: var(--eq-fond); border-left: 5px solid var(--eq); }
+
+/* ---------- bac à sable : estimation sur plusieurs parties ---------- */
+.estim { margin-top: 14px; padding-top: 12px; border-top: 2px dashed var(--lagon-pale, #d8eef2); }
+.estim h3 { margin: 0 0 4px; }
+.estim select { font: inherit; border-radius: 10px; padding: 4px 8px; border: 2px solid #d5e2ea; }
+.estim .jauge { margin-top: 10px; }
+.estim-moy { margin-top: 10px; font-family: var(--titre); font-size: 1.25rem; color: var(--ocean-800); }
+.estim-moy b { font-size: 2.4rem; color: var(--corail, #ff7b5c); margin-right: 4px; }
+.estim-avant { font-weight: 800; background: #fffaf0; border-radius: 10px; padding: 6px 10px; }
+.histo { display: flex; gap: 6px; align-items: flex-end; margin: 8px 0 10px; min-height: 90px; }
+.histo > div { display: flex; flex-direction: column; align-items: center; min-width: 34px; }
+.histo span { display: block; width: 26px; background: var(--lagon, #2bb3c3); border-radius: 6px 6px 0 0; min-height: 2px; }
+.histo small { font-weight: 700; font-size: .75rem; }
+.estim table.scores tr.moi td { font-weight: 800; background: #fff3d6; }
+
+/* ---------- séances longues : code perso, lien enseignant ---------- */
+.pill-btn { cursor: pointer; border: 0; font: inherit; font-weight: 800; background: var(--or, #ffc93c); color: var(--encre, #10233a); }
+.pill-btn:hover { filter: brightness(1.05); }
+.code-perso { font-family: "Fira Code", monospace; font-size: 2.4rem; font-weight: 700; letter-spacing: .12em; text-align: center;
+  background: #fffaf0; border: 3px dashed var(--or, #ffc93c); border-radius: 14px; padding: 10px; margin: 10px auto; max-width: 340px; user-select: all; }
+.etapes-code { text-align: left; line-height: 1.7; }
+.gros-code { font-family: "Fira Code", monospace; letter-spacing: .08em; }
+.reprise { margin: 4px 0 10px; }
+.reprise summary { cursor: pointer; font-weight: 800; color: var(--ocean-800); }
+.reprise[open] summary { margin-bottom: 8px; }
+.lien-prof { word-break: break-all; font-family: "Fira Code", monospace; font-size: .8rem; background: #f4f7f9; border-radius: 8px; padding: 6px 8px; }
+.illimite { display: flex; align-items: center; gap: 6px; font-weight: 700; margin-top: 4px; font-size: .9rem; }
+.illimite input { width: auto; }
+.overlay .boite.boite-large { max-width: 640px; max-height: 88vh; overflow: auto; }
+.codes-table { margin: 10px auto; }
+.codes-table .code-cell { font-family: "Fira Code", monospace; font-weight: 700; letter-spacing: .08em; }
+@media print {
+  body.impr-codes > *:not(.overlay) { display: none !important; }
+  body.impr-codes .overlay { position: static; background: none; }
+  body.impr-codes .overlay button { display: none; }
+}

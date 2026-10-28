@@ -48,13 +48,22 @@
       </div>
       <div class="card">
         <h2>🧪 Bac à sable</h2>
-        <p class="petit muted" style="margin-top:0">Ta tortue contre les 5 tortues d'entraînement 🤖, <span id="sb-twist"></span>. Ça ne compte pas pour le classement : teste autant que tu veux !</p>
+        <p class="petit muted" style="margin-top:0">Ta tortue contre les 5 tortues d'entraînement 🤖, <span id="sb-twist"></span>. Chaque <b>▶ Tester</b> se joue dans un <b>nouveau lagon</b> (corail, algues, départs tirés au hasard). Ça ne compte pas pour le classement : teste autant que tu veux !</p>
         <div class="row">
-          <button class="btn small ghost" id="autre">🎲 Autre lagon</button>
+          <button class="btn small ghost" id="autre" disabled title="Rejouer le dernier test dans le même lagon (pour vérifier une correction)">🔁 Rejouer ce lagon</button>
           <select id="sel-twist" class="libre-only"></select>
         </div>
         <div id="sb-vue" style="margin-top:10px"><div class="vide-vue"><div>Clique sur <b>▶ Tester</b> pour lancer ta tortue dans le lagon.</div></div></div>
         <div id="sb-res"></div>
+        <div class="estim">
+          <h3>📊 Combien d'œufs en moyenne ?</h3>
+          <p class="petit muted">Une seule partie, c'est beaucoup de chance (un départ près des algues, un requin tout près…). Ici, ta tortue joue <b>plusieurs parties sans les afficher</b> : tu obtiens le nombre d'œufs qu'elle pond <b>en moyenne</b>. Ce sont toujours les mêmes lagons : tu peux comparer tes versions.</p>
+          <div class="row">
+            <button class="btn small" id="estimer">📊 Estimer</button>
+            <select id="nb-estim"><option value="10">sur 10 parties</option><option value="20" selected>sur 20 parties</option><option value="50">sur 50 parties</option></select>
+          </div>
+          <div id="estim-res"></div>
+        </div>
       </div>
     </div>
   </section>

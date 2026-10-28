@@ -9,13 +9,15 @@ import { coupDePouceHTML } from "./pouce.js";
 import { RAPPELS, estAvance, setAvance, setEquipe, estEquipe } from "./primitives.js";
 import { MatchViewer, rapportHTML, tableauMatch } from "./viewer.js";
 import { lancerSimulation, codeDe, estBot, infosManche, classementCumule, baremeEquipes } from "./brawl.js";
-import { $, $$, el, esc, toast, store, mmss, AIDE_HTML, twistCarte, activerCopie, cartesEquipesHTML, nomEquipe, placeTxt } from "./common.js";
+import { $, $$, el, esc, toast, store, mmss, AIDE_HTML, twistCarte, activerCopie, cartesEquipesHTML, nomEquipe, placeTxt,
+  copier, nouveauCodePerso, jetonDuCode, codeLisible, cleJeton, cleCodePerso } from "./common.js";
 
 const q = new URLSearchParams(location.search);
 const SALLE = (q.get("salle") || "").toUpperCase();
 const LIBRE = q.has("libre") || !SALLE;
 const PSEUDO = q.get("pseudo") || "";
-const JETON = LIBRE ? null : store.get(`lagon:jeton:${SALLE}:${PSEUDO}`);
+let JETON = LIBRE ? null : store.get(cleJeton(SALLE, PSEUDO));
+let CODE_PERSO = LIBRE ? null : store.get(cleCodePerso(SALLE, PSEUDO));
 if (!LIBRE && !JETON) location.replace(`index.html?salle=${encodeURIComponent(SALLE)}`);
 
 document.body.classList.add(LIBRE ? "mode-libre" : "mode-salle");
@@ -91,7 +93,7 @@ $("#reinit").addEventListener("click", () => {
 // ---------------------------------------------------------------------
 //  Bac à sable : ta tortue contre les 5 tortues d'entraînement
 // ---------------------------------------------------------------------
-let salle = null, graineSB = store.get("lagon:graineSB", 1234), viewerSB = null;
+let salle = null, graineSB = null, viewerSB = null;
 let twistLibre = store.get("lagon:twistLibre", "calme");
 const twistActuel = () => (LIBRE ? twistLibre : salle && salle.manche > 0 ? salle.nouveaute : "calme");
 const selT = $("#sel-twist");
@@ -100,9 +102,8 @@ selT.addEventListener("change", () => { twistLibre = selT.value; store.set("lago
 function majTwistSB() { const T = TWISTS[twistActuel()]; $("#sb-twist").textContent = `nouveauté : ${T.icone} ${T.nom}`; }
 majTwistSB();
 
-function tester() {
-  const c = verifier();
-  if (!c.ok) { toast("Corrige d'abord l'erreur de ton code (en rouge).", "err"); return; }
+// les tortues du bac à sable : la mienne + les tortues d'entraînement (+ la Pirate en mode avancé)
+function joueursSB() {
   const bots = estAvance() ? [...BOTS, BOT_PIRATE] : BOTS;   // en mode avancé, la Pirate pousse les autres tortues !
   const joueurs = [{ id: "moi", nom: LIBRE ? "Ta tortue" : PSEUDO, couleur, code: ed.value },
     ...bots.map((b, i) => ({ id: "Bot-" + b.nom, nom: b.nom + " 🤖", couleur: BOT_COUL[i % BOT_COUL.length], code: b.code }))];
@@ -111,6 +112,15 @@ function tester() {
     const nb = Math.max(2, c.nbEquipes || 2), mienne = (c.equipes || {})[PSEUDO] || 1;
     joueurs.forEach((j, i) => { j.equipe = ((mienne - 1 + i) % nb) + 1; });
   }
+  return joueurs;
+}
+// ▶ Tester : un NOUVEAU lagon à chaque fois ; « Rejouer ce lagon » garde le même (pour vérifier une correction)
+function tester(memeLagon = false) {
+  const c = verifier();
+  if (!c.ok) { toast("Corrige d'abord l'erreur de ton code (en rouge).", "err"); return; }
+  if (!memeLagon || graineSB == null) graineSB = 1 + Math.floor(Math.random() * 2e9);
+  $("#autre").disabled = false;
+  const joueurs = joueursSB();
   const sim = simulate({ joueurs, graine: graineSB, twist: twistActuel() });
   if (viewerSB) viewerSB.destroy();
   viewerSB = new MatchViewer($("#sb-vue"), { sim, focus: "moi", code: ed.value, vitesse: 5 });
@@ -118,9 +128,67 @@ function tester() {
   $("#sb-res").innerHTML = `<div class="sep"></div><h3>Résultat : ${r.nids} nid${r.nids > 1 ? "s" : ""} · ${r.rang}<sup>${r.rang > 1 ? "e" : "re"}</sup> sur ${sim.resultats.length}</h3>` +
     rapportHTML(sim, "moi") + `<details><summary>Classement du test</summary>${tableauMatch(sim, "moi", (id) => id.startsWith("Bot-"))}</details>`;
 }
-$("#tester").addEventListener("click", tester);
+$("#tester").addEventListener("click", () => tester());
 $("#rejouer").addEventListener("click", () => { onglet("res"); const b = $("#etsi"); if (b) { b.click(); $("#etsi-res").scrollIntoView({ behavior: "smooth", block: "center" }); } });
-$("#autre").addEventListener("click", () => { graineSB = 1 + Math.floor(Math.random() * 1e6); store.set("lagon:graineSB", graineSB); tester(); });
+$("#autre").addEventListener("click", () => tester(true));
+
+// ---------------------------------------------------------------------
+//  Estimation : le nombre d'œufs MOYEN sur plusieurs parties (sans les afficher, en mode léger).
+//  Toujours les mêmes lagons (graines fixes) : on peut comparer deux versions de son code.
+// ---------------------------------------------------------------------
+let estimEnCours = false;
+const cleEstim = "lagon:estimations";
+const virgule = (x, d = 1) => x.toFixed(d).replace(".", ",");
+async function estimer() {
+  if (estimEnCours) return;
+  const c = verifier();
+  if (!c.ok) { toast("Corrige d'abord l'erreur de ton code (en rouge).", "err"); return; }
+  const n = parseInt($("#nb-estim").value, 10) || 20, twist = twistActuel(), code = ed.value;
+  const joueurs = joueursSB(), box = $("#estim-res"), btn = $("#estimer");
+  estimEnCours = true; btn.disabled = true;
+  box.innerHTML = `<div class="jauge"><div id="estim-jg" style="width:0"></div></div><p class="petit muted" id="estim-txt">Partie 0 / ${n}…</p>`;
+  const par = {};   // id -> { nids:[], captures, plastiques, epuisee }
+  for (const j of joueurs) par[j.id] = { nom: j.nom, nids: [], captures: 0, plastiques: 0, epuisee: 0 };
+  const t0 = performance.now();
+  for (let i = 0; i < n; i++) {
+    const sim = simulate({ joueurs, graine: 900001 + i * 7919, twist, leger: true });
+    for (const t of sim.tortues) {
+      const p = par[t.id]; p.nids.push(t.nids);
+      p.captures += t.stats.captures.length; p.plastiques += t.stats.plastiques.length; p.epuisee += t.stats.epuisee.length;
+    }
+    if (performance.now() - t0 > 40 * (i + 1) || i % 2 === 1) {   // on laisse la page respirer
+      const jg = $("#estim-jg"); if (jg) jg.style.width = (100 * (i + 1) / n) + "%";
+      const tx = $("#estim-txt"); if (tx) tx.textContent = `Partie ${i + 1} / ${n}…`;
+      await new Promise((r) => setTimeout(r, 0));
+    }
+  }
+  estimEnCours = false; btn.disabled = false;
+  const moy = (l) => l.reduce((a, b) => a + b, 0) / l.length;
+  const moi = par.moi, m = moy(moi.nids);
+  const max = Math.max(...moi.nids), zero = moi.nids.filter((x) => x === 0).length;
+  const histo = Array.from({ length: max + 1 }, (_, k) => moi.nids.filter((x) => x === k).length);
+  const hmax = Math.max(...histo);
+  const bots = Object.entries(par).filter(([id]) => id !== "moi").map(([, p]) => ({ nom: p.nom, m: moy(p.nids) }));
+  const classes = [...bots, { nom: "Ta tortue", m, moi: true }].sort((a, b) => b.m - a.m);
+  // mémoire : les estimations précédentes (même nouveauté, même nombre de parties)
+  const hist = store.get(cleEstim, []).filter((h) => h.twist === twist && h.n === n && h.salle === (SALLE || ""));
+  const avant = hist[hist.length - 1];
+  const memeCode = avant && avant.code === code;
+  if (!memeCode) { hist.push({ twist, n, salle: SALLE || "", m, code, quand: Date.now() }); }
+  const tout = store.get(cleEstim, []).filter((h) => !(h.twist === twist && h.n === n && h.salle === (SALLE || ""))).concat(hist.slice(-6));
+  store.set(cleEstim, tout.slice(-30));
+  const T = TWISTS[twist] || TWISTS.calme;
+  box.innerHTML = `<div class="estim-moy"><b>${virgule(m)}</b> œuf${m >= 2 ? "s" : ""} par partie en moyenne</div>
+    <p class="petit">Sur ${n} lagons (${T.icone} ${esc(T.nom)}) : entre ${Math.min(...moi.nids)} et ${max} œufs · ${Math.round(100 * zero / n)} % des parties sans œuf ·
+      🦈 ${virgule(moi.captures / n)} capture par partie · 🛍️ ${virgule(moi.plastiques / n)} sac · 😵 ${virgule(moi.epuisee / n)} épuisement.</p>
+    ${avant && !memeCode ? `<p class="estim-avant">${m > avant.m + 0.05 ? "📈" : m < avant.m - 0.05 ? "📉" : "➖"} Estimation précédente : ${virgule(avant.m)} → maintenant <b>${virgule(m)}</b></p>` : ""}
+    ${hist.length > 1 ? `<p class="petit muted">Tes estimations : ${hist.slice(-6).map((h) => virgule(h.m)).join(" → ")}</p>` : ""}
+    <div class="histo" title="Combien de parties avec 0, 1, 2… œufs">${histo.map((v, k) => `<div><span style="height:${hmax ? Math.round(56 * v / hmax) : 0}px"></span><small>${k} 🥚</small><small class="muted">${v}×</small></div>`).join("")}</div>
+    <table class="scores petit"><tr><th>#</th><th>Tortue</th><th class="num">🥚 moyenne</th></tr>
+      ${classes.map((x, i) => `<tr class="${x.moi ? "moi" : "bot"}"><td class="num">${i + 1}</td><td>${esc(x.nom)}</td><td class="num">${virgule(x.m)}</td></tr>`).join("")}</table>
+    ${m === 0 ? `<div class="msg warn">Ta tortue ne pond jamais : regarde le <b>💡 Coup de pouce</b>.</div>` : ""}`;
+}
+$("#estimer").addEventListener("click", estimer);
 
 // ---------------------------------------------------------------------
 //  Mode bac à sable seul : on s'arrête là
@@ -136,6 +204,9 @@ if (LIBRE) {
 const estFinaliste = () => !salle || !salle.duel || salle.duel.includes(PSEUDO);
 const heureCourte = (iso) => new Date(iso).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
+// manche « longue » : l'enseignant a choisi un temps illimité (la manche reste ouverte plusieurs jours)
+const ILLIMITE = 30 * 24 * 3600;
+const tempsIllimite = () => salle && salle.phase === "prog" && salle.fin_chrono && secondesRestantes(salle.fin_chrono) > ILLIMITE;
 function majEnvoi() {
   if (LIBRE) return;
   const b = $("#envoyer"), box = $("#envoi");
@@ -151,10 +222,11 @@ function majEnvoi() {
     return;
   }
   b.disabled = false;
+  const long = tempsIllimite();
   const envoye = dernierEnvoi && dernierEnvoi.manche === salle.manche;
   if (envoye && dernierEnvoi.code === ed.value) {
     b.textContent = "📤 Renvoyer";
-    box.innerHTML = `<div class="msg ok">✅ Tortue envoyée pour la manche ${salle.manche} (à ${heureCourte(dernierEnvoi.at)}). Tu peux encore l'améliorer et la renvoyer avant la fin du chrono.</div>`;
+    box.innerHTML = `<div class="msg ok">✅ Tortue envoyée pour la manche ${salle.manche} (${jourHeure(dernierEnvoi.at)}). Tu peux encore l'améliorer et la renvoyer ${long ? "jusqu'au brawl, même depuis chez toi (🏠 Mon code de session)" : "avant la fin du chrono"}.</div>`;
   } else if (envoye) {
     b.textContent = "📤 Renvoyer"; b.classList.add("pulse");
     box.innerHTML = `<div class="msg warn">⚠️ Tu as modifié ton code depuis l'envoi. Renvoie-la, sinon c'est l'<b>ancienne version</b> qui jouera.</div>`;
@@ -163,6 +235,10 @@ function majEnvoi() {
     box.innerHTML = `<div class="msg warn">⏳ Pas encore envoyée. Si tu n'envoies rien, c'est ta tortue précédente (ou la tortue de départ) qui jouera.</div>`;
   }
 }
+const jourHeure = (iso) => {
+  const d = new Date(iso), auj = new Date().toDateString() === d.toDateString();
+  return (auj ? "" : "le " + d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) + " ") + "à " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+};
 
 let envoiEnCours = false;
 async function envoyer(auto = false) {
@@ -186,8 +262,10 @@ $("#envoyer").addEventListener("click", () => envoyer(false));
 // --- topbar, bandeau, chrono ---
 function majInfo() {
   const info = $("#info"); info.innerHTML = "";
+  const bCode = el("button", { class: "pill pill-btn", title: "Pour continuer sur un autre ordinateur (à la maison…)" }, "🏠 Mon code de session");
+  bCode.addEventListener("click", montrerCodePerso);
   info.append(el("span", { class: "pill" }, "🔑 " + SALLE),
-    el("span", { class: "pill" }, el("span", { class: "dot", style: `background:${couleur}` }), PSEUDO));
+    el("span", { class: "pill" }, el("span", { class: "dot", style: `background:${couleur}` }), PSEUDO), bCode);
   if (salle && salle.manche > 0) info.append(el("span", { class: "pill" }, titreManche()));
   if (MODE === "demo") info.append(el("span", { class: "pill mode-demo" }, "Mode démo"));
 }
@@ -203,6 +281,7 @@ setInterval(() => {
   if (salle.phase !== "prog" || !salle.fin_chrono) { c.classList.add("cache"); return; }
   const r = secondesRestantes(salle.fin_chrono);
   c.classList.remove("cache");
+  if (r > ILLIMITE) { c.textContent = "♾️ Temps illimité"; c.classList.remove("alerte"); return; }
   c.textContent = r > 0 ? "⏱️ " + mmss(r) : "⏱️ Temps écoulé";
   c.classList.toggle("alerte", r <= 30);
   // envoi automatique juste avant la fin du chrono, si le code a changé et qu'il est correct
@@ -213,6 +292,53 @@ setInterval(() => {
     if (!envoye && check(ed.value).ok) envoyer(true);
   }
 }, 250);
+
+// --- code de session : se reconnecter depuis un autre ordinateur (manches longues, travail à la maison) ---
+// Les élèves arrivés avant les codes de session en reçoivent un (si la base de données est à jour).
+async function assurerCodePerso() {
+  if (LIBRE || CODE_PERSO) return CODE_PERSO;
+  const code = nouveauCodePerso(), nv = jetonDuCode(code);
+  try {
+    await db.changerJeton(SALLE, PSEUDO, JETON, nv);
+    JETON = nv; CODE_PERSO = code;
+    store.set(cleJeton(SALLE, PSEUDO), nv); store.set(cleCodePerso(SALLE, PSEUDO), code);
+  } catch { /* base de données pas encore à jour : pas de code de session */ }
+  return CODE_PERSO;
+}
+async function montrerCodePerso() {
+  const code = await assurerCodePerso();
+  const site = new URL("index.html", location.href).href;
+  if (!code) {
+    overlay(`<h2>🏠 Continuer sur un autre ordinateur</h2><p>Ton code de session n'est pas encore disponible : ton enseignant doit mettre à jour la base de données.</p>
+      <p>En attendant, sur l'autre ordinateur, demande à ton enseignant de <b>débloquer ton pseudo</b> (🔓).</p>`, true);
+    return;
+  }
+  const lien = `${new URL("index.html", location.href).href}?salle=${encodeURIComponent(SALLE)}&pseudo=${encodeURIComponent(PSEUDO)}#code=${code}`;
+  overlay(`<h2>🏠 Continuer chez toi (ou sur un autre ordinateur)</h2>
+    <ol class="etapes-code">
+      <li>Va sur <b>${esc(site.replace(/^https?:\/\//, ""))}</b></li>
+      <li>Salle <b class="gros-code">${esc(SALLE)}</b> · pseudo <b>${esc(PSEUDO)}</b></li>
+      <li>Clique sur « 🏠 Tu reviens depuis un autre ordinateur ? » et tape ton <b>code de session</b> :</li>
+    </ol>
+    <div class="code-perso">${codeLisible(code)}</div>
+    <p>✍️ <b>Note-le dans ton cahier.</b> Ne le donne à personne : avec ce code, on peut envoyer une tortue à ta place.</p>
+    <p class="petit">Ou garde ce lien personnel (il remplit tout seul le code) : <button class="btn small ghost" id="copier-lien">📋 Copier mon lien</button></p>
+    <p class="petit muted">Sur l'autre ordinateur, tu retrouves ta dernière tortue envoyée et tes points. Pendant une <b>manche à temps illimité</b>, tu peux continuer à la programmer et la renvoyer jusqu'au brawl. Pense à l'envoyer avant de quitter un ordinateur : c'est elle que tu retrouveras sur l'autre.</p>`, true);
+  $("#copier-lien").addEventListener("click", () => copier(lien).then(() => toast("Lien copié !"), () => toast(lien)));
+}
+// sur un nouvel ordinateur : on retrouve la dernière tortue envoyée (même celle de la manche en cours)
+async function recupererDerniereTortue() {
+  if (LIBRE) return;
+  let t = null;
+  try { t = await db.maTortue(SALLE, PSEUDO, JETON); } catch { return; }   // (base pas à jour : comportement d'avant)
+  if (!t) return;
+  if (!dernierEnvoi || t.manche > dernierEnvoi.manche || (t.manche === dernierEnvoi.manche && t.code !== dernierEnvoi.code)) {
+    dernierEnvoi = { manche: t.manche, code: t.code, at: t.depose_le || new Date().toISOString() };
+    store.set(cleEnvoi, dernierEnvoi);
+  }
+  if (!store.get(cleCode)) { ed.value = t.code; store.set(cleCode, t.code); verifier(); }
+  majEnvoi();
+}
 
 // --- overlay ---
 function overlay(html, fermable = false) {
@@ -290,6 +416,7 @@ function majCarteManche(annoncer = false) {
   if (prochaine && T) morceaux.push(`${T.icone} ${esc(T.nom)}`);
   if (c.coef === 2) morceaux.push("⭐ points doubles");
   if (c.coef === 0) morceaux.push("hors classement");
+  if (c.illimite) morceaux.push("♾️ temps illimité : tu peux continuer chez toi (🏠 Mon code de session)");
   if (c.participants) morceaux.push(c.participants.includes(PSEUDO) ? "✅ tu joues" : "👀 tu regardes");
   let html = `<div class="carte-manche">${prochaine ? `<b>📣 Prochaine manche : ${esc(titreManche(c))}</b>` : ""}${morceaux.length ? `<div>${morceaux.join(" · ")}</div>` : ""}`;
   if (c.mode === "equipes") {
@@ -339,7 +466,7 @@ async function chargerResultats(montrer) {
 
 function afficherResultats(info, scores, tortues, joueurs) {
   const m = info.manche, T = TWISTS[info.twist] || TWISTS.calme;
-  const sim = lancerSimulation(salle, m, info.pseudos, joueurs, tortues, info.twist, null, info.equipes);
+  const sim = lancerSimulation(salle, m, info.pseudos, joueurs, tortues, info.twist, null, info.equipes, info.version);
   const joue = info.pseudos.includes(PSEUDO);
   const moi = scores.find((s) => s.manche === m && s.pseudo === PSEUDO);
   const nbH = info.pseudos.filter((p) => !estBot(p)).length;
@@ -392,7 +519,7 @@ function afficherResultats(info, scores, tortues, joueurs) {
   if (joue) $("#etsi").addEventListener("click", () => {
     const c = verifier();
     if (!c.ok) { toast("Corrige d'abord l'erreur de ton code.", "err"); return; }
-    const sim2 = lancerSimulation(salle, m, info.pseudos, joueurs, tortues, info.twist, { pseudo: PSEUDO, code: ed.value }, info.equipes);
+    const sim2 = lancerSimulation(salle, m, info.pseudos, joueurs, tortues, info.twist, { pseudo: PSEUDO, code: ed.value }, info.equipes, info.version);
     const a = sim.resultats.find((r) => r.id === PSEUDO), b = sim2.resultats.find((r) => r.id === PSEUDO);
     const fleche = b.nids > a.nids ? "📈" : b.nids < a.nids ? "📉" : "➖";
     $("#etsi-res").innerHTML = `<div class="compare" style="margin-top:12px">
@@ -436,6 +563,11 @@ if (!LIBRE) {
   await synchroniserHorloge();
   await rafraichir(true);
   setInterval(rafraichir, 2000);
+  await recupererDerniereTortue();
+  assurerCodePerso().then((c) => {
+    const vu = `lagon:vuCode:${SALLE}:${PSEUDO}`;
+    if (c && !store.get(vu)) { store.set(vu, 1); setTimeout(() => toast("🏠 Pour te reconnecter depuis un autre ordinateur (chez toi…), note ton code de session : bouton « 🏠 Mon code de session » en haut."), 2500); }
+  });
 } else {
   tester();
 }

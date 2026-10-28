@@ -24,11 +24,15 @@ export const CAPTEURS = [
   { nom: "mes_nids", icone: "🥚", role: "Combien de nids me reste-t-il ?", rep: "un nombre", equipe: true },
   { nom: "nids_voisine", icone: "🐢🥚", role: "Combien de nids a la tortue collée à moi ? (0 s'il n'y en a pas)", rep: "un nombre", equipe: true },
   { nom: "nids_equipe", icone: "🥚🥚", role: "Combien de nids a mon équipe en tout ?", rep: "un nombre", equipe: true },
-  { nom: "nids_adversaires", icone: "🥚⚔️", role: "Combien de nids ont toutes les autres tortues (adversaires) en tout ?", rep: "un nombre", equipe: true },
+  { nom: "rang_equipe", icone: "🏅", role: "À quelle place est mon équipe en ce moment ? (1 = en tête ; on compare la moyenne de nids)", rep: "un nombre", equipe: true },
+  { nom: "equipe_en_tete", icone: "👑", role: "Mon équipe est-elle en tête en ce moment (seule ou à égalité) ?", rep: "True / False", equipe: true },
+  { nom: "equipe_rivale", icone: "🎯", role: "Le numéro de l'équipe RIVALE : la meilleure des autres équipes en ce moment", rep: "un nombre", equipe: true },
+  { nom: "nids_adversaires", icone: "🥚🎯", role: "Combien de nids a l'équipe rivale en tout ?", rep: "un nombre", equipe: true },
   { nom: "equipiere_a_cote", icone: "🤝", role: "Une tortue de MON équipe est-elle collée à moi ?", rep: "True / False", equipe: true },
-  { nom: "adversaire_a_cote", icone: "⚔️", role: "Une tortue ADVERSE est-elle collée à moi ?", rep: "True / False", equipe: true },
+  { nom: "adversaire_a_cote", icone: "⚔️", role: "Une tortue ADVERSE (d'une autre équipe, ou 🤖) est-elle collée à moi ?", rep: "True / False", equipe: true },
   { nom: "equipiere_fatiguee", icone: "🤝😓", role: `Une équipière collée à moi a-t-elle moins de ${P.energiePonte} ⚡ (pas assez pour pondre) ?`, rep: "True / False", equipe: true },
   { nom: "requin_derriere_adversaire", icone: "⚔️🦈", role: "Si je pousse l'adversaire collée à moi, tombe-t-elle sur un requin ?", rep: "True / False", equipe: true },
+  { nom: "rivale_a_cote", icone: "🎯🐢", role: "Une tortue de l'équipe RIVALE est-elle collée à moi ? (pousser() la vise en premier)", rep: "True / False", equipe: true },
 ];
 
 // Actions = des ORDRES (une seule par tour)
@@ -41,7 +45,7 @@ export const ACTIONS_INFO = [
   { nom: "aller_vers_plage", icone: "➡️🏖️", role: "Nager d'une case vers la plage." },
   // niveau avancé
   { nom: "aller_vers_algue_libre", icone: "➡️🌿✨", role: "Nager vers les algues propres où il n'y a PAS d'autre tortue.", avance: true },
-  { nom: "pousser", icone: "💥", role: `Pousser une tortue collée à moi d'une case (−${P.coutPousse} ⚡). S'il y a un requin derrière elle…`, avance: true },
+  { nom: "pousser", icone: "💥", role: `Pousser une tortue collée à moi d'une case (−${P.coutPousse} ⚡). S'il y a un requin derrière elle… (en équipes : jamais une équipière, l'équipe rivale d'abord)`, avance: true },
   // jeu en équipes
   { nom: "donner", icone: "🎁", role: `Donner ${P.don} ⚡ à une équipière collée à moi.`, equipe: true },
   { nom: "aller_vers_equipiere", icone: "➡️🤝", role: "Nager vers l'équipière la plus proche (deux équipières collées sont protégées des requins).", equipe: true },

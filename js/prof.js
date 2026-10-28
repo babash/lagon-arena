@@ -47,6 +47,8 @@ function accueil() {
         <li><b>Duel des champions</b> (facultatif) : les 3 premiers, dans la tempête.</li>
         <li><b>Bilan</b> : podium, meilleure progression, export CSV.</li>
       </ol>
+      <h3>♾️ Manche longue (travail à la maison)</h3>
+      <p>Dans « Préparer la manche », cochez <b>temps illimité</b> (ou le raccourci ♾️ Manche longue) : la manche reste ouverte jusqu'à ce que vous lanciez le brawl, au cours suivant par exemple. Chaque élève a un <b>code de session</b> pour se reconnecter depuis chez lui (bouton « 🏠 Mon code de session » de sa page ; vous les retrouvez tous avec « 🔑 Codes de session »). Une salle est gardée <b>60 jours</b> après sa dernière utilisation.</p>
       <h3>🧮 Points</h3>
       <p>Points selon le rang parmi les élèves : ${POINTS_RANG.slice(0, 6).join(", ")}… (1 point minimum), <b>+${BONUS_PROGRESSION}</b> si l'élève pond plus de nids qu'à la manche précédente. Les tortues d'entraînement 🤖 complètent le lagon s'il y a moins de ${reglages.min} élèves ; elles ne marquent pas de points.</p>
     </div></div>`;
@@ -70,7 +72,7 @@ async function ouvrir(code) {
   if (!m) { toast("Cette salle n'a pas été créée sur ce navigateur.", "err"); return accueil(); }
   CODE = code; SECRET = m.secret;
   salle = await db.salle(CODE);
-  if (!salle) { toast("Salle introuvable (supprimée après 7 jours ?).", "err"); const s = mesSalles(); delete s[code]; store.set("lagon:prof", s); return accueil(); }
+  if (!salle) { toast("Salle introuvable (supprimée après 60 jours sans utilisation ?).", "err"); const s = mesSalles(); delete s[code]; store.set("lagon:prof", s); return accueil(); }
   history.replaceState(null, "", "prof.html?salle=" + CODE);
   main.innerHTML = `<div class="prof-layout">
     <aside class="card cote">
@@ -90,7 +92,9 @@ async function ouvrir(code) {
           <label class="champ petit">Tortues minimum (🤖 sinon)<input type="number" min="0" max="20" id="r-min" value="${reglages.min}"></label>
         </div></details>
       <div class="sep"></div>
-      <button class="btn small ghost" id="quitter">← Mes salles</button>
+      <div class="row"><button class="btn small ghost" id="quitter">← Mes salles</button>
+        <button class="btn small ghost" id="autre-pc" title="Piloter cette salle depuis un autre ordinateur (séance longue, à la maison…)">🏠 Autre ordinateur</button>
+        <button class="btn small ghost" id="codes" title="Le code de session de chaque élève, pour se reconnecter depuis un autre ordinateur">🔑 Codes de session</button></div>
     </aside>
     <section class="card stage" id="stage"></section>
   </div>`;
@@ -98,6 +102,31 @@ async function ouvrir(code) {
   $("#url").textContent = url.replace(/^https?:\/\//, "");
   $("#copier").addEventListener("click", () => navigator.clipboard.writeText(url).then(() => toast("Lien copié !"), () => toast(url)));
   $("#quitter").addEventListener("click", accueil);
+  $("#autre-pc").addEventListener("click", () => {
+    const lien = new URL(`prof.html?salle=${CODE}#cle=${SECRET}`, location.href).href;
+    const o = el("div", { class: "overlay" }, el("div", { class: "boite", html: `<h2>🏠 Piloter depuis un autre ordinateur</h2>
+      <p>Ouvrez ce <b>lien enseignant</b> sur l'autre ordinateur (envoyez-le-vous par la messagerie de l'établissement, par exemple) : la salle <b>${CODE}</b> s'y ajoutera à « Mes salles ».</p>
+      <p class="lien-prof">${esc(lien)}</p>
+      <p class="petit">⚠️ <b>Ne le donnez pas aux élèves</b> : ce lien permet de piloter la salle.</p>
+      <p><button class="btn" id="copier-prof">📋 Copier le lien</button> <button class="btn ghost" id="fermer-prof">Fermer</button></p>` }));
+    document.body.append(o);
+    $("#copier-prof", o).addEventListener("click", () => navigator.clipboard.writeText(lien).then(() => toast("Lien enseignant copié !"), () => toast(lien)));
+    $("#fermer-prof", o).addEventListener("click", () => o.remove());
+  });
+  $("#codes").addEventListener("click", async () => {
+    let l;
+    try { l = await db.codesSession(CODE, SECRET); } catch (e) { return toast("Codes de session indisponibles : relancez supabase.sql dans Supabase.", "err"); }
+    const lisible = (c) => (c ? c.slice(0, 4) + "-" + c.slice(4) : "");
+    const o = el("div", { class: "overlay" }, el("div", { class: "boite boite-large", html: `<h2>🔑 Codes de session · salle ${CODE}</h2>
+      <p class="petit">Pour se reconnecter depuis un autre ordinateur (chez soi…), l'élève tape la salle, son pseudo et son code de session (« 🏠 Tu reviens depuis un autre ordinateur ? »). Chaque élève voit aussi le sien avec le bouton « 🏠 Mon code de session ».</p>
+      <table class="scores codes-table"><tr><th>Pseudo</th><th>Code de session</th></tr>
+        ${l.map((x) => `<tr><td>${esc(x.pseudo)}</td><td class="code-cell">${x.code ? lisible(x.code) : '<span class="muted petit">créé quand l\'élève ouvrira sa page</span>'}</td></tr>`).join("") || '<tr><td colspan="2" class="muted">Aucun élève</td></tr>'}</table>
+      <p class="petit">⚠️ À ne pas projeter : chaque code permet d'envoyer une tortue à la place de l'élève.</p>
+      <p><button class="btn ghost" id="imprimer-codes">🖨️ Imprimer</button> <button class="btn" id="fermer-codes">Fermer</button></p>` }));
+    document.body.append(o);
+    $("#fermer-codes", o).addEventListener("click", () => o.remove());
+    $("#imprimer-codes", o).addEventListener("click", () => { document.body.classList.add("impr-codes"); window.print(); document.body.classList.remove("impr-codes"); });
+  });
   if ($("#faux")) $("#faux").addEventListener("click", ajouterFaux);
   for (const [id, k, f] of [["r-d1", "duree1", 60], ["r-d", "duree", 60], ["r-dd", "dureeDuel", 60], ["r-min", "min", 1]])
     $("#" + id).addEventListener("change", (e) => { const v = parseFloat(e.target.value); if (v >= 0) { reglages[k] = Math.round(v * f); sauverReglages(); } });
@@ -228,13 +257,16 @@ function dessinerQR(box, texte) {
   } catch { /* pas de QR code */ }
 }
 
+// manche « longue » : temps illimité (en pratique 400 jours ; la manche reste ouverte jusqu'au brawl)
+const DUREE_ILLIMITEE = 400 * 24 * 3600;
+const estIllimite = () => salle && salle.phase === "prog" && salle.fin_chrono && secondesRestantes(salle.fin_chrono) > 30 * 24 * 3600;
 async function lancerManche() {
   const p = prep;
   if (p.qui === "choix" && !p.participants.length) return toast("Choisissez au moins un élève qui joue.", "err");
   if (p.mode === "equipes") completerEquipes();
   try {
     await publierPrep(true);
-    await piloter({ manche: p.manche, phase: "prog", duree: p.duree, nouveaute: p.nouveaute, duel: p.qui === "choix" ? p.participants.slice() : null });
+    await piloter({ manche: p.manche, phase: "prog", duree: p.illimite ? DUREE_ILLIMITEE : p.duree, nouveaute: p.nouveaute, duel: p.qui === "choix" ? p.participants.slice() : null });
     await envoyerFaux();
   } catch (e) { toast(e.message, "err"); }
 }
@@ -254,7 +286,7 @@ function titreManche() {
 function prepDefaut(manche, scores) {
   const nb = new Set(scores.filter((x) => !x.duel).map((x) => x.manche)).size;
   return { manche, nouveaute: TWIST_ORDER[Math.min(TWIST_ORDER.length - 1, nb)], duree: manche === 1 ? reglages.duree1 : reglages.duree,
-    coef: 1, bots: reglages.min, qui: "tous", participants: [], mode: "solo", equipes: {}, nbEquipes: 2, titre: "" };
+    coef: 1, bots: reglages.min, qui: "tous", participants: [], mode: "solo", equipes: {}, nbEquipes: 2, titre: "", illimite: false };
 }
 function chargerPrep(manche, scores) {
   scoresPrep = scores;
@@ -263,7 +295,7 @@ function chargerPrep(manche, scores) {
   prep.nbEquipes ||= 2;
 }
 const configDe = (p) => ({ manche: p.manche, mode: p.mode, equipes: p.mode === "equipes" ? p.equipes : null, nbEquipes: p.mode === "equipes" ? p.nbEquipes : null, coef: p.coef, bots: p.bots,
-  titre: p.titre, nouveaute: p.nouveaute, participants: p.qui === "choix" ? p.participants : null });
+  titre: p.titre, nouveaute: p.nouveaute, participants: p.qui === "choix" ? p.participants : null, illimite: !!p.illimite });
 function publierPrep(immediat = false) {
   store.set(clePrep(), prep);
   clearTimeout(publierTimer);
@@ -322,10 +354,11 @@ function rostersHTML(equipes, liste, nb) {
 }
 
 const PRESETS = {
-  rematch: { label: "🔁 Rematch", titre: "", f: () => ({ mode: "solo", coef: 1, qui: "tous", titre: "", nouveaute: prepDefaut(prep.manche, scoresPrep).nouveaute, duree: prep.manche === 1 ? reglages.duree1 : reglages.duree }) },
+  rematch: { label: "🔁 Rematch", titre: "", f: () => ({ mode: "solo", coef: 1, qui: "tous", titre: "", illimite: false, nouveaute: prepDefaut(prep.manche, scoresPrep).nouveaute, duree: prep.manche === 1 ? reglages.duree1 : reglages.duree }) },
   equipes: { label: "👥 En équipes", f: () => ({ mode: "equipes", coef: 1, qui: "tous", titre: "Manche en équipes", nbEquipes: prep.nbEquipes || 2 }) },
-  duel: { label: "⛈️ Duel des champions", f: () => ({ mode: "solo", coef: 0, qui: "choix", participants: classementCumule(scoresPrep).slice(0, 3).map((t) => t.pseudo), nouveaute: TWIST_DUEL, duree: reglages.dureeDuel, titre: "Duel des champions" }) },
+  duel: { label: "⛈️ Duel des champions", f: () => ({ mode: "solo", coef: 0, illimite: false, qui: "choix", participants: classementCumule(scoresPrep).slice(0, 3).map((t) => t.pseudo), nouveaute: TWIST_DUEL, duree: reglages.dureeDuel, titre: "Duel des champions" }) },
   entrainement: { label: "🏋️ Entraînement", f: () => ({ coef: 0, titre: "Manche d'entraînement" }) },
+  longue: { label: "♾️ Manche longue", f: () => ({ illimite: true, titre: prep.titre || "Manche longue" }) },
 };
 
 function panneauPrep(box, scores) {
@@ -340,7 +373,8 @@ function panneauPrep(box, scores) {
     <div class="prep-grille">
       <label class="champ petit">🏷️ Titre (facultatif)<input type="text" data-k="titre" maxlength="40" value="${esc(prep.titre)}" placeholder="Manche ${prep.manche}"></label>
       <label class="champ petit">🌊 Nouveauté<select data-k="nouveaute">${Object.entries(TWISTS).map(([k, T]) => `<option value="${k}" ${k === prep.nouveaute ? "selected" : ""}>${T.icone} ${T.nom}</option>`).join("")}</select></label>
-      <label class="champ petit">⏱️ Programmation (min)<input type="number" data-k="dureeMin" min="0.5" max="30" step="0.5" value="${prep.duree / 60}"></label>
+      <label class="champ petit">⏱️ Programmation (min)<input type="number" data-k="dureeMin" min="0.5" max="30" step="0.5" value="${prep.duree / 60}" ${prep.illimite ? "disabled" : ""}>
+        <span class="illimite"><input type="checkbox" data-k="illimite" ${prep.illimite ? "checked" : ""}> ♾️ temps illimité</span></label>
       <label class="champ petit">🧮 Points<select data-k="coef"><option value="1" ${prep.coef === 1 ? "selected" : ""}>normaux</option><option value="2" ${prep.coef === 2 ? "selected" : ""}>doubles (×2)</option><option value="0" ${prep.coef === 0 ? "selected" : ""}>hors classement</option></select></label>
       <label class="champ petit">🤖 Compléter jusqu'à (tortues)<input type="number" data-k="bots" min="0" max="20" value="${prep.bots}"></label>
     </div>
@@ -364,16 +398,18 @@ function panneauPrep(box, scores) {
       <p class="petit">Points par élève selon le rang de son équipe : <b>${baremeEquipes(prep.nbEquipes).join(" / ")}</b> (× le coefficient ; des équipes à égalité se partagent les points). On classe les équipes selon la moyenne de nids par élève : les équipes peuvent avoir des tailles différentes. Les 🤖 ne sont dans aucune équipe : ce sont des concurrentes neutres.</p>
     </div>` : ""}
     <p class="petit ok-publie">📣 Publié : les élèves voient déjà ces réglages${prep.mode === "equipes" ? " et <b>leur équipe</b> (ils peuvent préparer une stratégie)" : ""}.</p>
-    <div class="row"><button class="btn big corail" id="go">▶ Lancer la manche ${prep.manche}${prep.mode === "equipes" ? " 👥" : ""}${prep.coef === 2 ? " (×2)" : prep.coef === 0 ? " (hors classement)" : ""}</button></div>
+    ${prep.illimite ? `<p class="petit">♾️ <b>Temps illimité</b> : les élèves peuvent programmer et envoyer leur tortue (même depuis chez eux, avec leur code de session) jusqu'à ce que vous lanciez le brawl.</p>` : ""}
+    <div class="row"><button class="btn big corail" id="go">▶ Lancer la manche ${prep.manche}${prep.illimite ? " ♾️" : ""}${prep.mode === "equipes" ? " 👥" : ""}${prep.coef === 2 ? " (×2)" : prep.coef === 0 ? " (hors classement)" : ""}</button></div>
   </div>`;
   const maj = (redessiner = true) => { publierPrep(); if (redessiner) panneauPrep(box, scores); };
   box.querySelectorAll("[data-preset]").forEach((b) => b.addEventListener("click", () => { Object.assign(prep, PRESETS[b.dataset.preset].f()); if (prep.mode === "equipes" && !Object.keys(prep.equipes).length) equipesHasard(); maj(); }));
   box.querySelectorAll("[data-k]").forEach((i) => i.addEventListener("change", () => {
     const k = i.dataset.k;
     if (k === "dureeMin") prep.duree = Math.round(Math.max(0.5, parseFloat(i.value) || 1) * 60);
+    else if (k === "illimite") prep.illimite = i.checked;
     else if (k === "coef" || k === "bots") prep[k] = parseInt(i.value, 10) || 0;
     else prep[k] = i.value;
-    maj(k === "coef");
+    maj(k === "coef" || k === "illimite");
   }));
   box.querySelectorAll("input[name=qui]").forEach((r) => r.addEventListener("change", () => { prep.qui = r.value; if (prep.qui === "choix" && !prep.participants.length) prep.participants = tous.slice(); maj(); }));
   box.querySelectorAll("input[name=mode]").forEach((r) => r.addEventListener("change", () => { prep.mode = r.value; if (prep.mode === "equipes" && !Object.keys(prep.equipes).length) equipesHasard(); maj(); }));
@@ -415,6 +451,7 @@ function scProg(st) {
     <div class="jauge large"><div id="jg" style="width:0"></div></div>
     <div class="row centre" style="margin-top:16px">
       <button class="btn ghost" id="plus">+1 min</button>
+      <button class="btn ghost cache" id="chrono5" title="Remplacer le temps illimité par un chrono de 5 minutes">⏱️ Chrono de 5 min</button>
       <button class="btn ghost" id="stop">⏹ Terminer le chrono</button>
       <button class="btn big corail" id="brawl">🎬 Lancer le brawl</button>
     </div>
@@ -426,16 +463,27 @@ function scProg(st) {
     piloter({ duree: Math.round(r + 60) }).catch((e) => toast(e.message, "err"));
   });
   $("#stop").addEventListener("click", () => {
-    if (!confirm("Terminer le chrono maintenant ? Les élèves ont encore 5 secondes (envoi automatique).")) return;
+    if (!confirm((estIllimite() ? "Fermer les envois maintenant ?" : "Terminer le chrono maintenant ?") + " Les élèves connectés ont encore 5 secondes (envoi automatique).")) return;
     piloter({ duree: 5 }).catch((e) => toast(e.message, "err"));
   });
+  $("#chrono5").addEventListener("click", () => piloter({ duree: 300 }).catch((e) => toast(e.message, "err")));
   $("#brawl").addEventListener("click", demarrerBrawl);
+  let longPrec = null;
   const tick = () => {
     const r = secondesRestantes(salle.fin_chrono);
     const gc = $("#gc"); if (!gc) return;
-    gc.textContent = r > 0 ? mmss(r) : "0:00";
-    gc.classList.toggle("alerte", r <= 30);
-    $("#brawl").classList.toggle("pulse", r <= 0);
+    const long = estIllimite();
+    if (long !== longPrec) {   // manche à temps illimité : pas de compte à rebours
+      longPrec = long;
+      $("#plus").classList.toggle("cache", long); $("#chrono5").classList.toggle("cache", !long);
+      $("#stop").textContent = long ? "⏹ Fermer les envois" : "⏹ Terminer le chrono";
+      $("#aide-prog").innerHTML = long
+        ? "♾️ <b>Temps illimité</b> : les élèves programment et renvoient leur tortue quand ils veulent, même depuis chez eux (avec leur <b>code de session</b>), jusqu'à ce que vous lanciez le brawl."
+        : "Les élèves peuvent renvoyer leur tortue jusqu'à la fin du chrono. À 0, les tortues modifiées sont envoyées automatiquement.";
+    }
+    gc.textContent = long ? "♾️" : r > 0 ? mmss(r) : "0:00";
+    gc.classList.toggle("alerte", !long && r <= 30);
+    $("#brawl").classList.toggle("pulse", !long && r <= 0);
   };
   tick(); chronoTimer = setInterval(tick, 250);
   majEnvois();
@@ -456,7 +504,7 @@ async function demarrerBrawl() {
   if (brawlEnCours) return;
   const r = secondesRestantes(salle.fin_chrono);
   if (r > 3) {
-    if (!confirm("Le chrono n'est pas terminé. Lancer le brawl maintenant ?\n(Les élèves ont 5 secondes : les tortues modifiées sont envoyées automatiquement.)")) return;
+    if (!confirm((estIllimite() ? "Fermer les envois et lancer le brawl maintenant ?" : "Le chrono n'est pas terminé. Lancer le brawl maintenant ?") + "\n(Les élèves connectés ont 5 secondes : les tortues modifiées sont envoyées automatiquement.)")) return;
     brawlEnCours = true;
     try { await piloter({ duree: 5 }); } catch (e) { toast(e.message, "err"); brawlEnCours = false; return; }
     $("#aide-prog").innerHTML = "<b>📤 Envoi automatique des dernières tortues…</b>";
@@ -554,7 +602,7 @@ async function scResultats(st) {
   if (!info) { st.innerHTML = `<p>Pas de scores pour cette manche.</p>`; return; }
   const T = TWISTS[info.twist] || TWISTS.calme;
   const sm = scores.filter((s) => s.manche === info.manche && !estBot(s.pseudo)).sort((a, b) => a.rang - b.rang || b.nids - a.nids);
-  const sim = lancerSimulation(salle, info.manche, info.pseudos, joueurs, tortues, info.twist, null, info.equipes);
+  const sim = lancerSimulation(salle, info.manche, info.pseudos, joueurs, tortues, info.twist, null, info.equipes, info.version);
   const cap = Object.fromEntries(sim.resultats.map((r) => [r.id, r.captures]));
   const progres = sm.filter((s) => s.bonus > 0);
   const cls = classementCumule(scores);
@@ -635,5 +683,12 @@ function exporterCSV(cls) {
 
 // =====================================================================
 await synchroniserHorloge();
-const demande = new URLSearchParams(location.search).get("salle");
-if (demande && mesSalles()[demande.toUpperCase()]) ouvrir(demande.toUpperCase()); else accueil();
+const demande = (new URLSearchParams(location.search).get("salle") || "").toUpperCase();
+// lien enseignant (…prof.html?salle=ABCD#cle=…) : la salle s'ajoute à « Mes salles » de cet ordinateur
+const cleLien = new URLSearchParams(location.hash.slice(1)).get("cle");
+if (demande && cleLien) {
+  const s = mesSalles(); s[demande] = { secret: cleLien, cree: (s[demande] && s[demande].cree) || new Date().toISOString() }; store.set("lagon:prof", s);
+  history.replaceState(null, "", "prof.html?salle=" + demande);
+  toast(`🏠 Salle ${demande} ajoutée à vos salles sur cet ordinateur.`);
+}
+if (demande && mesSalles()[demande]) ouvrir(demande); else accueil();

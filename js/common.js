@@ -62,6 +62,21 @@ export const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* stockage indisponible */ } },
   del(k) { try { localStorage.removeItem(k); } catch { /* rien */ } },
 };
+// ---------- code de session : pour reprendre son pseudo sur un autre ordinateur (à la maison…) ----------
+//  8 caractères faciles à recopier (sans I, L, O, 0, 1). Le jeton secret de l'élève en est tiré.
+const ALPHA_CODE = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+export function nouveauCodePerso() {
+  const a = new Uint32Array(8);
+  (window.crypto || {}).getRandomValues ? crypto.getRandomValues(a) : a.forEach((_, i) => (a[i] = Math.random() * 1e9));
+  return [...a].map((v) => ALPHA_CODE[v % ALPHA_CODE.length]).join("");
+}
+export const normaliserCode = (s) => String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+export const codeValide = (s) => /^[A-HJKMNP-Z2-9]{8}$/.test(normaliserCode(s));
+export const jetonDuCode = (code) => `perso-${normaliserCode(code)}-lagon`;
+export const codeLisible = (c) => (c ? c.slice(0, 4) + "-" + c.slice(4) : "");
+export const cleJeton = (salle, pseudo) => `lagon:jeton:${salle}:${pseudo}`;
+export const cleCodePerso = (salle, pseudo) => `lagon:codeperso:${salle}:${pseudo}`;   // (lagon:code:… = le programme)
+
 export function jeton() {
   const a = new Uint8Array(16);
   (window.crypto || {}).getRandomValues ? crypto.getRandomValues(a) : a.forEach((_, i) => (a[i] = Math.random() * 256));
@@ -108,6 +123,7 @@ export const AIDE_HTML = `
 <h3>❗ Ordres d'équipe</h3>
 <table class="prims">${ACTIONS_INFO.filter((a) => a.equipe).map(ligneP).join("")}</table>
 <p>Exemple : <code>if equipiere_fatiguee() and energie() >= 8:</code> puis <code>donner()</code></p>
+<p><b>Plus de 2 équipes ?</b> L'équipe <b>rivale</b> est la meilleure des autres équipes en ce moment. <code>rang_equipe()</code> dit à quelle place est ton équipe, <code>equipe_en_tete()</code> si elle mène, <code>rivale_a_cote()</code> si une rivale est collée à toi ; <code>pousser()</code> vise l'équipe rivale en premier. Exemple : <code>if rivale_a_cote() and requin_derriere_adversaire():</code> puis <code>pousser()</code></p>
 </details>
 <details class="aide-avancee"><summary>🚀 Niveau avancé (voir le <a href="tuto-avance.html">tutoriel avancé</a>)</summary>
 <h3>❓ Questions avancées</h3>

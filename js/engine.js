@@ -128,13 +128,145 @@ export const HERBIERS = HERBIERS_DEPART;   // (ancien nom)
 const DIST_PLAGE = bfs(BEACHES, turtleOK);
 export const distancePlage = (x, y) => DIST_PLAGE[y][x];
 
-function stepDown(dist, x, y) {
+function stepDown(dist, x, y, passable = turtleOK) {
   let best = null, bd = dist[y][x];
   for (const [dx, dy] of DIRS) {
     const nx = x + dx, ny = y + dy;
-    if (inside(nx, ny) && turtleOK(nx, ny) && dist[ny][nx] < bd) { bd = dist[ny][nx]; best = [nx, ny]; }
+    if (inside(nx, ny) && passable(nx, ny) && dist[ny][nx] < bd) { bd = dist[ny][nx]; best = [nx, ny]; }
   }
   return best;
+}
+
+// =====================================================================
+//  Les cartes
+//   • version 1 : la carte classique ci-dessus (manches jouées avant les cartes aléatoires,
+//     tutoriels et missions) ;
+//   • version 2 : une carte ALÉATOIRE par partie, tirée de la graine (même graine = même carte,
+//     pour que chacun puisse rejouer exactement le même match) : corail, herbiers, départs
+//     des tortues et des requins. Les plages ne bougent pas.
+//  Chaque carte aléatoire est vérifiée (carteSansBlocage) : pas de zone fermée, pas de cul-de-sac.
+// =====================================================================
+export const VERSION_CARTE = 2;
+function preparerCarte(lignes, { spawns = null, requins = SHARK_STARTS, aleatoire = false } = {}) {
+  const tuile = (x, y) => TILE[lignes[y][x]];
+  const ok = (x, y) => tuile(x, y) !== "corail";
+  const okRequin = (x, y) => tuile(x, y) === "eau";
+  const plages = [], herbiers = [], departs = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (tuile(x, y) === "plage") plages.push([x, y]);
+    if (lignes[y][x] === "h") herbiers.push([x, y]);
+    if (lignes[y][x] === "T") departs.push([x, y]);
+  }
+  return { lignes, tuile, turtleOK: ok, sharkOK: okRequin, plages, herbiers, spawns: spawns || departs, requins, distPlage: bfs(plages, ok), aleatoire };
+}
+export const CARTE_CLASSIQUE = preparerCarte(MAP);
+
+// Une carte sans blocage :
+//  1. toutes les cases sans corail communiquent (une tortue peut aller partout : algues, plages…) ;
+//  2. toute l'eau communique (un requin peut patrouiller partout : pas de cachette hors d'atteinte) ;
+//  3. pas de cul-de-sac : chaque case sans corail a au moins 2 voisines sans corail ;
+//  4. les départs sont sur l'eau libre (pas sur le corail, la plage ou les algues), tous différents ;
+//  5. les requins partent dans l'eau, au large (loin des plages) et loin des tortues.
+export function carteSansBlocage(C, { distRequin = 5 } = {}) {
+  const cases = [], eaux = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (C.turtleOK(x, y)) cases.push([x, y]);
+    if (C.sharkOK(x, y)) eaux.push([x, y]);
+  }
+  if (!cases.length || !eaux.length) return false;
+  const d1 = bfs([cases[0]], C.turtleOK);
+  if (cases.some(([x, y]) => d1[y][x] === Infinity)) return false;
+  const d2 = bfs([eaux[0]], C.sharkOK);
+  if (eaux.some(([x, y]) => d2[y][x] === Infinity)) return false;
+  for (const [x, y] of cases) if (DIRS.filter(([dx, dy]) => inside(x + dx, y + dy) && C.turtleOK(x + dx, y + dy)).length < 2) return false;
+  const vus = new Set();
+  for (const [x, y] of C.spawns) {
+    const k = x + "," + y;
+    if (vus.has(k) || C.tuile(x, y) !== "eau" || C.lignes[y][x] === "h") return false;
+    vus.add(k);
+  }
+  for (const [x, y] of C.requins) {
+    if (!C.sharkOK(x, y)) return false;
+    if (C.aleatoire && C.distPlage[y][x] < 4) return false;   // départ au large, loin des plages
+    if (C.spawns.some(([a, b]) => Math.abs(a - x) + Math.abs(b - y) < distRequin)) return false;
+  }
+  return true;
+}
+
+// Carte aléatoire tirée de la graine (nbTortues départs). Si un tirage n'est pas valable, on en tire un autre.
+export function genererCarte(graine, nbTortues = 8) {
+  const n = Math.max(1, nbTortues);
+  const base = preparerCarte(MAP.map((l) => l.replace(/[^P]/g, ".")));
+  const dP0 = base.distPlage;
+  for (let essai = 0; essai < 80; essai++) {
+    const R = rng((Math.imul((graine >>> 0) ^ 0x5bd1e995, 2654435761) + Math.imul(essai + 1, 40503)) >>> 0);
+    const ri = (k) => Math.floor(R() * k);
+    const g = MAP.map((l) => [...l].map((ch) => (ch === "P" ? "P" : ".")));
+    const eauLoin = [];   // cases d'eau à 2 cases ou plus des plages
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (g[y][x] === "." && dP0[y][x] >= 2) eauLoin.push([x, y]);
+    // 1. corail : 5 à 8 massifs de 1 à 3 cases (jamais collés à la plage)
+    const massifs = 5 + ri(4);
+    for (let m = 0; m < massifs; m++) {
+      let [x, y] = eauLoin[ri(eauLoin.length)];
+      for (let k = 1 + ri(3); k > 0; k--) {
+        if (inside(x, y) && g[y][x] === "." && dP0[y][x] >= 2) g[y][x] = "#";
+        const [dx, dy] = DIRS[ri(4)]; x += dx; y += dy;
+      }
+    }
+    // 2. herbiers : 19 à 23 touffes, par petits groupes, à 2 cases ou plus des plages
+    const cible = 19 + ri(5);
+    let touffes = 0;
+    for (let garde = 0; touffes < cible && garde < 400; garde++) {
+      let [x, y] = eauLoin[ri(eauLoin.length)];
+      for (let k = 1 + ri(3); k > 0 && touffes < cible; k--) {
+        if (inside(x, y) && g[y][x] === "." && dP0[y][x] >= 2) { g[y][x] = "h"; touffes++; }
+        const [dx, dy] = DIRS[ri(4)]; x += dx; y += dy;
+      }
+    }
+    const C0 = preparerCarte(g.map((r) => r.join("")), { spawns: [], requins: [] });
+    if (!carteSansBlocage(C0)) continue;
+    // 3. départs des tortues : sur l'eau libre, ni trop près ni trop loin d'une plage, écartés si possible,
+    //    et pas sur les bords du lagon (le « large », réservé aux départs des requins)
+    const cand = [];
+    for (let y = 4; y < H - 4; y++) for (let x = 0; x < W - 3; x++) if (g[y][x] === "." && C0.distPlage[y][x] >= 4 && C0.distPlage[y][x] <= 13) cand.push([x, y]);
+    for (let i = cand.length - 1; i > 0; i--) { const j = ri(i + 1); [cand[i], cand[j]] = [cand[j], cand[i]]; }
+    let spawns = [];
+    for (const ecart of [3, 2, 1]) {
+      spawns = [];
+      for (const c of cand) {
+        if (spawns.length >= n) break;
+        if (spawns.every((s) => Math.abs(s[0] - c[0]) + Math.abs(s[1] - c[1]) >= ecart)) spawns.push(c);
+      }
+      if (spawns.length >= n) break;
+    }
+    if (spawns.length < Math.min(n, cand.length) || !spawns.length) continue;
+    // 4. requins : 6 départs AU LARGE (bords du lagon, loin des plages), loin de toutes les tortues, écartés entre eux.
+    //    (Après une capture, le requin retourne à son départ : un départ entre une tortue et la plage
+    //     la ferait attraper encore et encore sur le même chemin.)
+    const eaux = [];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const bord = x >= W - 2 || y <= 1 || y >= H - 2;
+      if (bord && g[y][x] === "." && C0.distPlage[y][x] >= 4 && !spawns.some((s) => s[0] === x && s[1] === y)) eaux.push([x, y]);
+    }
+    for (let i = eaux.length - 1; i > 0; i--) { const j = ri(i + 1); [eaux[i], eaux[j]] = [eaux[j], eaux[i]]; }
+    const loinDe = (c, l, d) => l.every((s) => Math.abs(s[0] - c[0]) + Math.abs(s[1] - c[1]) >= d);
+    let requins = [], dReq = 0;
+    for (const d of [7, 6, 5]) {
+      requins = [];
+      for (const c of eaux) { if (requins.length >= SHARK_STARTS.length) break; if (loinDe(c, spawns, d) && loinDe(c, requins, 4)) requins.push(c); }
+      if (requins.length >= SHARK_STARTS.length) { dReq = d; break; }
+    }
+    if (requins.length < SHARK_STARTS.length) continue;
+    const C = preparerCarte(g.map((r) => r.join("")), { spawns, requins, aleatoire: true });
+    if (carteSansBlocage(C, { distRequin: dReq })) return C;
+  }
+  return CARTE_CLASSIQUE;   // (n'arrive pas en pratique : vérifié par outils/verifier.mjs)
+}
+const cacheCartes = new Map();
+export function carteDe(graine, nbTortues) {
+  const k = graine + "/" + nbTortues;
+  if (!cacheCartes.has(k)) { if (cacheCartes.size > 50) cacheCartes.clear(); cacheCartes.set(k, genererCarte(graine, nbTortues)); }
+  return cacheCartes.get(k);
 }
 
 // ---------- tortue de départ et tortues d'entraînement ----------
@@ -234,14 +366,20 @@ export const COULEURS = ["#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", 
   "#bfef45", "#fabed4", "#469990", "#dcbeff", "#9a6324", "#fffac8", "#800000", "#aaffc3", "#808000", "#ffd8b1", "#000075", "#a9a9a9"];
 
 // =====================================================================
-//  simulate({ joueurs:[{id, nom, couleur, code}], graine, twist, ticks, scenario })
+//  simulate({ joueurs:[{id, nom, couleur, code}], graine, twist, ticks, scenario, version, leger })
+//  version : 1 = carte classique, 2 = carte aléatoire tirée de la graine (par défaut, hors scénario)
+//  leger   : sans images ni « pensées » (pour estimer une moyenne sur beaucoup de parties)
 //  scenario (tutoriels) : { energie, requins:[[x,y]], plastiques:[[x,y]], heureDepart, ticks,
 //     spawn:[x,y] (1re tortue), spawns:{id:[x,y]}, herbes:[[x,y,portions]], repousse:false,
 //     requinsFixes:true, energies:{id:n} }
 // =====================================================================
-export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario = null }) {
+export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario = null, version = VERSION_CARTE, leger = false }) {
   const T = TWISTS[twist] || TWISTS.calme;
   const sc = scenario || {};
+  if (scenario) version = 1;   // tutoriels et missions : toujours la carte classique
+  const C = version >= 2 ? carteDe(graine, joueurs.length) : CARTE_CLASSIQUE;
+  const { tuile: tileAt, turtleOK, sharkOK, distPlage: DIST_PLAGE } = C;
+  const SPAWNS = C.spawns;
   ticks = ticks || sc.ticks || TICKS;
   const heureDepart = sc.heureDepart ?? 8;
   const R = rng(graine);
@@ -266,7 +404,7 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
 
   // --- herbiers (qui bougent), plastiques, requins ---
   const herbes = new Map();   // "x,y" -> { x, y, n }
-  for (const [x, y, n] of sc.herbes || HERBIERS_DEPART.map(([x, y]) => [x, y, P.portionsHerbier])) herbes.set(x + "," + y, { x, y, n });
+  for (const [x, y, n] of sc.herbes || C.herbiers.map(([x, y]) => [x, y, P.portionsHerbier])) herbes.set(x + "," + y, { x, y, n });
   const repousses = [];       // tours restants avant qu'une nouvelle touffe pousse
   const spawnSet = new Set(SPAWNS.map(([x, y]) => x + "," + y));
   const waterCells = [];
@@ -290,7 +428,7 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
   const plastics = sc.plastiques
     ? sc.plastiques.map(([x, y]) => ({ x, y, retour: 0, fixe: true }))
     : Array.from({ length: T.plastiques }, () => { const [x, y] = randomPlasticCell(T.plastiqueHerbier); return { x, y, retour: 0, vie: vieSac() }; });
-  const sharks = (sc.requins || SHARK_STARTS.slice(0, T.requins)).map(([x, y]) => ({ x, y, sx: x, sy: y, repos: 0, wp: null, fx: 0, fy: 0 }));
+  const sharks = (sc.requins || C.requins.slice(0, T.requins)).map(([x, y]) => ({ x, y, sx: x, sy: y, repos: 0, wp: null, fx: 0, fy: 0 }));
   // patrouille : sans proie en vue, un requin traverse le lagon vers un point choisi au hasard
   const sharkCells = [];
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (sharkOK(x, y)) sharkCells.push([x, y]);
@@ -300,6 +438,7 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
 
   const frames = [], events = [], traces = {}, nids = [];
   for (const t of turtles) traces[t.id] = [];
+  const tracer = leger ? (t, rec) => { traces[t.id][0] = rec; } : (t, rec) => traces[t.id].push(rec);   // léger : on garde seulement le dernier tour
 
   const hasPlastic = (x, y) => plastics.some((p) => p.retour === 0 && p.x === x && p.y === y);
   const touffe = (x, y) => herbes.get(x + "," + y);
@@ -311,6 +450,17 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
   const enDuo = (t) => P.protectionEquipe && t.equipe > 0 && turtles.some((u) => u !== t && u.bloquee === 0 && equipiere(t, u) && manh(u, t) === 1);
   const protegee = (t) => t.bloquee > 0 || t.immunite > 0 || cachee(t) || tileAt(t.x, t.y) === "plage" || enDuo(t);
   const nidsEquipe = (t) => turtles.filter((u) => u === t || equipiere(t, u)).reduce((a, u) => a + u.nids, 0);
+  // Plusieurs équipes : classement EN DIRECT, avec la même règle que le résultat (moyenne de nids par tortue).
+  // L'équipe « rivale » = la meilleure des AUTRES équipes (à égalité : le plus petit numéro). Les 🤖 sont neutres.
+  const numsEquipes = [...new Set(turtles.filter((t) => t.equipe > 0).map((t) => t.equipe))].sort((a, b) => a - b);
+  const moyenneEquipe = (e) => { const m = turtles.filter((u) => u.equipe === e); return m.length ? m.reduce((a, u) => a + u.nids, 0) / m.length : 0; };
+  const rangEquipe = (t) => (t.equipe > 0 ? 1 + numsEquipes.filter((e) => moyenneEquipe(e) > moyenneEquipe(t.equipe) + 1e-9).length : 0);
+  const equipeRivale = (t) => {
+    if (!(t.equipe > 0)) return 0;
+    let best = 0, bm = -1;
+    for (const e of numsEquipes) if (e !== t.equipe) { const m = moyenneEquipe(e); if (m > bm + 1e-9) { bm = m; best = e; } }
+    return best;
+  };
 
   // --- pousser : tortues voisines, case derrière, requin derrière ---
   const voisines = (t) => turtles.filter((u) => u !== t && u.bloquee === 0 && manh(u, t) === 1);
@@ -326,6 +476,7 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
   };
 
   function snapshot(tick) {
+    if (leger) return;
     frames.push({
       tick, heure: heureDe(tick, heureDepart), nuit: nuitDe(tick),
       tortues: turtles.map((t) => [t.x, t.y, t.energie, t.nids, t.bloquee, t.immunite, t.dir, cachee(t) ? 1 : 0]),
@@ -349,10 +500,10 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
       const t = turtles[idx];
       t.mange = false;
       const rec = { tick, x: t.x, y: t.y, energie: t.energie };
-      if (t.bloquee > 0) { t.bloquee--; rec.bloquee = true; traces[t.id].push(rec); continue; }
+      if (t.bloquee > 0) { t.bloquee--; rec.bloquee = true; tracer(t, rec); continue; }
       if (!t.compiled) {
         rec.erreur = t.compileError ? `Ligne ${t.compileError.line} : ${t.compileError.message}` : "Pas de code";
-        t.stats.immobile++; traces[t.id].push(rec); continue;
+        t.stats.immobile++; tracer(t, rec); continue;
       }
       const sensors = {
         requin_proche: () => sharks.some((s) => manh(s, t) <= P.porteeRequin),
@@ -376,10 +527,16 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
         equipiere_fatiguee: () => voisines(t).some((u) => equipiere(t, u) && u.energie < P.energiePonte),
         requin_derriere_adversaire: () => voisines(t).some((u) => !equipiere(t, u) && versRequin(t, u)),
         nids_equipe: () => nidsEquipe(t),
-        nids_adversaires: () => turtles.filter((u) => u !== t && !equipiere(t, u)).reduce((a, u) => a + u.nids, 0),
+        // en équipes (cartes v2) : les nids de l'équipe rivale ; sinon : de toutes les autres tortues
+        nids_adversaires: () => (version >= 2 && t.equipe > 0
+          ? turtles.filter((u) => u.equipe > 0 && u.equipe === equipeRivale(t)).reduce((a, u) => a + u.nids, 0)
+          : turtles.filter((u) => u !== t && !equipiere(t, u)).reduce((a, u) => a + u.nids, 0)),
+        rang_equipe: () => rangEquipe(t),
+        equipe_en_tete: () => rangEquipe(t) === 1,
+        equipe_rivale: () => equipeRivale(t),
+        rivale_a_cote: () => { const r = equipeRivale(t); return r > 0 && voisines(t).some((u) => u.equipe === r); },
       };
-      rec.capteurs = {};
-      for (const k of Object.keys(SENSORS)) rec.capteurs[k] = sensors[k]();
+      if (!leger) { rec.capteurs = {}; for (const k of Object.keys(SENSORS)) rec.capteurs[k] = sensors[k](); }
       const tr = runTurn(t.compiled, sensors);
       rec.conds = tr.conds; rec.action = tr.action; rec.ligne = tr.actionLine;
       if (tr.extra.length) rec.extra = tr.extra;
@@ -434,7 +591,8 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
             const dmin = sharks.length ? Math.min(...sharks.map((s) => Math.abs(s.x - x) + Math.abs(s.y - y))) : 99;
             // fuir = s'éloigner, et surtout rejoindre un refuge (plage, ou algues où l'on est caché)
             const refuge = tileAt(x, y) === "plage" || algueIci(x, y);
-            const sc2 = dmin + (refuge ? 100 : 0);
+            // cartes v2 : la plage (toujours sûre) d'abord, puis les algues (sûres seulement tant qu'on ne mange pas)
+            const sc2 = dmin + (refuge ? 100 : 0) + (version >= 2 && tileAt(x, y) === "plage" ? 100 : 0);
             if (sc2 > bestScore) { bestScore = sc2; best = [x, y]; }
           }
           move(best[0], best[1]);
@@ -442,7 +600,7 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
           break;
         }
         case "aller_vers_algue": {
-          const s = stepDown(distAlgue, t.x, t.y);
+          const s = stepDown(distAlgue, t.x, t.y, turtleOK);
           if (s) move(s[0], s[1]);
           else rec.effet = distAlgue[t.y][t.x] === 0 ? "déjà sur des algues : il faudrait manger()" : "aucune algue propre disponible";
           break;
@@ -450,13 +608,13 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
         case "aller_vers_algue_libre": {
           const occupees = new Set(turtles.filter((u) => u !== t && u.bloquee === 0).map((u) => u.x + "," + u.y));
           const d = bfs(propres.filter((h) => h.n > 0 && !occupees.has(h.x + "," + h.y)).map((h) => [h.x, h.y]), turtleOK);
-          const s = stepDown(d, t.x, t.y);
+          const s = stepDown(d, t.x, t.y, turtleOK);
           if (s) move(s[0], s[1]);
           else rec.effet = d[t.y][t.x] === 0 ? "déjà sur des algues libres : il faudrait manger()" : "aucune algue libre";
           break;
         }
         case "aller_vers_plage": {
-          const s = stepDown(DIST_PLAGE, t.x, t.y);
+          const s = stepDown(DIST_PLAGE, t.x, t.y, turtleOK);
           if (s) move(s[0], s[1]); else rec.effet = "déjà sur la plage";
           break;
         }
@@ -475,14 +633,16 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
           if (!eq.length) { rec.effet = "pas d'équipière dans le lagon"; break; }
           if (eq.some((u) => manh(u, t) === 1)) { rec.effet = "déjà collée à une équipière"; break; }
           const d = bfs(eq.map((u) => [u.x, u.y]), turtleOK);
-          const s = stepDown(d, t.x, t.y);
+          const s = stepDown(d, t.x, t.y, turtleOK);
           if (s) move(s[0], s[1]); else rec.effet = "aucun chemin vers une équipière";
           break;
         }
         case "pousser": {
           const vs = voisines(t).filter((u) => poussable(t, u) && !equipiere(t, u));   // on ne pousse pas ses équipières
           if (!vs.length) { rec.effet = "personne à pousser ici"; break; }
-          const u = vs.find((v) => versRequin(t, v)) || vs[0];
+          // plusieurs équipes (cartes v2) : on vise d'abord l'équipe rivale (la meilleure des autres)
+          const r = version >= 2 ? equipeRivale(t) : 0, riv = (v) => r > 0 && v.equipe === r;
+          const u = (r && vs.find((v) => versRequin(t, v) && riv(v))) || vs.find((v) => versRequin(t, v)) || (r && vs.find(riv)) || vs[0];
           const surRequin = versRequin(t, u);
           const [bx, by] = derriere(t, u);
           u.dir = bx > u.x ? 1 : bx < u.x ? 3 : by > u.y ? 2 : 0;
@@ -498,7 +658,7 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
         }
       }
       t.stats.energieMax = Math.max(t.stats.energieMax, t.energie);
-      traces[t.id].push(rec);
+      tracer(t, rec);
     }
 
     // --- les requins bougent (2 tours sur 3, ou à chaque tour s'ils sont affamés) ---
@@ -552,7 +712,15 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
         if (last) last.effet = (last.effet ? last.effet + " — " : "") + "ATTRAPÉE par un requin !" + (perdu ? " (−1 nid)" : "");
         t.x = t.sx; t.y = t.sy; t.bloquee = P.bloqueeCapture; t.immunite = P.bloqueeCapture + 3;
         t.energie = Math.max(1, t.energie - P.perteCapture);
-        s.x = s.sx; s.y = s.sy; s.repos = 6;     // le requin repart au large et digère
+        if (version >= 2) {
+          // carte aléatoire : le requin repart au large, au départ de requin le plus LOIN du départ de la tortue
+          // (sinon, si son départ est sur le chemin de la tortue, il pourrait l'attraper encore et encore au même endroit)
+          const dist = ([x, y]) => Math.abs(x - t.sx) + Math.abs(y - t.sy);
+          const libres = C.requins.filter(([x, y]) => !sharks.some((o) => o !== s && o.x === x && o.y === y));
+          const loin = (libres.length ? libres : C.requins).reduce((b, p) => (dist(p) > dist(b) ? p : b));
+          s.x = loin[0]; s.y = loin[1];
+        } else { s.x = s.sx; s.y = s.sy; }
+        s.repos = 6;     // le requin repart au large et digère
         break;
       }
     }
@@ -592,7 +760,7 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
   res.forEach((r, i) => { const key = r.nids + "/" + r.captures + "/" + r.energie; if (key !== prev) rang = i + 1; r.rang = rang; prev = key; });
   for (const r of res) r.equipe = turtles.find((t) => t.id === r.id).equipe;
   return {
-    twist, graine, ticks, heureDepart, frames, events, traces, nids,
+    twist, graine, ticks, heureDepart, frames, events, traces, nids, version, carte: C.lignes,
     tortues: turtles.map((t) => ({ id: t.id, nom: t.nom, couleur: t.couleur, equipe: t.equipe, sx: t.sx, sy: t.sy, stats: t.stats, nids: t.nids, compileError: t.compileError })),
     resultats: res,
     equipes: resultatEquipes(turtles.map((t) => ({ id: t.id, nom: t.nom, equipe: t.equipe, nids: t.nids }))),
