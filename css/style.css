@@ -489,3 +489,37 @@ ol.etapes-mini li { background: var(--lagon-pale); border-radius: 999px; padding
 .aide table.prims td.ic { font-size: 1.2rem; width: 2em; text-align: center; }
 pre.modele { background: #0e2236; color: #e7eef5; border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.55; overflow: auto; }
 pre.modele i { color: #9fe3b5; }
+
+/* =====================================================================
+   Indentation visible, if/else assortis, boutons Copier, mode avancé
+   ===================================================================== */
+.ind { --g: rgba(255, 255, 255, .16); background-image: linear-gradient(to right, var(--g) 0, var(--g) 2px, transparent 2px); }
+.ind.n0 { --g: rgba(95, 211, 223, .38); }
+.ind.n1 { --g: rgba(255, 142, 196, .38); }
+.ind.n2 { --g: rgba(255, 209, 102, .38); }
+.ind.n3 { --g: rgba(159, 227, 181, .38); }
+.ind.actif { --g: #ffe680; background-image: linear-gradient(to right, var(--g) 0, var(--g) 3px, rgba(255, 230, 128, .10) 3px); }
+.tok-kw.chaine { background: #ffe680; color: #3b2a00; border-radius: 4px; box-shadow: 0 0 0 2px #ffe680; }
+.editor .gutter .chl { color: #3b2a00; background: #ffe680; border-radius: 4px; display: inline-block; padding: 0 3px; }
+.editor { position: relative; }
+.copier { position: absolute; top: 6px; right: 8px; z-index: 3; font: inherit; font-family: "Nunito", sans-serif; font-size: .78rem; font-weight: 800;
+  border: 0; border-radius: 8px; padding: 3px 9px; cursor: pointer; background: rgba(255, 255, 255, .14); color: #e7eef5; opacity: .75; }
+.copier:hover { opacity: 1; background: rgba(255, 255, 255, .26); }
+.codeview, pre.modele { position: relative; }
+.codeview .copier { top: 4px; }
+.chip.c-avance { box-shadow: 0 0 0 2px #b28bff inset; }
+.badge-avance { background: #6d3fd1; color: #fff; border-radius: 999px; padding: 1px 9px; font-size: .78rem; font-weight: 800; }
+.avance-sw { margin-top: 10px; }
+.switch.petit { font-size: .88rem; }
+.switch.petit .glissiere { width: 38px; height: 22px; }
+.switch.petit .glissiere::after { width: 16px; height: 16px; }
+.switch.petit input:checked + .glissiere::after { transform: translateX(16px); }
+.switch.petit input:checked + .glissiere { background: #6d3fd1; }
+.curseur { display: inline-flex; gap: 8px; align-items: center; font-weight: 800; }
+.curseur b { min-width: 1.6em; text-align: center; background: var(--ocean-800); color: #fff; border-radius: 8px; padding: 0 6px; }
+.curseur input { width: 140px; }
+details.aide-avancee { margin-top: 14px; background: #f4efff; border-radius: 12px; padding: 8px 14px; }
+details.aide-avancee summary { color: #4b2a9e; }
+.codeview[data-copie] { padding-top: 32px; }
+.codeview .copier { top: 5px; }
+table.prims td:first-child { white-space: nowrap; width: auto; min-width: 2.2em; }

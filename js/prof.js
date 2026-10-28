@@ -125,6 +125,10 @@ async function sonder() {
   try {
     [joueurs, depots] = await Promise.all([db.joueurs(CODE), salle.manche > 0 ? db.depots(CODE, salle.manche) : Promise.resolve([])]);
   } catch (e) { return; }
+  // les élèves peuvent arriver en cours de partie : on les annonce
+  const connus = sonder.connus;
+  sonder.connus = new Set(joueurs.map((j) => j.pseudo));
+  if (connus && salle.manche > 0) for (const j of joueurs) if (!connus.has(j.pseudo)) toast(`🆕 ${j.pseudo} rejoint la partie : sa tortue jouera au prochain brawl.`);
   const envoyes = new Set(depots.map((d) => d.pseudo));
   $("#nb").textContent = joueurs.length;
   const liste = $("#liste");
@@ -132,13 +136,18 @@ async function sonder() {
   for (const j of joueurs) {
     const spect = salle.duel && !salle.duel.includes(j.pseudo);
     const etat = salle.manche === 0 ? "" : spect ? "👀" : envoyes.has(j.pseudo) ? "✅" : salle.phase === "prog" ? "⏳" : "·";
-    const x = el("button", { class: "x", title: "Retirer cet élève" }, "✕");
+    const x = el("button", { class: "x", title: "Retirer cet élève (et ses tortues)" }, "✕");
     x.addEventListener("click", async () => {
-      if (!confirm(`Retirer ${j.pseudo} de la salle ?`)) return;
+      if (!confirm(`Retirer ${j.pseudo} de la salle ? (ses tortues sont supprimées)`)) return;
       try { await db.retirerJoueur(CODE, SECRET, j.pseudo); sonder(); } catch (e) { toast(e.message, "err"); }
     });
+    const cle = el("button", { class: "x", title: "Débloquer ce pseudo : l'élève pourra se reconnecter depuis un autre ordinateur (il garde ses tortues et ses points)" }, "🔓");
+    cle.addEventListener("click", async () => {
+      if (!confirm(`Débloquer le pseudo ${j.pseudo} ?\nL'élève pourra le reprendre en rejoignant la salle depuis un autre ordinateur ; il garde ses tortues et ses points.`)) return;
+      try { await db.libererPseudo(CODE, SECRET, j.pseudo); toast(`🔓 ${j.pseudo} peut se reconnecter.`); } catch (e) { toast(e.message, "err"); }
+    });
     liste.append(el("li", {}, el("span", { class: "swatch", style: `background:${j.couleur}` }), j.pseudo,
-      el("span", { class: "etat", title: etat === "✅" ? "tortue envoyée" : etat === "⏳" ? "pas encore envoyée" : "" }, etat), x));
+      el("span", { class: "etat", title: etat === "✅" ? "tortue envoyée" : etat === "⏳" ? "pas encore envoyée" : "" }, etat), cle, x));
   }
   if (salle.phase === "attente") { const n = $("#nb-grand"); if (n) n.textContent = joueurs.length; }
   if (salle.phase === "prog") majEnvois();
@@ -232,7 +241,7 @@ function scProg(st) {
   const T = TWISTS[salle.nouveaute] || TWISTS.calme;
   st.innerHTML = `<div class="stage-centre">
     <h2 class="titre-scene">${salle.duel ? "⛈️ Duel des champions" : `⌨️ Manche ${salle.manche} : programmez vos tortues !`}</h2>
-    ${salle.duel ? `<p class="consigne">Finalistes : <b>${salle.duel.map(esc).join(" · ")}</b> (+ la Championne 🤖)</p>` : ""}
+    ${salle.duel ? `<p class="consigne">Finalistes : <b>${salle.duel.map(esc).join(" · ")}</b> ${salle.duel.length < reglages.min ? ` (+ ${reglages.min - salle.duel.length} tortues d'entraînement 🤖)` : ""}</p>` : ""}
     <div id="tw"></div>
     <div class="grand-chrono chrono" id="gc">--:--</div>
     <p class="consigne"><b id="nb-env">0</b> / <span id="nb-tot">0</span> tortues envoyées</p>
@@ -298,9 +307,10 @@ async function demarrerBrawl() {
 // ---------- brawl ----------
 const FEED = {
   nid: (n, e) => [`🥚 <b>${n}</b> pond son ${e.n}${e.n > 1 ? "e" : "er"} nid !`, "nid"],
-  capture: (n, e) => [`🦈 <b>${n}</b> s'est fait attraper !${e.perdu ? " (−1 nid)" : ""}`, "capture"],
+  capture: (n, e, noms) => [`🦈 <b>${n}</b> s'est fait attraper !${e.perdu ? " (−1 nid)" : ""}${e.par ? ` (poussée par ${esc(noms[e.par] ? noms[e.par].nom : e.par)})` : ""}`, "capture"],
   plastique: (n) => [`🛍️ <b>${n}</b> a avalé un sac plastique…`, "capture"],
   epuisee: (n) => [`😵 <b>${n}</b> est épuisée !`, "capture"],
+  pousse: (n, e, noms) => [`💥 <b>${n}</b> pousse ${esc(noms[e.cible] ? noms[e.cible].nom : e.cible)}${e.requin ? " sur un requin !" : ""}`, "capture"],
 };
 async function scBrawl(st) {
   st.innerHTML = `<div class="stage-centre"><div class="emoji">🌊</div><h2>Les tortues plongent…</h2></div>`;
@@ -310,7 +320,8 @@ async function scBrawl(st) {
   const m = salle.manche, duel = !!salle.duel;
   // participants : élèves (ou finalistes) + tortues d'entraînement si besoin
   let pseudos = participantsHumains();
-  pseudos = duel ? [...pseudos, BOT_PREFIXE + "Championne"] : [...pseudos, ...botsPourCompleter(pseudos.length, reglages.min)];
+  // les tortues d'entraînement 🤖 servent seulement à compléter le lagon jusqu'au minimum (8 par défaut)
+  pseudos = [...pseudos, ...botsPourCompleter(pseudos.length, reglages.min)];
   if (!pseudos.length) { toast("Aucune tortue dans le lagon !", "err"); return; }
   const sim = lancerSimulation(salle, m, pseudos, joueurs, tortues, salle.nouveaute);
   const T = TWISTS[salle.nouveaute] || TWISTS.calme;
@@ -331,7 +342,7 @@ async function scBrawl(st) {
     if (t < dernier) $("#feed").innerHTML = "";
     const ev = sim.events.filter((e) => e.tick > dernier && e.tick <= t && (e.type === "nid" || !estBot(e.id)));
     for (const e of ev) {
-      const [txt, cls] = FEED[e.type](esc(noms[e.id] ? noms[e.id].nom : e.id), e);
+      const [txt, cls] = FEED[e.type](esc(noms[e.id] ? noms[e.id].nom : e.id), e, noms);
       $("#feed").prepend(el("li", { class: cls, html: txt }));
     }
     while ($("#feed").children.length > 9) $("#feed").lastChild.remove();
@@ -354,9 +365,10 @@ async function scBrawl(st) {
   // petit compte à rebours avant le départ
   const box = $("#vue .lagon-box");
   const cd = el("div", { class: "decompte" }, "3"); box.append(cd);
+  const v = viewer;
   for (const n of ["3", "2", "1", "🐢 GO !"]) { cd.textContent = n; await new Promise((r) => setTimeout(r, 700)); }
   cd.remove();
-  viewer.player.play();
+  if (viewer === v && v) v.player.play();   // (sauf si l'enseignant a déjà passé aux résultats)
 }
 
 // ---------- résultats d'une manche ----------
@@ -402,7 +414,7 @@ async function scResultats(st) {
   bDuel.title = "Les 3 premiers du classement s'affrontent dans la tempête (hors classement)";
   bDuel.addEventListener("click", () => {
     if (top3.length < 2) return toast("Il faut au moins 2 élèves classés.", "err");
-    if (!confirm(`Duel des champions entre ${top3.join(", ")} (+ la Championne 🤖), nouveauté « Tempête ».\nLes autres élèves regardent et continuent à s'entraîner. On y va ?`)) return;
+    if (!confirm(`Duel des champions entre ${top3.join(", ")}, nouveauté « Tempête » (des tortues d'entraînement 🤖 complètent le lagon).\nLes autres élèves regardent et continuent à s'entraîner. On y va ?`)) return;
     lancerManche(prochaine, TWIST_DUEL, reglages.dureeDuel, top3);
   });
   const bFin = el("button", { class: "btn sombre" }, "🏁 Terminer la séance");

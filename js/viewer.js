@@ -17,7 +17,7 @@ export class MatchViewer {
    *               pensee (afficher le code et les capteurs), noms }
    */
   constructor(container, { sim, focus = null, code = null, vitesse = 2.4, autoplay = true, pensee = true, noms = true, marqueurs = null, controles: avecControles = true, zoom = 1 } = {}) {
-    this.container = container; this.sim = sim; this.focus = focus;
+    this.container = container; this.sim = sim; this.focus = focus; this.code = code;
     container.innerHTML = "";
     const box = el("div", { class: "lagon-box" });
     const canvas = el("canvas");
@@ -55,7 +55,7 @@ export class MatchViewer {
     if (this.cv) {
       const rec = this.sim.traces[this.focus] && this.sim.traces[this.focus][t];
       this.cv.montrer(rec);
-      this.capt.innerHTML = capteursHTML(rec, t);
+      this.capt.innerHTML = capteursHTML(rec, t, this.code || "");
     }
   }
   destroy() { this.player.destroy(); this.lagon.destroy(); if (this.ctrl) this.ctrl.detruire(); this.container.innerHTML = ""; }

@@ -5,7 +5,7 @@
 //  2. une même partie rejouée donne exactement le même résultat (déterminisme) ;
 //  3. équilibrage : nombre moyen de nids des tortues d'entraînement selon la nouveauté.
 // =====================================================================
-import { simulate, MISSIONS, BOTS, TWISTS, CODE_DEPART } from "../js/engine.js";
+import { simulate, MISSIONS, MISSIONS_AVANCEES, BOTS, TWISTS, CODE_DEPART } from "../js/engine.js";
 
 const CORRECTIONS = {
   1: "def tour():\n    if algue_ici():\n        manger()\n    else:\n        aller_vers_algue()\n",
@@ -21,6 +21,15 @@ for (const M of MISSIONS) {
   const bon = !M.reussi(a) && M.reussi(b);
   ok &&= bon;
   console.log(`   ${bon ? "✔" : "✘"} Mission ${M.id} : code donné → ${M.reussi(a) ? "réussit (problème !)" : "échoue"} ; corrigé → ${M.reussi(b) ? "réussit" : "échoue (problème !)"}`);
+}
+
+console.log("1 bis. Missions du tutoriel avancé");
+for (const M of MISSIONS_AVANCEES) {
+  const jouer = (code) => simulate({ joueurs: [{ id: "t", nom: "t", couleur: "#f00", code }, ...M.autres], graine: 7, scenario: M.scenario });
+  const a = jouer(M.code), b = jouer(M.solution);
+  const bon = !M.reussi(a) && M.reussi(b);
+  ok &&= bon;
+  console.log(`   ${bon ? "✔" : "✘"} Mission ${M.id} : code donné → ${M.reussi(a) ? "réussit (problème !)" : "échoue"} ; solution → ${M.reussi(b) ? "réussit" : "échoue (problème !)"} (${M.bilan(b)})`);
 }
 
 console.log("2. Déterminisme");

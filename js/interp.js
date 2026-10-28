@@ -12,8 +12,12 @@
 export const SENSORS = {
   requin_proche: "booléen", algue_ici: "booléen", plastique_ici: "booléen",
   sur_plage: "booléen", est_la_nuit: "booléen", energie: "nombre", heure: "nombre",
+  // niveau avancé
+  distance_algue: "nombre", distance_plage: "nombre", distance_requin: "nombre",
+  tortue_a_cote: "booléen", requin_derriere_tortue: "booléen",
 };
-export const ACTIONS = ["manger", "pondre", "fuir", "se_cacher", "aller_vers_algue", "aller_vers_plage"];
+export const ACTIONS = ["manger", "pondre", "fuir", "se_cacher", "aller_vers_algue", "aller_vers_plage",
+  /* niveau avancé */ "aller_vers_algue_libre", "pousser"];
 const KNOWN = [...Object.keys(SENSORS), ...ACTIONS];
 const KEYWORDS = new Set(["if", "elif", "else", "and", "or", "not", "True", "False", "def", "pass", "return"]);
 

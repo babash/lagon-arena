@@ -27,6 +27,36 @@ export function toast(msg, type = "") {
   setTimeout(() => t.remove(), 4200);
 }
 
+// ---------- copier du code (bouton « Copier » sur tous les blocs de code) ----------
+export async function copier(texte) {
+  texte = texte.replace(/\s+$/, "") + "\n";
+  try { await navigator.clipboard.writeText(texte); }
+  catch {
+    const t = document.createElement("textarea"); t.value = texte; t.style.position = "fixed"; t.style.opacity = "0";
+    document.body.append(t); t.select(); try { document.execCommand("copy"); } catch { /* rien */ } t.remove();
+  }
+  toast("📋 Code copié !");
+}
+// texte d'un bloc .codeview (sans les numéros de ligne ni les étiquettes True/False)
+export function texteCodeview(box) {
+  const lignes = box.querySelectorAll(".l");
+  if (!lignes.length) return box.textContent;
+  return [...lignes].map((l) => { const c = l.cloneNode(true); c.querySelectorAll(".n, .tag").forEach((x) => x.remove()); return c.textContent.replace(/\u00a0/g, " "); }).join("\n");
+}
+// ajoute automatiquement un bouton « Copier » à chaque bloc de code affiché (même ceux créés plus tard)
+export function activerCopie(racine = document.body) {
+  const equiper = (el) => {
+    if (el.dataset.copie || el.closest(".pas-copie")) return;
+    el.dataset.copie = "1";
+    const b = document.createElement("button"); b.type = "button"; b.className = "copier"; b.textContent = "📋 Copier"; b.title = "Copier ce code";
+    b.addEventListener("click", (e) => { e.stopPropagation(); copier(el.matches("pre") ? el.innerText.replace("📋 Copier", "") : texteCodeview(el)); });
+    el.append(b);
+  };
+  const scan = (n) => { if (n.nodeType !== 1) return; if (n.matches(".codeview, pre.modele")) equiper(n); n.querySelectorAll(".codeview, pre.modele").forEach(equiper); };
+  scan(racine);
+  new MutationObserver((ms) => { for (const m of ms) m.addedNodes.forEach(scan); }).observe(racine, { childList: true, subtree: true });
+}
+
 export const store = {
   get(k, def = null) { try { const v = localStorage.getItem(k); return v === null ? def : JSON.parse(v); } catch { return def; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* stockage indisponible */ } },
@@ -50,9 +80,9 @@ export const AIDE_HTML = `
   <li>1 point = <code>pondre()</code> <b>sur la plage</b>, <b>la nuit</b>, avec <b>${P.energiePonte} ⚡ ou plus</b>.</li>
 </ol>
 <h3>❓ Les questions (capteurs) : réponse True ou False</h3>
-<table class="prims">${CAPTEURS.map(ligneP).join("")}</table>
+<table class="prims">${CAPTEURS.filter((c) => !c.avance).map(ligneP).join("")}</table>
 <h3>❗ Les ordres (actions) : un seul par tour</h3>
-<table class="prims">${ACTIONS_INFO.map(ligneP).join("")}</table>
+<table class="prims">${ACTIONS_INFO.filter((a) => !a.avance).map(ligneP).join("")}</table>
 <h3>✍️ Le modèle à suivre</h3>
 <pre class="modele"><span class="tok-kw">def</span> tour():
     <span class="tok-kw">if</span> <i>question</i>:          <span class="tok-com"># si…</span>
@@ -68,7 +98,16 @@ export const AIDE_HTML = `
   <li>🦈 Attrapée par un requin : retour au départ et <b>−1 nid</b>. Refuges : la <b>plage</b> et les <b>algues</b> (sauf quand tu manges).</li>
   <li>🛍️ Manger un sac plastique : <b>−${P.pertePlastique} ⚡</b>.</li>
   <li>🕐 Un match = 180 tours = 3 jours. Nuit de 19 h à 6 h (sauf nouveauté).</li>
-</ul>`;
+  <li>🌿 Une touffe d'algues mangée jusqu'au bout disparaît : une nouvelle pousse ailleurs. Les sacs plastique dérivent et réapparaissent ailleurs.</li>
+  <li>☀️ Le jour, sur la plage, le soleil fatigue : l'énergie baisse plus vite.</li>
+</ul>
+<details class="aide-avancee"><summary>🚀 Niveau avancé (voir le <a href="tuto-avance.html">tutoriel avancé</a>)</summary>
+<h3>❓ Questions avancées</h3>
+<table class="prims">${CAPTEURS.filter((c) => c.avance).map(ligneP).join("")}</table>
+<h3>❗ Ordres avancés</h3>
+<table class="prims">${ACTIONS_INFO.filter((a) => a.avance).map(ligneP).join("")}</table>
+<p>Combiner : <code>if distance_requin() <= 2 or energie() < 3:</code> · <code>if not tortue_a_cote():</code> · <code>if est_la_nuit() and (sur_plage() or distance_plage() <= 1):</code></p>
+</details>`;
 
 export function twistCarte(key) {
   const T = TWISTS[key] || TWISTS.calme;

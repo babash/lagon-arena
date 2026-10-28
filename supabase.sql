@@ -148,6 +148,14 @@ begin
   delete from joueurs where salle = p_code and pseudo = p_pseudo;
 end $$;
 
+-- l'enseignant « débloque » un pseudo : l'élève pourra le reprendre depuis un autre appareil
+create or replace function public.liberer_pseudo(p_code text, p_secret text, p_pseudo text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  perform verifier_prof(p_code, p_secret);
+  delete from joueurs_secret where salle = p_code and pseudo = p_pseudo;
+end $$;
+
 create or replace function public.rejoindre(p_salle text, p_pseudo text, p_jeton text, p_couleur text) returns text
 language plpgsql security definer set search_path = public as $$
 declare v_pseudo text := btrim(p_pseudo); v_jeton text;
@@ -159,15 +167,22 @@ begin
     raise exception 'Pseudo invalide : 2 à 14 lettres ou chiffres.';
   end if;
   if length(coalesce(p_jeton, '')) < 16 then raise exception 'Jeton invalide.'; end if;
+  -- on peut rejoindre une salle à tout moment (même pendant une manche)
   select jeton into v_jeton from joueurs_secret where salle = upper(p_salle) and pseudo = v_pseudo;
   if v_jeton is null then
+    if exists (select 1 from joueurs where salle = upper(p_salle) and pseudo = v_pseudo) then
+      -- pseudo « débloqué » par l'enseignant : l'élève le récupère (autre appareil), avec ses tortues
+      insert into joueurs_secret (salle, pseudo, jeton) values (upper(p_salle), v_pseudo, p_jeton);
+      update joueurs set couleur = p_couleur where salle = upper(p_salle) and pseudo = v_pseudo;
+      return v_pseudo;
+    end if;
     if (select count(*) from joueurs where salle = upper(p_salle)) >= 30 then
       raise exception 'La salle est pleine (30 joueurs maximum).';
     end if;
     insert into joueurs (salle, pseudo, couleur) values (upper(p_salle), v_pseudo, p_couleur);
     insert into joueurs_secret (salle, pseudo, jeton) values (upper(p_salle), v_pseudo, p_jeton);
   elsif v_jeton <> p_jeton then
-    raise exception 'Ce pseudo est déjà pris dans cette salle : choisis-en un autre.';
+    raise exception 'Ce pseudo est déjà pris dans cette salle. Si c''est le tien (autre ordinateur), demande à ton enseignant de le débloquer.';
   else
     update joueurs set couleur = p_couleur where salle = upper(p_salle) and pseudo = v_pseudo;
   end if;
@@ -219,7 +234,7 @@ end $$;
 revoke execute on function public.verifier_prof(text, text) from public, anon, authenticated;
 grant execute on function public.heure_serveur(), public.creer_salle(),
   public.piloter_salle(text, text, int, text, int, int, text, text[]),
-  public.retirer_joueur(text, text, text), public.rejoindre(text, text, text, text),
+  public.retirer_joueur(text, text, text), public.liberer_pseudo(text, text, text), public.rejoindre(text, text, text, text),
   public.deposer_tortue(text, text, text, int, text), public.etat_depots(text, int),
   public.enregistrer_scores(text, text, int, jsonb)
 to anon, authenticated;

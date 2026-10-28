@@ -13,6 +13,12 @@ export const CAPTEURS = [
   { nom: "est_la_nuit", icone: "🌙", role: "Fait-il nuit ?", rep: "True / False" },
   { nom: "energie", icone: "⚡", role: `Combien ai-je d'énergie ? (0 à ${P.energieMax})`, rep: "un nombre" },
   { nom: "heure", icone: "🕐", role: "Quelle heure est-il ? (0 à 23)", rep: "un nombre" },
+  // niveau avancé (tutoriel avancé)
+  { nom: "distance_algue", icone: "📏🌿", role: "À combien de cases sont les algues propres les plus proches ? (0 = ici)", rep: "un nombre", avance: true },
+  { nom: "distance_plage", icone: "📏🏖️", role: "À combien de cases est la plage ? (0 = j'y suis)", rep: "un nombre", avance: true },
+  { nom: "distance_requin", icone: "📏🦈", role: "À combien de cases est le requin le plus proche ?", rep: "un nombre", avance: true },
+  { nom: "tortue_a_cote", icone: "🐢🐢", role: "Une autre tortue est-elle collée à moi ?", rep: "True / False", avance: true },
+  { nom: "requin_derriere_tortue", icone: "🐢🦈", role: "Si je pousse la tortue voisine, tombe-t-elle sur un requin ?", rep: "True / False", avance: true },
 ];
 
 // Actions = des ORDRES (une seule par tour)
@@ -23,6 +29,9 @@ export const ACTIONS_INFO = [
   { nom: "se_cacher", icone: "🙈", role: "Ne pas bouger. Dans les algues, le requin ne me voit pas." },
   { nom: "aller_vers_algue", icone: "➡️🌿", role: "Nager d'une case vers les algues propres." },
   { nom: "aller_vers_plage", icone: "➡️🏖️", role: "Nager d'une case vers la plage." },
+  // niveau avancé
+  { nom: "aller_vers_algue_libre", icone: "➡️🌿✨", role: "Nager vers les algues propres où il n'y a PAS d'autre tortue.", avance: true },
+  { nom: "pousser", icone: "💥", role: `Pousser une tortue collée à moi d'une case (−${P.coutPousse} ⚡). S'il y a un requin derrière elle…`, avance: true },
 ];
 
 // Mots-clés Python, avec leur traduction (on peut les retrouver en tapant le mot français)
@@ -36,6 +45,16 @@ export const MOTS = [
   { nom: "True", fr: "vrai", role: "vrai" },
   { nom: "False", fr: "faux", role: "faux" },
 ];
+
+// ---------- mode avancé (primitives avancées visibles ou non) ----------
+let avance = false;
+try { avance = localStorage.getItem("lagon:avance") === "1"; } catch { /* stockage indisponible */ }
+export const estAvance = () => avance;
+export function setAvance(v) {
+  avance = !!v;
+  try { localStorage.setItem("lagon:avance", avance ? "1" : "0"); } catch { /* rien */ }
+  document.dispatchEvent(new CustomEvent("lagon:avance", { detail: avance }));
+}
 
 export const INFO = Object.fromEntries([
   ...CAPTEURS.map((c) => [c.nom, { ...c, type: "capteur" }]),

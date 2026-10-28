@@ -20,6 +20,7 @@ Après chaque match, chaque élève revoit **sa** tortue ligne par ligne, compre
 | `index.html` | élèves | Accueil : tutoriel, rejoindre une salle (code + pseudo + couleur), bac à sable |
 | `tuto.html` | élèves | **Tutoriel** en 14 étapes courtes : un exemple à manipuler, puis un petit exercice vérifié tout de suite |
 | `eleve.html` | élèves | Programmer, tester, envoyer sa tortue ; résultats, rapport, « Et si… ? », classement, aide |
+| `tuto-avance.html` | élèves avancés | **Tutoriel avancé** (niveau intermédiaire) : distances, comparaisons, `or` / `not`, algues libres, pousser, anticiper la nuit |
 | `eleve.html?libre=1` | élèves | Bac à sable seul, sans salle (pour s'entraîner à la maison) |
 | `prof.html` | enseignant | Créer la salle, lancer les manches, projeter les brawls, podium, export CSV |
 
@@ -50,6 +51,23 @@ Chaque étape montre **d'abord un exemple à manipuler**, avec très peu de text
 
 14. **En classe** : le déroulé de la séance et le barème des points.
 
+### Le tutoriel avancé (`tuto-avance.html`) : pour les élèves à l'aise
+
+Il ne remplace pas le premier tutoriel : il ajoute des primitives **cachées par défaut** pour ne pas noyer les débutants.
+
+| Étape | Contenu |
+|---|---|
+| 1 | Le lagon bouge : les touffes d'algues se vident puis repoussent ailleurs, les sacs plastique dérivent, le soleil fatigue sur la plage, on peut pousser |
+| 2 | Les distances : `distance_algue()`, `distance_plage()`, `distance_requin()`, avec des curseurs et un quiz « vrai ou faux » sur `<`, `<=`, `==`, `!=` |
+| 3 | `or` et `not` (et les parenthèses), suivis d'un exercice |
+| M1 | Mission « Le buffet est pris » : `aller_vers_algue_libre()` |
+| 4 | Pousser : `pousser()` (−2 ⚡), `tortue_a_cote()`, `requin_derriere_tortue()`, suivis d'un exercice |
+| M2 | Mission « La pirate » : pousser une rivale sur un requin, en testant le bon capteur en premier |
+| 5 | Anticiper la nuit avec `heure()` et `distance_plage()` |
+| 🏆 | Le défi : lire le code de la tortue **Pirate** 🤖 et activer le mode avancé |
+
+**Mode avancé** : sous l'éditeur de l'écran élève, l'interrupteur « 🚀 Primitives avancées » ajoute les nouvelles primitives à l'autocomplétion, à la boîte à outils et à l'aide. Dans le bac à sable, la tortue Pirate 🤖 rejoint alors les tortues d'entraînement. Le jeu accepte toujours toutes les primitives : l'interrupteur ne change que ce qui est proposé.
+
 ### Les aides pour les débutants (dans tous les éditeurs)
 
 - **Autocomplétion** :
@@ -58,6 +76,8 @@ Chaque étape montre **d'abord un exemple à manipuler**, avec très peu de text
   - les propositions tiennent compte de l'endroit : seulement des questions après un `if`, seulement des ordres en début de ligne.
 - **Boîte à outils** : toutes les primitives en boutons. Un clic insère le mot dans le code et rappelle son rôle.
 - **Barre d'info** sous l'éditeur : le rôle du mot sous le curseur.
+- **Indentation visible** : un trait vertical coloré par niveau de décalage. Quand le curseur est sur un `if`, un `elif` ou un `else`, les mots-clés qui vont ensemble sont surlignés en jaune, avec le trait qui les relie. La barre d'info précise, par exemple : « Ce `else` va avec le `if` de la ligne 5 ».
+- **Bouton 📋 Copier** sur tous les blocs de code : l'éditeur, les solutions, le coup de pouce, la « pensée » de la tortue, l'aide-mémoire.
 - **Deux-points ajoutés automatiquement** quand on oublie les `:` après `if`, `elif` ou `else` (l'éditeur le signale), et **indentation automatique**.
 - **💡 Coup de pouce** (écran élève) :
   - il donne **l'idée suivante** d'après ce qui manque dans le code, en 5 paliers : pondre la nuit sur la plage, se méfier des requins, vérifier l'énergie, éviter le plastique, partir avant la nuit ;
@@ -79,6 +99,10 @@ Chaque étape montre **d'abord un exemple à manipuler**, avec très peu de text
   - `manger()` sur des algues : +3 ;
   - `manger()` sur un sac plastique : −3 ;
   - à 0, la tortue est **épuisée** : retour au départ et bloquée 5 tours.
+- **Les algues bougent** : une touffe a 5 portions. Mangée jusqu'au bout, elle disparaît et une nouvelle pousse ailleurs, à 2 cases ou plus des plages. Rester collé à la plage n'est donc plus une stratégie gagnante à coup sûr.
+- **Les sacs plastique** dérivent, coulent au bout de 30 à 60 tours, puis réapparaissent ailleurs.
+- **Le soleil** : le jour, une tortue qui reste sur la plage perd 1 ⚡ de plus tous les 3 tours.
+- **Pousser** (primitive avancée) : `pousser()` coûte 2 ⚡ et pousse une tortue voisine d'une case. Si un requin attend derrière elle, elle est attrapée.
 - **Les requins** voient à 4 cases et chassent la tortue la plus proche. Une tortue attrapée **perd 1 nid** (si elle en a), retourne au départ et reste bloquée 5 tours. Deux refuges :
   - **la plage**, où les requins ne vont jamais ;
   - **les algues** : la tortue y est invisible… **sauf quand elle mange**.
@@ -98,7 +122,7 @@ Chaque étape montre **d'abord un exemple à manipuler**, avec très peu de text
 |---|---|
 | 🌊 Lagon calme (manche 1) | 3 requins, quelques sacs plastique |
 | 🛍️ Invasion de plastique (manche 2) | 22 sacs, surtout sur les algues : il faut `not plastique_ici()` |
-| 🏆 Finale (manche 3) | 5 requins rapides et nuits courtes (21 h – 4 h) : il faut anticiper avec `heure()` |
+| 🏆 Finale (manche 3) | 5 requins rapides et nuits courtes (20 h – 5 h) : il faut anticiper avec `heure()` |
 | 🦈 Requins affamés, 🌙 Nuits courtes | Au choix de l'enseignant |
 | ⛈️ Tempête | Tout à la fois (duel des champions) |
 
@@ -106,8 +130,8 @@ Chaque étape montre **d'abord un exemple à manipuler**, avec très peu de text
 
 - À chaque manche, les points dépendent du **rang parmi les élèves** : 25, 20, 16, 13, 11, 10, 9…, avec 1 point minimum.
 - **+3 de bonus** si la tortue pond plus de nids qu'à la manche précédente. Un élève faible qui progresse marque donc aussi.
-- Les tortues d'entraînement 🤖 complètent le lagon s'il y a moins de 8 élèves. Elles ne marquent pas de points.
-- Le **duel des champions** (les 3 premiers et la Championne 🤖) est hors classement.
+- Les tortues d'entraînement 🤖 servent **uniquement à compléter le lagon jusqu'à 8 tortues** (réglable), y compris pendant le duel. Elles ne marquent pas de points.
+- Le **duel des champions** (les 3 premiers, complétés par des 🤖) est hors classement.
 
 ---
 
@@ -131,7 +155,9 @@ Conseils :
 - « Terminer le chrono » laisse 5 secondes aux élèves. « +1 min » rallonge le temps.
 - Le bouton **◧ Panneau** masque la colonne de gauche. Elle est masquée automatiquement pendant le brawl. **⛶ Plein écran** sert pour le vidéoprojecteur.
 - La salle est pilotée **depuis le navigateur qui l'a créée** : le jeton enseignant y est enregistré. On peut la reprendre plus tard depuis « Mes salles ».
-- Le bouton ✕ retire un élève (pseudo inapproprié, doublon). Faites-le de préférence avant le premier brawl.
+- **Arriver en cours de partie** : un élève peut rejoindre la salle à tout moment avec le code. L'écran projeté l'annonce (« 🆕 … rejoint la partie »), et sa tortue joue au brawl suivant.
+- **Changer d'ordinateur** : si un élève doit continuer sur un autre poste, son pseudo est refusé (il est protégé). Cliquez sur 🔓 à côté de son nom : il pourra le reprendre, avec ses tortues et ses points.
+- Le bouton ✕ retire un élève et ses tortues (pseudo inapproprié, doublon). Faites-le de préférence avant le premier brawl.
 
 ---
 
@@ -143,7 +169,8 @@ Conseils :
    - Choisissez une **région européenne** (par exemple *West EU (Paris)* ou *Central EU (Frankfurt)*), ce qui est préférable pour le RGPD.
    - Le mot de passe de la base ne servira pas ici.
 2. Ouvrez **SQL Editor → New query**. Copiez-collez **tout** le fichier `supabase.sql`, puis cliquez sur **Run**. Le script peut être relancé sans risque, par exemple après une mise à jour.
-> ✅ **Déjà fait pour votre projet** : `js/config.js` contient l'URL et la clé de votre projet Supabase. Il reste seulement à exécuter `supabase.sql` (point 2) si ce n'est pas encore fait.
+> ✅ **Déjà fait pour votre projet** : `js/config.js` contient l'URL et la clé de votre projet Supabase. Il reste seulement à exécuter `supabase.sql` (point 2).
+> ⚠️ **À refaire après chaque mise à jour du site** : le script peut être relancé sans risque. La dernière version ajoute le déblocage de pseudo 🔓.
 > Pour vérifier : la page d'accueil du site doit afficher « 🟢 Connecté à la base de données de la classe ».
 > Si elle affiche « 🔴 La base de données n'est pas prête », exécutez `supabase.sql`.
 
@@ -236,6 +263,8 @@ js/render.js     ← dessin du lagon (canvas) et lecteur de match
 js/editor.js     ← éditeur de code coloré, autocomplétion, boîte à outils, vue « pensée de la tortue »
 js/primitives.js ← les capteurs, actions et mots-clés avec leur rôle (en mots simples)
 js/pouce.js      ← le « coup de pouce » gradué
+js/tutokit.js    ← composants communs aux deux tutoriels (exemples, exercices, quiz, missions)
+js/tuto-avance.js ← le tutoriel avancé (avec tuto-avance.html)
 js/viewer.js     ← visionneuse réutilisable (lagon + frise + pensée)
 js/tuto.js  js/eleve.js  js/prof.js
 supabase.sql     ← tables, règles de sécurité et fonctions

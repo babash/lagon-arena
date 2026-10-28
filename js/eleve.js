@@ -2,14 +2,14 @@
 //  Lagon Arena — écran élève : programmer, tester, envoyer, comprendre
 // =====================================================================
 import { db, MODE, synchroniserHorloge, secondesRestantes } from "./db.js";
-import { simulate, BOTS, CODE_DEPART, TWISTS, BONUS_PROGRESSION } from "./engine.js";
+import { simulate, BOTS, BOT_PIRATE, CODE_DEPART, TWISTS, BONUS_PROGRESSION } from "./engine.js";
 import { check } from "./interp.js";
 import { CodeEditor, boiteOutils } from "./editor.js";
 import { coupDePouceHTML } from "./pouce.js";
-import { RAPPELS } from "./primitives.js";
+import { RAPPELS, estAvance, setAvance } from "./primitives.js";
 import { MatchViewer, rapportHTML, tableauMatch } from "./viewer.js";
 import { lancerSimulation, codeDe, estBot, infosManche, classementCumule } from "./brawl.js";
-import { $, $$, el, esc, toast, store, mmss, AIDE_HTML, twistCarte } from "./common.js";
+import { $, $$, el, esc, toast, store, mmss, AIDE_HTML, twistCarte, activerCopie } from "./common.js";
 
 const q = new URLSearchParams(location.search);
 const SALLE = (q.get("salle") || "").toUpperCase();
@@ -46,6 +46,16 @@ const ed = new CodeEditor($("#ed"), {
   onChange: (v) => { store.set(cleCode, v); clearTimeout(minuterie); minuterie = setTimeout(verifier, 450); majEnvoi(); },
 });
 boiteOutils($("#outils"), ed);
+activerCopie();
+
+// mode avancé : affiche les primitives du tutoriel avancé (et la tortue Pirate dans le bac à sable)
+{
+  const input = el("input", { type: "checkbox" }); input.checked = estAvance();
+  const sw = el("label", { class: "switch petit", title: "Affiche les primitives avancées (distances, pousser…) dans l'autocomplétion et la boîte à outils" },
+    input, el("span", { class: "glissiere" }), el("span", { html: '🚀 Primitives avancées <a href="tuto-avance.html" target="_blank">(tutoriel avancé)</a>' }));
+  input.addEventListener("change", () => { setAvance(input.checked); toast(input.checked ? "🚀 Mode avancé : nouvelles primitives disponibles !" : "Mode simple."); });
+  $("#outils").before(el("div", { class: "row avance-sw" }, sw));
+}
 
 // coup de pouce : l'idée suivante, d'après ce qui manque dans le code
 const pouce = $("#pouce");
@@ -93,8 +103,9 @@ majTwistSB();
 function tester() {
   const c = verifier();
   if (!c.ok) { toast("Corrige d'abord l'erreur de ton code (en rouge).", "err"); return; }
+  const bots = estAvance() ? [...BOTS, BOT_PIRATE] : BOTS;   // en mode avancé, la Pirate pousse les autres tortues !
   const joueurs = [{ id: "moi", nom: LIBRE ? "Ta tortue" : PSEUDO, couleur, code: ed.value },
-    ...BOTS.map((b, i) => ({ id: "Bot-" + b.nom, nom: b.nom + " 🤖", couleur: BOT_COUL[i], code: b.code }))];
+    ...bots.map((b, i) => ({ id: "Bot-" + b.nom, nom: b.nom + " 🤖", couleur: BOT_COUL[i % BOT_COUL.length], code: b.code }))];
   const sim = simulate({ joueurs, graine: graineSB, twist: twistActuel() });
   if (viewerSB) viewerSB.destroy();
   viewerSB = new MatchViewer($("#sb-vue"), { sim, focus: "moi", code: ed.value, vitesse: 5 });
@@ -220,6 +231,7 @@ async function changementPhase(premier) {
     case "attente":
       bandeau("⏳ <b>La partie va bientôt commencer.</b> En attendant, prépare ta tortue et teste-la dans le bac à sable !"); break;
     case "prog":
+      if (premier && salle.manche > 1 && !dernierEnvoi && !salle.duel) toast("🆕 La partie a déjà commencé : programme ta tortue et envoie-la, elle jouera au prochain brawl !");
       if (salle.duel && !estFinaliste()) bandeau(`⛈️ <b>Duel des champions</b> : ${salle.duel.map(esc).join(", ")} préparent leur tortue. Toi, tu peux continuer à t'entraîner !`);
       else bandeau(`⌨️ <b>${salle.duel ? "Duel des champions" : "Manche " + salle.manche}</b> : ${T.icone} ${esc(T.nom)}. Améliore ta tortue, teste-la, puis <b>envoie-la</b> avant la fin du chrono !`, "action");
       if (!premier) { onglet("prog"); toast(salle.duel ? "⛈️ Le duel des champions commence !" : `🔔 Manche ${salle.manche} : à vos claviers !`); }
@@ -300,7 +312,8 @@ function afficherResultats(info, scores, tortues, joueurs) {
       </div>${prog}
       <h3>🔍 Ce qu'a fait ta tortue</h3>${rapportHTML(sim, PSEUDO)}`;
   } else {
-    bloc = `<p>Tu ne jouais pas ce match${info.duel ? " (duel des finalistes)" : ""}. Regarde-le quand même : que font les meilleures tortues ?</p>`;
+    bloc = info.duel ? `<p>Ce match était le duel des finalistes. Regarde-le quand même : que font les meilleures tortues ?</p>`
+      : `<p>🆕 Tu es arrivé·e après ce match : ta tortue n'y était pas. Regarde-le quand même (que font les meilleures tortues ?) : <b>ta tortue jouera au prochain brawl</b>.</p>`;
   }
   $("#t-res").innerHTML = `<div class="grid2"><div>
       <div class="card"><h2>${titre} · ${T.icone} ${esc(T.nom)}</h2>${bloc}</div>

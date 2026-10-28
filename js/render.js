@@ -1,7 +1,7 @@
 // =====================================================================
 //  Lagon Arena — dessin du lagon (canvas) et lecteur de match
 // =====================================================================
-import { MAP, W, H, tileAt, HERBIERS } from "./engine.js";
+import { MAP, W, H, tileAt } from "./engine.js";
 
 const TAU = Math.PI * 2;
 function hash(x, y, s = 0) { let h = (x * 374761393 + y * 668265263 + s * 1442695041) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
@@ -156,7 +156,12 @@ export class Lagon {
     g.drawImage(this.bg, 0, 0, this.canvas.width / d, this.canvas.height / d);
     const temps = opts.temps ?? performance.now() / 1000;
 
-    HERBIERS.forEach(([x, y], i) => { if (A.algues[i] > 0) this.algues(g, (x + 0.5) * c, (y + 0.5) * c, c, A.algues[i], temps); });
+    // touffes d'algues (elles bougent : on les dessine à chaque image)
+    for (const [x, y, n] of A.herbes || []) {
+      g.fillStyle = "rgba(25,110,70,.38)";
+      g.beginPath(); g.ellipse((x + 0.5) * c, (y + 0.5) * c, c * 0.48, c * 0.44, 0, 0, TAU); g.fill();
+      if (n > 0) this.algues(g, (x + 0.5) * c, (y + 0.5) * c, c, Math.min(3, n), temps);
+    }
     // nids pondus jusqu'ici
     const parCase = {};
     for (const nd of sim.nids) {
@@ -199,6 +204,14 @@ export class Lagon {
       const x = saut ? (u < 0.5 ? s[0] : e[0]) : lerp(s[0], e[0], u), y = saut ? (u < 0.5 ? s[1] : e[1]) : lerp(s[1], e[1], u);
       this.requin(g, (x + 0.5) * c, (y + 0.5) * c, c, e[3], e[4], s[2] > 0);
     });
+    // 💥 tortues poussées (pendant le tour où ça se passe)
+    if (sim.events.length) for (const e of sim.events) {
+      if (e.type !== "pousse" || e.tick !== k) continue;
+      const i = sim.tortues.findIndex((t) => t.id === e.cible); if (i < 0) continue;
+      const b = B.tortues[i];
+      g.font = `${Math.round(c * 0.7)}px sans-serif`; g.globalAlpha = 1 - u * 0.6;
+      g.fillText("💥", (b[0] + 0.15) * c, (b[1] + 0.35) * c); g.globalAlpha = 1;
+    }
     // nuit
     const na = lerp(A.nuit ? 1 : 0, B.nuit ? 1 : 0, u);
     if (na > 0) {
@@ -241,7 +254,7 @@ export class Player {
 // ---------------------------------------------------------------------
 //  Barre de contrôle : lecture/pause, vitesse, frise avec les événements
 // ---------------------------------------------------------------------
-const ICONES = { nid: "🥚", capture: "🦈", plastique: "🛍️", epuisee: "😵" };
+const ICONES = { nid: "🥚", capture: "🦈", plastique: "🛍️", epuisee: "😵", pousse: "💥" };
 export function controles(player, marqueurs = []) {
   const btn = document.createElement("button"); btn.className = "btn small"; btn.textContent = "▶ Lecture";
   const vit = document.createElement("select");

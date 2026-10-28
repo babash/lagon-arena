@@ -17,7 +17,8 @@ export function rng(seed) {
 }
 
 // ---------- la carte du lagon (24 x 14) ----------
-//  .  eau   #  corail   h  herbier   P  plage   T  départ des tortues
+//  .  eau   #  corail   h  herbier AU DÉPART   P  plage   T  départ des tortues
+//  Les herbiers bougent : une touffe mangée jusqu'au bout disparaît, une autre pousse ailleurs.
 export const MAP = [
   "PP.....#.........#......",
   "PPh....##.......hh......",
@@ -38,7 +39,7 @@ export const W = MAP[0].length, H = MAP.length;
 export const TICKS = 180;              // durée d'un match (en tours)
 export const SHARK_STARTS = [[21, 3], [21, 10], [11, 0], [11, 13], [23, 0], [23, 13]];
 
-// Réglages du jeu (équilibrés par simulation : voir le README)
+// Réglages du jeu (équilibrés par simulation : node outils/verifier.mjs)
 export const P = {
   energieDepart: 8, energieMax: 10,
   energiePonte: 6,      // énergie minimale pour pondre
@@ -46,15 +47,20 @@ export const P = {
   gainAlgue: 3,         // manger une algue rapporte 3
   pertePlastique: 3,    // avaler un sac plastique fait perdre 3
   perteEnergie: 6,      // l'énergie baisse de 1 tous les 6 tours
-  algueMax: 3, repousse: 8,   // chaque herbier a 3 portions d'algues, +1 tous les 8 tours
+  portionsHerbier: 5,   // une touffe d'algues = 5 repas, puis elle disparaît…
+  delaiRepousse: 6,     // … et une nouvelle touffe pousse ailleurs 6 tours plus tard
+  distPlageRepousse: 2, // les nouvelles touffes poussent à 2 cases ou plus de la plage
+  soleilPlage: 3,       // le jour, sur la plage : −1 ⚡ de plus tous les 3 tours (0 = désactivé)
+  viePlastique: 30,     // un sac dérive environ 30 à 60 tours puis réapparaît ailleurs
   bloquee: 5,           // tours bloquée après un épuisement
   bloqueeCapture: 5,    // tours bloquée après une capture
   perteCapture: 0,      // énergie perdue quand un requin attrape la tortue
   nidPerduCapture: true, // attrapée par un requin : −1 nid (s'il y en a)
   porteeRequin: 3,      // requin_proche() : un requin à 3 cases ou moins
+  coutPousse: 2,        // pousser() une tortue voisine coûte 2 d'énergie
 };
 
-const TILE = { ".": "eau", "#": "corail", "h": "herbier", "P": "plage", "T": "eau" };
+const TILE = { ".": "eau", "#": "corail", "h": "eau", "P": "plage", "T": "eau" };
 export const tileAt = (x, y) => TILE[MAP[y][x]];
 const inside = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
 const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];
@@ -68,9 +74,9 @@ export const TWISTS = {
   calme:     { nom: "Lagon calme", icone: "🌊", texte: "3 requins tranquilles et quelques sacs plastique.", requins: 3, rapides: false, vision: 4, plastiques: 4, plastiqueHerbier: false, nuit: [19, 6] },
   plastique: { nom: "Invasion de plastique", icone: "🛍️", texte: "22 sacs plastique dérivent, surtout sur les herbiers !", requins: 3, rapides: false, vision: 4, plastiques: 22, plastiqueHerbier: true, nuit: [19, 6] },
   affames:   { nom: "Requins affamés", icone: "🦈", texte: "5 requins rapides qui voient plus loin.", requins: 5, rapides: true, vision: 5, plastiques: 4, plastiqueHerbier: false, nuit: [19, 6] },
-  nuits:     { nom: "Nuits courtes", icone: "🌙", texte: "La nuit ne dure que de 21 h à 4 h : il faut anticiper.", requins: 3, rapides: false, vision: 4, plastiques: 4, plastiqueHerbier: false, nuit: [21, 4] },
-  finale:    { nom: "Finale : requins affamés et nuits courtes", icone: "🏆", texte: "5 requins rapides, et la nuit ne dure que de 21 h à 4 h.", requins: 5, rapides: true, vision: 5, plastiques: 6, plastiqueHerbier: false, nuit: [21, 4] },
-  tempete:   { nom: "Tempête : tout à la fois", icone: "⛈️", texte: "Requins affamés, invasion de plastique et nuits courtes.", requins: 5, rapides: true, vision: 5, plastiques: 22, plastiqueHerbier: true, nuit: [21, 4] },
+  nuits:     { nom: "Nuits courtes", icone: "🌙", texte: "La nuit ne dure que de 20 h à 5 h : il faut anticiper.", requins: 3, rapides: false, vision: 4, plastiques: 4, plastiqueHerbier: false, nuit: [20, 5] },
+  finale:    { nom: "Finale : requins affamés et nuits courtes", icone: "🏆", texte: "5 requins rapides, et la nuit ne dure que de 20 h à 5 h.", requins: 5, rapides: true, vision: 5, plastiques: 6, plastiqueHerbier: false, nuit: [20, 5] },
+  tempete:   { nom: "Tempête : tout à la fois", icone: "⛈️", texte: "Requins affamés, invasion de plastique et nuits courtes.", requins: 5, rapides: true, vision: 5, plastiques: 22, plastiqueHerbier: true, nuit: [20, 5] },
 };
 export const TWIST_ORDER = ["calme", "plastique", "finale"];
 export const TWIST_DUEL = "tempete";
@@ -93,13 +99,15 @@ function bfs(sources, passable) {
   return d;
 }
 const turtleOK = (x, y) => tileAt(x, y) !== "corail";
-const sharkOK = (x, y) => { const t = tileAt(x, y); return t === "eau" || t === "herbier"; };
-export const BEACHES = [], HERBIERS = [];
+const sharkOK = (x, y) => tileAt(x, y) === "eau";
+export const BEACHES = [], HERBIERS_DEPART = [];
 for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
   if (tileAt(x, y) === "plage") BEACHES.push([x, y]);
-  if (tileAt(x, y) === "herbier") HERBIERS.push([x, y]);
+  if (MAP[y][x] === "h") HERBIERS_DEPART.push([x, y]);
 }
+export const HERBIERS = HERBIERS_DEPART;   // (ancien nom)
 const DIST_PLAGE = bfs(BEACHES, turtleOK);
+export const distancePlage = (x, y) => DIST_PLAGE[y][x];
 
 function stepDown(dist, x, y) {
   let best = null, bd = dist[y][x];
@@ -185,12 +193,32 @@ export const BOTS = [
 ` },
 ];
 
+// Tortue d'entraînement « avancée » (tutoriel avancé, bac à sable en mode avancé)
+export const BOT_PIRATE = { nom: "Pirate", niveau: "avancé", code: `def tour():
+    if requin_derriere_tortue() and energie() >= 4:
+        pousser()
+    elif distance_requin() <= 2 and not sur_plage():
+        fuir()
+    elif sur_plage() and est_la_nuit() and energie() >= 6:
+        pondre()
+    elif est_la_nuit() and energie() >= 6:
+        aller_vers_plage()
+    elif heure() >= 17 and energie() >= 9:
+        aller_vers_plage()
+    elif algue_ici() and not plastique_ici() and energie() < 10:
+        manger()
+    else:
+        aller_vers_algue_libre()
+` };
+
 export const COULEURS = ["#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#42d4f4", "#f032e6",
   "#bfef45", "#fabed4", "#469990", "#dcbeff", "#9a6324", "#fffac8", "#800000", "#aaffc3", "#808000", "#ffd8b1", "#000075", "#a9a9a9"];
 
 // =====================================================================
 //  simulate({ joueurs:[{id, nom, couleur, code}], graine, twist, ticks, scenario })
-//  scenario (tutoriel) : { energie, requins:[[x,y]], plastiques:[[x,y]], heureDepart, spawn:[x,y], ticks }
+//  scenario (tutoriels) : { energie, requins:[[x,y]], plastiques:[[x,y]], heureDepart, ticks,
+//     spawn:[x,y] (1re tortue), spawns:{id:[x,y]}, herbes:[[x,y,portions]], repousse:false,
+//     requinsFixes:true, energies:{id:n} }
 // =====================================================================
 export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario = null }) {
   const T = TWISTS[twist] || TWISTS.calme;
@@ -205,31 +233,46 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
   for (let i = spawnOrder.length - 1; i > 0; i--) { const j = ri(i + 1); [spawnOrder[i], spawnOrder[j]] = [spawnOrder[j], spawnOrder[i]]; }
   const sorted = [...joueurs].sort((a, b) => String(a.id).localeCompare(String(b.id)));
   const turtles = sorted.map((j, i) => {
-    const sp = sc.spawn && i === 0 ? sc.spawn : SPAWNS[spawnOrder[i % SPAWNS.length]];
+    const sp = (sc.spawns && sc.spawns[j.id]) || (sc.spawn && i === 0 ? sc.spawn : SPAWNS[spawnOrder[i % SPAWNS.length]]);
     const c = check(j.code || "");
+    const e0 = (sc.energies && sc.energies[j.id]) ?? sc.energie ?? P.energieDepart;
     return {
       id: j.id, nom: j.nom, couleur: j.couleur, x: sp[0], y: sp[1], sx: sp[0], sy: sp[1], dir: 1,
-      energie: sc.energie ?? P.energieDepart, nids: 0, bloquee: 0, immunite: 0, mange: false,
+      energie: e0, nids: 0, bloquee: 0, immunite: 0, mange: false, pousseePar: null,
       compiled: c.ok ? c.compiled : null, compileError: c.ok ? null : c.error,
-      stats: { captures: [], plastiques: [], epuisee: [], refus: {}, rienAManger: 0, pasFaim: 0, immobile: 0, erreurs: 0, actions: {}, pontes: [], repas: 0, energieMax: sc.energie ?? P.energieDepart },
+      stats: { captures: [], plastiques: [], epuisee: [], refus: {}, rienAManger: 0, pasFaim: 0, immobile: 0, erreurs: 0, actions: {}, pontes: [], repas: 0, energieMax: e0,
+        pousses: [], poussee: [], victimes: 0 },
     };
   });
 
-  // --- herbiers, plastiques, requins ---
-  const algues = {}; for (const [x, y] of HERBIERS) algues[x + "," + y] = P.algueMax;
-  const waterCells = [];
+  // --- herbiers (qui bougent), plastiques, requins ---
+  const herbes = new Map();   // "x,y" -> { x, y, n }
+  for (const [x, y, n] of sc.herbes || HERBIERS_DEPART.map(([x, y]) => [x, y, P.portionsHerbier])) herbes.set(x + "," + y, { x, y, n });
+  const repousses = [];       // tours restants avant qu'une nouvelle touffe pousse
   const spawnSet = new Set(SPAWNS.map(([x, y]) => x + "," + y));
+  const waterCells = [];
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (tileAt(x, y) === "eau" && !spawnSet.has(x + "," + y)) waterCells.push([x, y]);
-  function randomPlasticCell(onHerbier) {
-    const pool = onHerbier && R() < 0.8 ? HERBIERS : waterCells;
-    return pool[ri(pool.length)];
+  const cellsRepousse = waterCells.filter(([x, y]) => DIST_PLAGE[y][x] >= P.distPlageRepousse);
+  function nouvelleTouffe() {
+    for (let essai = 0; essai < 30; essai++) {
+      const [x, y] = cellsRepousse[ri(cellsRepousse.length)];
+      const k = x + "," + y;
+      if (herbes.has(k) || turtles.some((t) => t.x === x && t.y === y)) continue;
+      herbes.set(k, { x, y, n: P.portionsHerbier, ne: true });
+      return;
+    }
   }
+  function randomPlasticCell(onHerbier) {
+    const touffes = [...herbes.values()];
+    if (onHerbier && touffes.length && R() < 0.8) { const h = touffes[ri(touffes.length)]; return [h.x, h.y]; }
+    return waterCells[ri(waterCells.length)];
+  }
+  const vieSac = () => P.viePlastique + ri(P.viePlastique);
   const plastics = sc.plastiques
     ? sc.plastiques.map(([x, y]) => ({ x, y, retour: 0, fixe: true }))
-    : Array.from({ length: T.plastiques }, () => { const [x, y] = randomPlasticCell(T.plastiqueHerbier); return { x, y, retour: 0 }; });
+    : Array.from({ length: T.plastiques }, () => { const [x, y] = randomPlasticCell(T.plastiqueHerbier); return { x, y, retour: 0, vie: vieSac() }; });
   const sharks = (sc.requins || SHARK_STARTS.slice(0, T.requins)).map(([x, y]) => ({ x, y, sx: x, sy: y, repos: 0, wp: null, fx: 0, fy: 0 }));
   // patrouille : sans proie en vue, un requin traverse le lagon vers un point choisi au hasard
-  // (il ne tourne pas en rond au même endroit, ce qui bloquerait les tortues cachées)
   const sharkCells = [];
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (sharkOK(x, y)) sharkCells.push([x, y]);
   const distPatrouille = new Map();
@@ -240,10 +283,24 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
   for (const t of turtles) traces[t.id] = [];
 
   const hasPlastic = (x, y) => plastics.some((p) => p.retour === 0 && p.x === x && p.y === y);
-  const algueIci = (x, y) => tileAt(x, y) === "herbier" && algues[x + "," + y] > 0;
+  const touffe = (x, y) => herbes.get(x + "," + y);
+  const algueIci = (x, y) => { const h = touffe(x, y); return !!h && h.n > 0; };
   // cachée = dans des algues ET ne mange pas ce tour-ci (manger fait bouger les algues)
   const cachee = (t) => algueIci(t.x, t.y) && !t.mange;
   const protegee = (t) => t.bloquee > 0 || t.immunite > 0 || cachee(t) || tileAt(t.x, t.y) === "plage";
+
+  // --- pousser : tortues voisines, case derrière, requin derrière ---
+  const voisines = (t) => turtles.filter((u) => u !== t && u.bloquee === 0 && manh(u, t) === 1);
+  const derriere = (t, u) => [u.x + (u.x - t.x), u.y + (u.y - t.y)];
+  const poussable = (t, u) => {
+    const [bx, by] = derriere(t, u);
+    return inside(bx, by) && turtleOK(bx, by) && !turtles.some((v) => v !== u && v.x === bx && v.y === by && v.bloquee === 0);
+  };
+  const versRequin = (t, u) => {
+    if (!poussable(t, u) || u.immunite > 0) return false;
+    const [bx, by] = derriere(t, u);
+    return tileAt(bx, by) === "eau" && !algueIci(bx, by) && sharks.some((s) => s.repos === 0 && s.x === bx && s.y === by);
+  };
 
   function snapshot(tick) {
     frames.push({
@@ -251,7 +308,7 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
       tortues: turtles.map((t) => [t.x, t.y, t.energie, t.nids, t.bloquee, t.immunite, t.dir, cachee(t) ? 1 : 0]),
       requins: sharks.map((s) => [s.x, s.y, s.repos, s.fx, s.fy]),
       plastiques: plastics.filter((p) => p.retour === 0).map((p) => [p.x, p.y]),
-      algues: HERBIERS.map(([x, y]) => algues[x + "," + y]),
+      herbes: [...herbes.values()].map((h) => [h.x, h.y, h.n]),
       nids: nids.length,
     });
   }
@@ -260,7 +317,8 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
   for (let tick = 0; tick < ticks; tick++) {
     const heure = heureDe(tick, heureDepart), nuit = nuitDe(tick);
     // distances vers les algues propres (avec des algues et sans plastique)
-    const distAlgue = bfs(HERBIERS.filter(([x, y]) => algues[x + "," + y] > 0 && !hasPlastic(x, y)), turtleOK);
+    const propres = [...herbes.values()].filter((h) => h.n > 0 && !hasPlastic(h.x, h.y));
+    const distAlgue = bfs(propres.map((h) => [h.x, h.y]), turtleOK);
     const order = turtles.map((_, i) => i);
     for (let i = order.length - 1; i > 0; i--) { const j = ri(i + 1); [order[i], order[j]] = [order[j], order[i]]; }
 
@@ -281,6 +339,11 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
         est_la_nuit: () => nuit,
         energie: () => t.energie,
         heure: () => heure,
+        distance_algue: () => (distAlgue[t.y][t.x] === Infinity ? 99 : distAlgue[t.y][t.x]),
+        distance_plage: () => DIST_PLAGE[t.y][t.x],
+        distance_requin: () => (sharks.length ? Math.min(...sharks.map((s) => manh(s, t))) : 99),
+        tortue_a_cote: () => voisines(t).length > 0,
+        requin_derriere_tortue: () => voisines(t).some((u) => versRequin(t, u)),
       };
       rec.capteurs = {};
       for (const k of Object.keys(SENSORS)) rec.capteurs[k] = sensors[k]();
@@ -294,7 +357,6 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
       switch (tr.action) {
         case null: t.stats.immobile++; rec.effet = "aucune action"; break;
         case "manger": {
-          const k = t.x + "," + t.y;
           t.mange = true;
           if (hasPlastic(t.x, t.y)) {
             const p = plastics.find((p) => p.retour === 0 && p.x === t.x && p.y === t.y);
@@ -303,7 +365,16 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
             events.push({ tick, type: "plastique", id: t.id }); rec.effet = "a avalé un sac plastique (−3)";
           } else if (algueIci(t.x, t.y)) {
             if (t.energie >= P.energieMax) { t.stats.pasFaim++; rec.effet = "n'a plus faim (énergie déjà à 10)"; }
-            else { t.energie = Math.min(P.energieMax, t.energie + P.gainAlgue); algues[k]--; t.stats.repas++; rec.effet = "mange une algue (+3)"; }
+            else {
+              const h = touffe(t.x, t.y);
+              t.energie = Math.min(P.energieMax, t.energie + P.gainAlgue); h.n--; t.stats.repas++;
+              rec.effet = "mange une algue (+3)";
+              if (h.n <= 0) {   // touffe finie : elle disparaît, une autre poussera ailleurs
+                herbes.delete(t.x + "," + t.y);
+                if (sc.repousse !== false) repousses.push(P.delaiRepousse);
+                rec.effet += " — la touffe est finie";
+              }
+            }
           } else { t.stats.rienAManger++; rec.effet = "rien à manger ici"; }
           break;
         }
@@ -343,9 +414,34 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
           else rec.effet = distAlgue[t.y][t.x] === 0 ? "déjà sur des algues : il faudrait manger()" : "aucune algue propre disponible";
           break;
         }
+        case "aller_vers_algue_libre": {
+          const occupees = new Set(turtles.filter((u) => u !== t && u.bloquee === 0).map((u) => u.x + "," + u.y));
+          const d = bfs(propres.filter((h) => h.n > 0 && !occupees.has(h.x + "," + h.y)).map((h) => [h.x, h.y]), turtleOK);
+          const s = stepDown(d, t.x, t.y);
+          if (s) move(s[0], s[1]);
+          else rec.effet = d[t.y][t.x] === 0 ? "déjà sur des algues libres : il faudrait manger()" : "aucune algue libre";
+          break;
+        }
         case "aller_vers_plage": {
           const s = stepDown(DIST_PLAGE, t.x, t.y);
           if (s) move(s[0], s[1]); else rec.effet = "déjà sur la plage";
+          break;
+        }
+        case "pousser": {
+          const vs = voisines(t).filter((u) => poussable(t, u));
+          if (!vs.length) { rec.effet = "personne à pousser ici"; break; }
+          const u = vs.find((v) => versRequin(t, v)) || vs[0];
+          const surRequin = versRequin(t, u);
+          const [bx, by] = derriere(t, u);
+          u.dir = bx > u.x ? 1 : bx < u.x ? 3 : by > u.y ? 2 : 0;
+          u.x = bx; u.y = by; u.pousseePar = { id: t.id, tick };
+          t.energie -= P.coutPousse;
+          t.stats.pousses.push({ tick, cible: u.id, requin: surRequin });
+          u.stats.poussee.push({ tick, par: t.id });
+          events.push({ tick, type: "pousse", id: t.id, cible: u.id, requin: surRequin });
+          rec.effet = `pousse ${u.nom} (−${P.coutPousse} ⚡)` + (surRequin ? " sur un requin !" : "");
+          const lu = traces[u.id][traces[u.id].length - 1];
+          if (lu && lu.tick === tick) lu.effet = (lu.effet ? lu.effet + " — " : "") + `poussée par ${t.nom}`;
           break;
         }
       }
@@ -357,7 +453,7 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
     const moveTick = T.rapides || tick % 3 !== 2;
     for (const s of sharks) {
       if (s.repos > 0) { s.repos--; continue; }
-      if (!moveTick) continue;
+      if (!moveTick || sc.requinsFixes) continue;
       let cible = null, cd = Infinity;
       for (const t of turtles) {
         if (protegee(t)) continue;
@@ -365,14 +461,14 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
         if (d <= T.vision && d < cd) { cd = d; cible = t; }
       }
       let nx = s.x, ny = s.y;
-      if (cible) {
+      if (cible && cd > 0) {
         const dm = bfs([[cible.x, cible.y]], sharkOK);
         let bd = Infinity;
         for (const [dx, dy] of DIRS) {
           const ax = s.x + dx, ay = s.y + dy;
           if (inside(ax, ay) && sharkOK(ax, ay) && dm[ay][ax] < bd) { bd = dm[ay][ax]; nx = ax; ny = ay; }
         }
-      } else {
+      } else if (!cible) {
         if (!s.wp || (s.x === s.wp[0] && s.y === s.wp[1]) || R() < 0.03) s.wp = sharkCells[ri(sharkCells.length)];
         const dm = versPoint(s.wp);
         let bd = dm[s.y][s.x];
@@ -397,11 +493,13 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
           const nd = [...nids].reverse().find((n) => n.id === t.id && n.perdu == null);
           if (nd) nd.perdu = tick;
         }
-        t.stats.captures.push({ tick, ligne: last && last.ligne, action: last && last.action, perdu });
-        events.push({ tick, type: "capture", id: t.id, perdu });
+        const par = t.pousseePar && t.pousseePar.tick === tick ? t.pousseePar.id : null;
+        if (par) { const p = turtles.find((u) => u.id === par); if (p) p.stats.victimes++; }
+        t.stats.captures.push({ tick, ligne: last && last.ligne, action: last && last.action, perdu, par });
+        events.push({ tick, type: "capture", id: t.id, perdu, par });
         if (last) last.effet = (last.effet ? last.effet + " — " : "") + "ATTRAPÉE par un requin !" + (perdu ? " (−1 nid)" : "");
         t.x = t.sx; t.y = t.sy; t.bloquee = P.bloqueeCapture; t.immunite = P.bloqueeCapture + 3;
-        t.energie = Math.max(1, t.energie - P.perteCapture);   // la morsure fatigue
+        t.energie = Math.max(1, t.energie - P.perteCapture);
         s.x = s.sx; s.y = s.sy; s.repos = 6;     // le requin repart au large et digère
         break;
       }
@@ -410,6 +508,10 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
     for (const t of turtles) {
       if (t.immunite > 0) t.immunite--;
       if (tick % P.perteEnergie === P.perteEnergie - 1 && t.bloquee === 0) t.energie--;
+      // le jour, sur la plage, le soleil dessèche la tortue : elle perd de l'énergie plus vite
+      if (P.soleilPlage && !nuit && tileAt(t.x, t.y) === "plage" && t.bloquee === 0 && tick % P.soleilPlage === P.soleilPlage - 1) {
+        t.energie--; t.stats.soleil = (t.stats.soleil || 0) + 1;
+      }
       if (t.energie <= 0) {
         t.stats.epuisee.push(tick); events.push({ tick, type: "epuisee", id: t.id });
         const last = traces[t.id][traces[t.id].length - 1];
@@ -417,10 +519,12 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
         t.x = t.sx; t.y = t.sy; t.bloquee = P.bloquee; t.immunite = P.bloquee + 3; t.energie = 5;
       }
     }
-    if (tick % P.repousse === P.repousse - 1) for (const k in algues) algues[k] = Math.min(P.algueMax, algues[k] + 1);
+    for (const h of herbes.values()) delete h.ne;
+    for (let i = repousses.length - 1; i >= 0; i--) if (--repousses[i] <= 0) { repousses.splice(i, 1); nouvelleTouffe(); }
     for (const p of plastics) {
       if (p.fixe) { if (p.retour > 0) p.retour--; continue; }
-      if (p.retour > 0) { p.retour--; if (p.retour === 0) { const [x, y] = randomPlasticCell(T.plastiqueHerbier); p.x = x; p.y = y; } continue; }
+      if (p.retour > 0) { p.retour--; if (p.retour === 0) { [p.x, p.y] = randomPlasticCell(T.plastiqueHerbier); p.vie = vieSac(); } continue; }
+      if (--p.vie <= 0) { [p.x, p.y] = randomPlasticCell(T.plastiqueHerbier); p.vie = vieSac(); continue; }   // le sac coule, un autre arrive ailleurs
       if (tick % 5 === 4) {
         const opts = DIRS.map(([dx, dy]) => [p.x + dx, p.y + dy]).filter(([x, y]) => inside(x, y) && sharkOK(x, y));
         if (opts.length && R() < 0.7) [p.x, p.y] = opts[ri(opts.length)];
@@ -474,6 +578,9 @@ export function rapport(sim, id) {
   if (s.epuisee.length) lignes.push(`😵 S'est épuisée ${s.epuisee.length} fois (énergie à 0).`);
   const refusTxt = Object.entries(s.refus).map(([r, n]) => `${n} × « ${r} »`).join(", ");
   if (refusTxt) lignes.push(`⛔ pondre() refusé : ${refusTxt}.`);
+  if (s.pousses.length) lignes.push(`💥 A poussé ${s.pousses.length} tortue${s.pousses.length > 1 ? "s" : ""}${s.victimes ? ` (dont ${s.victimes} sur un requin !)` : ""}.`);
+  if (s.poussee.length) lignes.push(`😤 S'est fait pousser ${s.poussee.length} fois.`);
+  if (s.soleil >= 10) lignes.push(`☀️ A passé beaucoup de temps au soleil sur la plage (−${s.soleil} ⚡).`);
 
   // conseils (2 au maximum, du plus important au moins important) ; `code` = à écrire tel quel
   const capManger = s.captures.filter((c) => c.action === "manger").length;
@@ -492,6 +599,9 @@ export function rapport(sim, id) {
   if (s.epuisee.length) conseils.push("Elle tombe à 0 ⚡. Elle doit manger quand elle a peu d'énergie : `energie() < 4`.");
   if (s.immobile > 20) conseils.push("Elle reste souvent sans rien faire. Ajoute un `else:` à la fin pour qu'elle ait toujours un ordre.");
   if (s.pasFaim > 10) conseils.push("`manger()` à 10 ⚡ ne sert à rien : pars plutôt vers la plage.");
+  if (s.captures.filter((c) => c.par).length) conseils.push("Une tortue t'a poussée sur un requin ! Méfie-toi quand `tortue_a_cote()` est vrai (tutoriel avancé).");
+  if (s.pousses.length >= 3 && !s.victimes) conseils.push("Tes `pousser()` coûtent 2 ⚡ chacun sans rien rapporter : pousse seulement si `requin_derriere_tortue()`.");
+  if (s.soleil >= 15) conseils.push("Le jour, rester sur la plage fatigue (soleil). Va plutôt manger et reviens à la tombée de la nuit.");
   if (!conseils.length) conseils.push(t.nids >= 6
     ? "Très belle tortue ! Pour gagner encore : pars vers la plage avant la nuit, par exemple avec `heure() >= 16`."
     : "Pour pondre plus : remplis ton énergie le jour, puis va vers la plage un peu avant la nuit (`heure() >= 16`).");
@@ -501,6 +611,7 @@ export function rapport(sim, id) {
     ...s.captures.map((c) => ({ tick: c.tick, type: "capture" })),
     ...s.plastiques.map((p) => ({ tick: p.tick, type: "plastique" })),
     ...s.epuisee.map((tick) => ({ tick, type: "epuisee" })),
+    ...s.pousses.map((p) => ({ tick: p.tick, type: "pousse" })),
   ].sort((a, b) => a.tick - b.tick);
   return { lignes, conseils: conseils.slice(0, 2), marqueurs };
 }
@@ -575,5 +686,62 @@ export const MISSIONS = [
     scenario: { energie: 4, requins: [], plastiques: [[4, 6]], spawn: [4, 6], heureDepart: 8, ticks: 30 },
     reussi: (sim) => sim.tortues[0].stats.plastiques.length === 0 && sim.tortues[0].stats.repas >= 2,
     bilan: (sim) => `${sim.tortues[0].stats.repas} repas · ${sim.tortues[0].stats.plastiques.length} sac(s) plastique avalé(s).`,
+  },
+];
+
+// ---------- missions du tutoriel avancé ----------
+const RIVALE_GOURMANDE = `def tour():
+    if algue_ici():
+        manger()
+    else:
+        aller_vers_algue()
+`;
+const pleinAuTour = (sim) => { const i = sim.tortues.findIndex((t) => t.id === "t"); return sim.frames.findIndex((f) => f.tortues[i][2] >= 10); };
+export const MISSIONS_AVANCEES = [
+  {
+    id: "A1", titre: "🔧 Le buffet est pris", notion: "aller_vers_algue_libre()",
+    probleme: "😟 Les algues les plus proches sont déjà occupées par deux gourmandes. Ta tortue y va quand même… et attend.",
+    objectif: "Être pleine d'énergie (10 ⚡) en 15 tours.",
+    code: RIVALE_GOURMANDE,
+    solution: `def tour():
+    if algue_ici():
+        manger()
+    else:
+        aller_vers_algue_libre()
+`,
+    indice: "Il existe un ordre qui va vers les algues où il n'y a PERSONNE : aller_vers_algue_libre().",
+    appris: "<code>aller_vers_algue_libre()</code> évite les touffes déjà occupées : pas de bousculade, plus de repas.",
+    scenario: { energie: 3, energies: { t: 3, u1: 2, u2: 2 }, requins: [], plastiques: [], heureDepart: 8, ticks: 20, repousse: false,
+      herbes: [[10, 3, 3], [9, 3, 3], [15, 2, 5]], spawns: { t: [11, 4], u1: [10, 3], u2: [9, 3] } },
+    autres: [{ id: "u1", nom: "Gourmande 1", couleur: "#9fb3c2", code: RIVALE_GOURMANDE }, { id: "u2", nom: "Gourmande 2", couleur: "#c9d6df", code: RIVALE_GOURMANDE }],
+    reussi: (sim) => { const k = pleinAuTour(sim); return k >= 0 && k <= 15; },
+    bilan: (sim) => { const k = pleinAuTour(sim); return k >= 0 ? `Pleine d'énergie au tour ${k}.` : "Jamais pleine d'énergie."; },
+  },
+  {
+    id: "A2", titre: "🏴‍☠️ La pirate", notion: "requin_derriere_tortue()",
+    probleme: "😟 Une rivale se repose sur la plage, collée à toi… et un requin attend juste derrière elle. Mais ta tortue a peur et s'enfuit.",
+    objectif: "Pousser la rivale sur le requin (10 tours maximum).",
+    code: `def tour():
+    if requin_proche():
+        fuir()
+    elif tortue_a_cote():
+        pousser()
+    else:
+        se_cacher()
+`,
+    solution: `def tour():
+    if requin_derriere_tortue():
+        pousser()
+    elif requin_proche():
+        fuir()
+    else:
+        se_cacher()
+`,
+    indice: "Le premier vrai gagne : requin_proche() est vrai, donc ta tortue fuit. Teste d'abord requin_derriere_tortue().",
+    appris: "<code>pousser()</code> (−2 ⚡) envoie la voisine d'une case. Avec un requin derrière elle, elle est attrapée et perd un nid !",
+    scenario: { energie: 8, requins: [[19, 6]], requinsFixes: true, plastiques: [], heureDepart: 10, ticks: 10, repousse: false, herbes: [], spawns: { t: [21, 6], u1: [20, 6] } },
+    autres: [{ id: "u1", nom: "Rivale", couleur: "#9fb3c2", code: "def tour():\n    se_cacher()\n" }],
+    reussi: (sim) => sim.tortues.find((t) => t.id === "t").stats.victimes >= 1,
+    bilan: (sim) => { const s = sim.tortues.find((t) => t.id === "t").stats; return `${s.pousses.length} poussée(s), ${s.victimes} rivale(s) attrapée(s).`; },
   },
 ];

@@ -4,17 +4,18 @@
 //  puis un petit exercice vérifié tout de suite.
 // =====================================================================
 import { simulate, BOTS, MISSIONS, P, POINTS_RANG, BONUS_PROGRESSION, tileAt } from "./engine.js";
-import { compile, runTurn, check } from "./interp.js";
+import { compile } from "./interp.js";
 import { icone } from "./render.js";
-import { CodeEditor, CodeView, boiteOutils } from "./editor.js";
+import { CodeView } from "./editor.js";
 import { MatchViewer, tableauMatch } from "./viewer.js";
-import { CAPTEURS, ACTIONS_INFO } from "./primitives.js";
-import { $, el, esc, store } from "./common.js";
+import { CAPTEURS as TOUS_CAPTEURS, ACTIONS_INFO as TOUTES_ACTIONS } from "./primitives.js";
+import { $, esc } from "./common.js";
+import { bascule, vf, capt, act, exemple, phrase, exercice, quiz, etapeMission, demarrer, fait } from "./tutokit.js";
+
+// le tutoriel débutant ne montre que les primitives de base
+const CAPTEURS = TOUS_CAPTEURS.filter((c) => !c.avance), ACTIONS_INFO = TOUTES_ACTIONS.filter((a) => !a.avance);
 
 const GRAINE_MISSION = 7;
-const prog = store.get("lagon:tuto2", { faits: [] });
-const sauver = () => store.set("lagon:tuto2", prog);
-const fait = (cle) => { if (!prog.faits.includes(cle)) { prog.faits.push(cle); sauver(); majNav(); } };
 
 // match de démonstration (5 tortues d'entraînement)
 let demo = null;
@@ -23,124 +24,6 @@ const matchDemo = () => demo ||= simulate({
   joueurs: BOTS.map((b, i) => ({ id: b.nom, nom: b.nom, couleur: COUL[i], code: b.code })), graine: 2024, twist: "calme",
 });
 
-// =====================================================================
-//  Petits composants
-// =====================================================================
-function bascule(label, valeur, onChange) {
-  const input = el("input", { type: "checkbox" }); input.checked = valeur;
-  const lab = el("label", { class: "switch" }, input, el("span", { class: "glissiere" }), el("span", { html: label }));
-  input.addEventListener("change", () => onChange(input.checked));
-  lab.regler = (v) => { input.checked = v; };
-  return lab;
-}
-const vf = (b) => `<span class="b-${b}">${b ? "True" : "False"}</span>`;
-const capt = (nom) => { const c = CAPTEURS.find((x) => x.nom === nom); return `${c.icone} <code>${nom}()</code>`; };
-const act = (nom) => { const a = ACTIONS_INFO.find((x) => x.nom === nom); return `${a.icone} <code>${nom}()</code>`; };
-
-// exécute UN tour d'un programme dans une situation donnée
-function unTour(compiled, sit) {
-  const base = { requin_proche: false, algue_ici: false, plastique_ici: false, sur_plage: false, est_la_nuit: false, energie: 8, heure: 12, ...sit };
-  return runTurn(compiled, Object.fromEntries(Object.entries(base).map(([k, v]) => [k, () => v])));
-}
-
-// petit programme-exemple + interrupteurs : on voit quelle ligne s'exécute
-function exemple(box, code, capteurs, sitDepart, phrase) {
-  // le jeu exige def tour(): on l'ajoute en coulisse (et on décale les numéros de ligne)
-  const comp = compile("def tour():\n" + code.split("\n").map((l) => "    " + l).join("\n"));
-  const s = { ...sitDepart };
-  box.innerHTML = `<div class="bascules"></div><div class="cv"></div><div class="msg ok resultat"></div>`;
-  const cv = new CodeView(box.querySelector(".cv")); cv.setCode(code);
-  const maj = () => {
-    const r = unTour(comp, s);
-    cv.montrer({ conds: r.conds.map(([n, v]) => [n - 1, v]), ligne: r.actionLine && r.actionLine - 1 });
-    box.querySelector(".resultat").innerHTML = r.action ? `→ ${phrase(r.action)}` : "→ 😐 Rien ne se passe : la condition est fausse, Python saute le bloc.";
-    box.querySelector(".resultat").className = "msg resultat " + (r.action ? "ok" : "warn");
-  };
-  const bs = {};
-  for (const k of capteurs) {
-    const c = CAPTEURS.find((x) => x.nom === k);
-    bs[k] = bascule(`${c.icone} <code>${k}()</code>`, s[k], (v) => { s[k] = v; maj(); });
-    box.querySelector(".bascules").append(bs[k]);
-  }
-  maj();
-  return { regler(sit) { Object.assign(s, sit); for (const k in bs) bs[k].regler(s[k]); maj(); } };
-}
-const PHRASE = {
-  manger: "😋 la tortue <b>mange</b>.", fuir: "💨 la tortue <b>fuit</b>.", pondre: "🥚 la tortue <b>pond</b> !",
-  aller_vers_algue: "➡️🌿 la tortue <b>nage vers les algues</b>.", aller_vers_plage: "➡️🏖️ la tortue <b>nage vers la plage</b>.", se_cacher: "🙈 la tortue <b>se cache</b>.",
-};
-const phrase = (a) => PHRASE[a] || `<code>${a}()</code>`;
-
-// exercice : écrire un petit programme, vérifié dans plusieurs situations
-function exercice(box, { cle, consigne, depart = "def tour():\n    ", cas, solution, indice, outils }) {
-  box.innerHTML = `<div class="exo">
-    <h3>🎯 À toi !</h3>
-    <div class="consigne">${consigne}</div>
-    <div class="ed"></div><div class="boite"></div>
-    <div class="row" style="margin-top:8px"><button class="btn vert verif">✔ Vérifier</button><button class="btn ghost small sol cache">👀 Voir la solution</button><button class="btn ghost small rst">↺ Recommencer</button></div>
-    <div class="res"></div></div>`;
-  const cleCode = "lagon:tuto2:" + cle;
-  const ed = new CodeEditor(box.querySelector(".ed"), { value: store.get(cleCode) || depart, onChange: (v) => store.set(cleCode, v) });
-  boiteOutils(box.querySelector(".boite"), ed, outils);
-  let essais = 0;
-  const res = box.querySelector(".res");
-  box.querySelector(".rst").addEventListener("click", () => { ed.value = depart; store.del(cleCode); res.innerHTML = ""; ed.focus(); });
-  box.querySelector(".sol").addEventListener("click", () => {
-    res.innerHTML = `<div class="msg info">👀 Une solution possible (recopie-la pour bien la retenir) :</div><div class="sol-code"></div>`;
-    const cv = new CodeView(res.querySelector(".sol-code")); cv.setCode(solution);
-  });
-  box.querySelector(".verif").addEventListener("click", () => {
-    essais++;
-    const c = check(ed.value);
-    if (!c.ok) {
-      ed.setErreur(c.error.line);
-      res.innerHTML = `<div class="msg err">🐞 <b>Ligne ${c.error.line}</b> : ${esc(c.error.message)}</div>` + (essais >= 2 ? `<div class="msg warn">💡 ${indice}</div>` : "");
-    } else {
-      const lignes = cas.map((k) => {
-        const r = unTour(c.compiled, k.sit);
-        const ok = k.attendu ? r.action === k.attendu : r.action !== k.pas;
-        return { ok, html: `<tr class="${ok ? "ok" : "ko"}"><td>${k.texte}</td><td>${k.attendu ? act(k.attendu) : `pas ${act(k.pas)}`}</td><td>${r.action ? act(r.action) : "rien"}</td><td>${ok ? "✅" : "❌"}</td></tr>` };
-      });
-      const tout = lignes.every((l) => l.ok);
-      res.innerHTML = `<table class="cas"><tr><th>Situation</th><th>Attendu</th><th>Ta tortue</th><th></th></tr>${lignes.map((l) => l.html).join("")}</table>` +
-        (tout ? `<div class="msg ok bravo">🎉 <b>Bravo !</b> Ton code marche dans toutes les situations.</div>`
-              : `<div class="msg err">Presque ! Regarde les lignes ❌.</div>` + (essais >= 2 ? `<div class="msg warn">💡 ${indice}</div>` : ""));
-      if (tout) { fait(cle); const b = el("button", { class: "btn big pulse" }, "Continuer →"); b.addEventListener("click", () => aller(courant + 1)); res.append(b); }
-    }
-    if (essais >= 2) box.querySelector(".sol").classList.remove("cache");
-  });
-}
-
-// quiz à boutons
-function quiz(box, titre, questions, rendreQuestion = null, fin = null) {
-  let qi = 0, score = 0;
-  const poser = () => {
-    if (qi >= questions.length) {
-      box.innerHTML = `<h3>${titre} : ${score} / ${questions.length} ${score === questions.length ? "🏆" : ""}</h3>` + (fin ? fin(score) : "");
-      const b = el("button", { class: "btn small ghost" }, "↺ Rejouer le quiz"); b.addEventListener("click", () => { qi = 0; score = 0; poser(); }); box.append(b);
-      if (score === questions.length && questions.cle) fait(questions.cle);
-      return;
-    }
-    const q = questions[qi];
-    box.innerHTML = `<h3>${titre} (${qi + 1}/${questions.length})</h3><div class="q-texte">${q.texte}</div><div class="row choix-rep"></div><div class="expl"></div>`;
-    if (rendreQuestion) rendreQuestion(q);
-    for (const [val, lab] of q.options) {
-      const b = el("button", { class: "btn ghost rep", html: lab });
-      b.addEventListener("click", () => {
-        box.querySelectorAll(".rep").forEach((x) => (x.disabled = true));
-        const bon = val === q.bon; if (bon) score++;
-        b.classList.remove("ghost"); b.classList.add(bon ? "vert" : "corail");
-        box.querySelector(".expl").innerHTML = `<div class="msg ${bon ? "ok" : "err"}">${bon ? "✅ Oui !" : "❌ Non."} ${q.pourquoi || ""}</div>`;
-        if (q.apres) q.apres();
-        const s = el("button", { class: "btn small" }, qi + 1 < questions.length ? "Suivante →" : "Résultat");
-        s.addEventListener("click", () => { qi++; poser(); });
-        box.querySelector(".expl").append(s);
-      });
-      box.querySelector(".choix-rep").append(b);
-    }
-  };
-  poser();
-}
 
 // =====================================================================
 //  Les étapes
@@ -173,7 +56,7 @@ ETAPES.push({
 ETAPES.push({
   court: "2", titre: "Le lagon",
   rendre(box) {
-    const L = [["tortue", "Ta tortue"], ["herbier", "Algues = <b>nourriture</b>"], ["plage", "Plage = on y <b>pond</b> (et pas de requin)"], ["nid", "Nid = <b>1 point</b>"],
+    const L = [["tortue", "Ta tortue"], ["herbier", "Algues = <b>nourriture</b> (elles se vident et repoussent ailleurs)"], ["plage", "Plage = on y <b>pond</b> (et pas de requin)"], ["nid", "Nid = <b>1 point</b>"],
       ["requin", "Requin = <b>danger</b> (−1 nid)"], ["sac", "Sac plastique = <b>poison</b>"], ["corail", "Corail = <b>mur</b>"], ["nuit", "Nuit = <b>l'heure de pondre</b>"]];
     box.innerHTML = `<div class="etape"><div class="texte">
       <h2>🗺️ Le lagon</h2>
@@ -278,6 +161,7 @@ ETAPES.push({
       cas: [{ texte: "🦈 requin proche", sit: { requin_proche: true }, attendu: "fuir" }, { texte: "😌 pas de requin", sit: { requin_proche: false }, pas: "fuir" }],
       solution: "def tour():\n    if requin_proche():\n        fuir()\n",
       indice: "Écris <code>if requin_proche():</code> puis appuie sur <kbd>Entrée</kbd> : la ligne suivante se décale toute seule. Écris alors <code>fuir()</code>.",
+      avance: false,
       outils: { capteurs: ["requin_proche", "algue_ici", "sur_plage"], actions: ["fuir", "manger", "pondre"], mots: ["if"] },
     });
   },
@@ -304,6 +188,7 @@ ETAPES.push({
       cas: [{ texte: "🏖️ sur la plage", sit: { sur_plage: true, est_la_nuit: true }, attendu: "pondre" }, { texte: "🌊 dans l'eau", sit: { sur_plage: false }, attendu: "aller_vers_plage" }],
       solution: "def tour():\n    if sur_plage():\n        pondre()\n    else:\n        aller_vers_plage()\n",
       indice: "Après <code>pondre()</code>, appuie sur <kbd>Entrée</kbd> puis efface 4 espaces (<kbd>⌫</kbd>) pour revenir sous le <code>if</code>. Écris <code>else:</code>.",
+      avance: false,
       outils: { capteurs: ["sur_plage", "est_la_nuit", "algue_ici"], actions: ["pondre", "aller_vers_plage", "manger"], mots: ["if", "else"] },
     });
   },
@@ -366,6 +251,7 @@ ETAPES.push({
       ],
       solution: "def tour():\n    if sur_plage() and est_la_nuit():\n        pondre()\n    else:\n        aller_vers_plage()\n",
       indice: "La première ligne : <code>if sur_plage() and est_la_nuit():</code>",
+      avance: false,
       outils: { capteurs: ["sur_plage", "est_la_nuit"], actions: ["pondre", "aller_vers_plage"], mots: ["if", "else", "and"] },
     });
   },
@@ -391,6 +277,8 @@ ETAPES.push({
       <div class="regle"><span>⚡</span><div>L'énergie <b>baisse</b> toute seule. À <b>0</b> : épuisée, retour au départ.</div></div>
       <div class="regle"><span>🦈</span><div>Attrapée par un requin = retour au départ et <b>−1 nid</b>. <b>Refuges</b> : la <b>plage</b> 🏖️ et les <b>algues</b> 🌿 (sauf quand tu manges).</div></div>
       <div class="regle"><span>🛍️</span><div>Sac plastique = <b>−${P.pertePlastique} ⚡</b>. <code>not plastique_ici()</code> = « <b>pas</b> de plastique ».</div></div>
+      <div class="regle"><span>🌿</span><div>Une touffe d'algues <b>se vide</b> quand on la mange : une nouvelle <b>pousse ailleurs</b>.</div></div>
+      <div class="regle"><span>☀️</span><div>Le jour, <b>sur la plage</b>, le soleil fatigue : l'énergie baisse plus vite.</div></div>
       <div class="regle"><span>🕐</span><div>Un match = <b>3 jours</b>. Nuit de 19 h à 6 h.</div></div>
     </div></div>`;
     let e = P.energieDepart, n = 0;
@@ -432,65 +320,14 @@ const PROBLEME = {
   4: "Elle mange le sac plastique !",
 };
 for (const M of MISSIONS) {
-  ETAPES.push({
-    court: "M" + M.id, titre: "Mission " + M.id, cle: "m" + M.id,
-    rendre(box) {
-      box.innerHTML = `<div class="etape"><div>
-        <div class="mission-head"><h2 style="margin:0">🔧 Répare la tortue ${M.id}</h2><span class="notion">${esc(M.notion)}</span></div>
-        <p class="probleme">😟 ${PROBLEME[M.id]}</p>
-        <div class="objectif">🎯 ${esc(M.objectif)}</div>
-        <ol class="etapes-mini"><li>▶ <b>Teste</b> : regarde le problème.</li><li>✏️ <b>Corrige</b> le code.</li><li>▶ <b>Reteste</b>.</li></ol>
-        <div id="ed"></div><div id="boite"></div>
-        <div class="row" style="margin-top:10px">
-          <button class="btn vert" id="tester">▶ Tester</button>
-          <button class="btn ghost small" id="indice">💡 Indice</button>
-          <button class="btn ghost small cache" id="sol">👀 Solution</button>
-          <button class="btn ghost small" id="reset">↺</button>
-        </div>
-        <div id="res"></div>
-      </div><div id="vue" class="vue-mission"><div class="vide-vue"><div>Clique sur <b>▶ Tester</b> pour lancer la tortue.</div></div></div></div>`;
-      const cle = "lagon:tuto2:m" + M.id;
-      const ed = new CodeEditor($("#ed", box), { value: store.get(cle) || M.code, onChange: (v) => store.set(cle, v) });
-      boiteOutils($("#boite", box), ed);
-      let viewer = null, essais = 0;
-      $("#indice", box).addEventListener("click", () => { $("#res", box).innerHTML = `<div class="msg warn">💡 ${esc(M.indice)}</div>`; $("#sol", box).classList.remove("cache"); });
-      $("#sol", box).addEventListener("click", () => {
-        $("#res", box).innerHTML = `<div class="msg info">👀 Une solution (recopie-la ligne par ligne pour la retenir) :</div><div id="solc"></div>`;
-        new CodeView($("#solc", box)).setCode(SOLUTIONS[M.id]);
-      });
-      $("#reset", box).addEventListener("click", () => { ed.value = M.code; store.del(cle); $("#res", box).innerHTML = ""; });
-      $("#tester", box).addEventListener("click", () => {
-        essais++;
-        const c = check(ed.value);
-        if (!c.ok) {
-          ed.setErreur(c.error.line);
-          $("#res", box).innerHTML = `<div class="msg err">🐞 <b>Ligne ${c.error.line}</b> : ${esc(c.error.message)}</div>`;
-          return;
-        }
-        const sim = simulate({ joueurs: [{ id: "t", nom: "Ta tortue", couleur: "#ff7b5c", code: ed.value }], graine: GRAINE_MISSION, scenario: M.scenario });
-        if (viewer) viewer.destroy();
-        viewer = new MatchViewer($("#vue", box), { sim, focus: "t", code: ed.value, vitesse: 5 });
-        const ok = M.reussi(sim);
-        const res = $("#res", box);
-        res.innerHTML = `<div class="msg info">⏳ Ta tortue joue…</div>`;
-        viewer.player.onEnd = () => {
-          if (ok) {
-            fait("m" + M.id);
-            res.innerHTML = `<div class="msg ok bravo">✅ <b>Réparée !</b> ${esc(M.bilan(sim))}</div><div class="appris">🎓 ${APPRIS[M.id]}</div>`;
-            const b = el("button", { class: "btn big pulse", style: "margin-top:10px" }, "Continuer →");
-            b.addEventListener("click", () => aller(courant + 1)); res.append(b);
-          } else {
-            res.innerHTML = `<div class="msg err">❌ <b>Pas encore.</b> ${esc(M.bilan(sim))}<br>Regarde « Dans la tête de ta tortue » : quelle ligne s'exécute au mauvais moment ?</div>`;
-            if (essais >= 2) { res.innerHTML += `<div class="msg warn">💡 ${esc(M.indice)}</div>`; $("#sol", box).classList.remove("cache"); }
-          }
-        };
-      });
-      return () => viewer && viewer.destroy();
-    },
-  });
+  ETAPES.push(etapeMission({
+    court: "M" + M.id, cle: "m" + M.id, titre: `🔧 Répare la tortue ${M.id}`, notion: M.notion,
+    probleme: "😟 " + PROBLEME[M.id], objectif: M.objectif, code: M.code, indice: M.indice,
+    solution: SOLUTIONS[M.id], appris: APPRIS[M.id], scenario: M.scenario, graine: GRAINE_MISSION,
+    reussi: M.reussi, bilan: M.bilan, avance: false,
+  }));
 }
 
-// ---------- 14. La séance ----------
 ETAPES.push({
   court: "🏆", titre: "C'est parti !",
   rendre(box) {
@@ -513,40 +350,11 @@ ETAPES.push({
       <div class="row" style="margin-top:14px">
         <a class="btn vert big" href="index.html">🐢 Rejoindre la partie</a>
         <a class="btn ghost" href="eleve.html?libre=1">🧪 S'entraîner</a>
+        <a class="btn ghost" href="tuto-avance.html">🚀 Tutoriel avancé</a>
       </div>
     </div></div>`;
   },
 });
 
-// =====================================================================
-//  Navigation
-// =====================================================================
-let courant = 0, nettoyer = null;
-function majNav() {
-  const nav = $("#nav"); nav.innerHTML = "";
-  ETAPES.forEach((e, i) => {
-    const ok = e.cle && prog.faits.includes(e.cle);
-    const b = el("button", { title: e.titre, class: (i === courant ? "on " : "") + (ok ? "fait " : "") + (e.court.length > 1 ? "m" : "") }, ok ? "✓" : e.court);
-    b.addEventListener("click", () => aller(i));
-    nav.append(b);
-  });
-  const nbEx = ETAPES.filter((e) => e.cle).length, nbFaits = ETAPES.filter((e) => e.cle && prog.faits.includes(e.cle)).length;
-  $("#progression").textContent = `Étape ${courant + 1} / ${ETAPES.length} · ⭐ ${nbFaits} / ${nbEx}`;
-  $("#prec").disabled = courant === 0;
-  $("#suiv").classList.toggle("cache", courant === ETAPES.length - 1);
-}
-function aller(i) {
-  i = Math.max(0, Math.min(ETAPES.length - 1, i));
-  if (nettoyer) { try { nettoyer(); } catch { /* rien */ } nettoyer = null; }
-  document.querySelectorAll("ul.ac").forEach((p) => p.remove());   // popups d'autocomplétion des éditeurs précédents
-  courant = i;
-  const box = $("#etape"); box.innerHTML = "";
-  nettoyer = ETAPES[i].rendre(box) || null;
-  majNav();
-  history.replaceState(null, "", "#" + (i + 1));
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-$("#prec").addEventListener("click", () => aller(courant - 1));
-$("#suiv").addEventListener("click", () => aller(courant + 1));
-const h = parseInt(location.hash.slice(1), 10);
-aller(Number.isFinite(h) ? h - 1 : 0);
+
+demarrer(ETAPES, "lagon:tuto2");

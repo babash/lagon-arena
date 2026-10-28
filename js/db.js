@@ -60,6 +60,7 @@ class Supabase {
   enregistrerScores(code, secret, manche, scores) { return this.rpc("enregistrer_scores", { p_code: code, p_secret: secret, p_manche: manche, p_scores: scores }); }
   scores(code) { return this.get("scores", `salle=eq.${encodeURIComponent(code)}&select=*&order=manche,rang`); }
   retirerJoueur(code, secret, pseudo) { return this.rpc("retirer_joueur", { p_code: code, p_secret: secret, p_pseudo: pseudo }); }
+  libererPseudo(code, secret, pseudo) { return this.rpc("liberer_pseudo", { p_code: code, p_secret: secret, p_pseudo: pseudo }); }
 }
 
 // ---------------------------------------------------------------------
@@ -104,7 +105,8 @@ class Demo {
     if (!j) {
       if (s.joueurs[code].length >= 30) throw new Error("La salle est pleine (30 joueurs maximum).");
       s.joueurs[code].push({ pseudo, couleur }); s.jetons[code][pseudo] = jeton;
-    } else if (s.jetons[code][pseudo] !== jeton) throw new Error("Ce pseudo est déjà pris dans cette salle : choisis-en un autre.");
+    } else if (s.jetons[code][pseudo] == null) { s.jetons[code][pseudo] = jeton; j.couleur = couleur; }   // pseudo débloqué
+    else if (s.jetons[code][pseudo] !== jeton) throw new Error("Ce pseudo est déjà pris dans cette salle. Si c'est le tien (autre ordinateur), demande à ton enseignant de le débloquer.");
     else j.couleur = couleur;
     this.save(s);
     return pseudo;
@@ -137,6 +139,12 @@ class Demo {
     this.save(s);
   }
   async scores(code) { await this.pause(); return this.load().scores.filter((x) => x.salle === code).sort((a, b) => a.manche - b.manche || a.rang - b.rang); }
+  async libererPseudo(code, secret, pseudo) {
+    await this.pause();
+    const s = this.load(); this.verifProf(s, code, secret);
+    delete s.jetons[code][pseudo];
+    this.save(s);
+  }
   async retirerJoueur(code, secret, pseudo) {
     await this.pause();
     const s = this.load(); this.verifProf(s, code, secret);
