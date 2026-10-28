@@ -8,8 +8,7 @@ import { POINTS_RANG, BONUS_PROGRESSION } from "../engine.js";
 import { $, $$, toast } from "../common.js";
 import { reglages, mesSalles, memoriserSalle, oublierSalle } from "./etat.js";
 import { ouvrir, fermer } from "./salle.js";
-import { lancerDevoir } from "./preparer.js";
-import { fenetreLienEleves } from "./liens.js";
+import { prevoirDevoir } from "./preparer.js";
 
 export function accueil() {
   fermer();
@@ -27,7 +26,7 @@ export function accueil() {
       </div>
       <div class="card">
         <h2>📚 Devoir à la maison</h2>
-        <p>Une salle créée <b>hors cours</b> : la manche 1 démarre tout de suite, <b>sans limite de temps</b>. Vous recevez un <b>lien d'accès</b> et un message prêt à envoyer aux élèves (messagerie de l'établissement…). Ils programment et envoient leur tortue de chez eux ; vous lancez le brawl quand vous voulez (en classe, ou d'ici).</p>
+        <p>Une salle créée <b>hors cours</b>, avec une manche <b>sans limite de temps</b> : choisissez la nouveauté (calme, plastique, tempête…), les équipes si vous le voulez, puis lancez-la. Vous recevez un <b>lien d'accès</b> et un message prêt à envoyer aux élèves (messagerie de l'établissement…). Ils programment et envoient leur tortue de chez eux ; vous lancez le brawl quand vous voulez (en classe, ou d'ici).</p>
         <button class="btn big" id="devoir">📚 Créer un devoir</button>
       </div>
       ${MODE === "demo" ? `<div class="msg warn"><b>Mode démo</b> : la base de données n'est pas configurée (voir <code>js/config.js</code> et le README). Tout reste dans <b>ce navigateur</b> : pour tester, ouvrez des élèves dans d'autres onglets, ou ajoutez des élèves fictifs.</div>` : ""}
@@ -59,10 +58,7 @@ async function creer(devoir) {
   try {
     const r = await db.creerSalle();
     memoriserSalle(r.code, r.secret, devoir ? { devoir: true } : {});
+    if (devoir) prevoirDevoir(r.code);   // manche 1 sans limite de temps, à régler puis lancer
     await ouvrir(r.code);
-    if (devoir) {   // la manche 1 démarre tout de suite, sans limite de temps, puis le lien à donner
-      await lancerDevoir();
-      fenetreLienEleves({ devoir: true });
-    }
   } catch (e) { toast(e.message, "err"); }
 }

@@ -9,6 +9,7 @@ import { classementCumule, baremeEquipes } from "../brawl.js";
 import { $, esc, toast, store, nomEquipe } from "../common.js";
 import { S, reglages, configActuelle, piloter, DUREE_ILLIMITEE } from "./etat.js";
 import { envoyerFaux } from "./demo.js";
+import { fenetreLienEleves } from "./liens.js";
 
 let prep = null, publierTimer = null, scoresPrep = [], selection = null;
 const clePrep = () => "lagon:prep:" + S.code;
@@ -128,7 +129,7 @@ export function panneauPrep(box, scores) {
     </div>` : ""}
     <p class="petit ok-publie">📣 Publié : les élèves voient déjà ces réglages${prep.mode === "equipes" ? " et <b>leur équipe</b> (ils peuvent préparer une stratégie)" : ""}.</p>
     ${prep.illimite ? `<p class="petit">♾️ <b>Temps illimité</b> : les élèves peuvent programmer et envoyer leur tortue (même depuis chez eux, avec leur code de session) jusqu'à ce que vous lanciez le brawl.</p>` : ""}
-    <div class="row"><button class="btn big corail" id="go">▶ Lancer la manche ${prep.manche}${prep.illimite ? " ♾️" : ""}${prep.mode === "equipes" ? " 👥" : ""}${prep.coef === 2 ? " (×2)" : prep.coef === 0 ? " (hors classement)" : ""}</button></div>
+    <div class="row"><button class="btn big corail" id="go">▶ Lancer ${prep.devoir && prep.manche === 1 ? "le devoir" : "la manche " + prep.manche}${prep.illimite ? " ♾️" : ""}${prep.mode === "equipes" ? " 👥" : ""}${prep.coef === 2 ? " (×2)" : prep.coef === 0 ? " (hors classement)" : ""}</button></div>
   </div>`;
   const maj = (redessiner = true) => { publierPrep(); if (redessiner) panneauPrep(box, scores); };
   box.querySelectorAll("[data-preset]").forEach((b) => b.addEventListener("click", () => { Object.assign(prep, PRESETS[b.dataset.preset].f()); if (prep.mode === "equipes" && !Object.keys(prep.equipes).length) equipesHasard(); maj(); }));
@@ -173,12 +174,12 @@ export async function lancerManche() {
     await publierPrep(true);
     await piloter({ manche: p.manche, phase: "prog", duree: p.illimite ? DUREE_ILLIMITEE : p.duree, nouveaute: p.nouveaute, duel: p.qui === "choix" ? p.participants.slice() : null });
     await envoyerFaux();
+    if (p.devoir) fenetreLienEleves({ devoir: true });   // devoir lancé : le lien à donner aux élèves
   } catch (e) { toast(e.message, "err"); }
 }
 
-// DEVOIR (salle créée hors cours) : la manche 1 démarre tout de suite, sans limite de temps
-export async function lancerDevoir() {
-  chargerPrep(1, []);
-  Object.assign(prep, { illimite: true, titre: "Devoir" });
-  await lancerManche();
+// DEVOIR (salle créée hors cours) : la manche 1 est préparée sans limite de temps ;
+// l'enseignant choisit la nouveauté, les équipes… puis la lance (le lien s'affiche alors).
+export function prevoirDevoir(code) {
+  store.set("lagon:prep:" + code, { ...prepDefaut(1, []), illimite: true, titre: "Devoir", devoir: true });
 }

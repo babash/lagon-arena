@@ -7,7 +7,7 @@ import { TWISTS, BONUS_PROGRESSION, equipeInfo, resultatEquipes } from "../engin
 import { MatchViewer } from "../viewer.js";
 import { botsPourCompleter, lancerSimulation, calculerScores, classementCumule, meilleureProgression, estBot, infosManche, equipesCompletes } from "../brawl.js";
 import { $, el, esc, toast, mmss, twistCarte, cartesEquipesHTML, annonceEquipes } from "../common.js";
-import { S, reglages, configActuelle, titreManche, participantsHumains, estIllimite, piloter, navigation } from "./etat.js";
+import { S, reglages, mesSalles, configActuelle, titreManche, participantsHumains, estIllimite, piloter, navigation } from "./etat.js";
 import { chargerPrep, panneauPrep, rostersHTML } from "./preparer.js";
 import { lienEleves, dessinerQR, adresseCourte, fenetreLienEleves } from "./liens.js";
 
@@ -22,7 +22,9 @@ export function rendreScene() {
 
 // ---------- attente : le code de la salle en grand, et la préparation de la manche 1 ----------
 function scAttente(st) {
+  const devoir = (mesSalles()[S.code] || {}).devoir;
   st.innerHTML = `<div class="stage-centre">
+    ${devoir ? `<div class="msg info">📚 <b>Devoir à la maison</b> : réglez la manche ci-dessous (nouveauté, équipes…), puis cliquez sur <b>▶ Lancer le devoir</b>. Le lien à donner aux élèves s'affichera.</div>` : ""}
     <h2 class="titre-scene">🌊 Rejoignez le lagon !</h2>
     <p class="consigne">1. Allez sur <b>${esc(adresseCourte())}</b><br>2. Tapez le code :</p>
     <div class="code-salle geant">${S.code}</div>
@@ -49,6 +51,7 @@ function scProg(st) {
     ${S.salle.duel ? `<p class="consigne">Jouent : <b>${S.salle.duel.map(esc).join(" · ")}</b></p>` : ""}
     ${c.mode === "equipes" ? `<div id="rosters">${rostersHTML(c.equipes || {}, liste, c.nbEquipes)}</div><p class="consigne">👥 Seul le <b>score de l'équipe</b> compte : mettez-vous d'accord !</p>` : ""}
     <div id="tw"></div>
+    <div id="changer-tw" class="cache"><label class="champ petit">🌊 Changer la nouveauté (manche à temps illimité, avant le brawl)<select id="sel-tw">${Object.entries(TWISTS).map(([k, X]) => `<option value="${k}" ${k === S.salle.nouveaute ? "selected" : ""}>${X.icone} ${X.nom}</option>`).join("")}</select></label></div>
     <div class="grand-chrono chrono" id="gc">--:--</div>
     <p class="consigne"><b id="nb-env">0</b> / <span id="nb-tot">0</span> tortues envoyées</p>
     <div class="jauge large"><div id="jg" style="width:0"></div></div>
@@ -70,6 +73,7 @@ function scProg(st) {
     piloter({ duree: 5 }).catch((e) => toast(e.message, "err"));
   });
   $("#chrono5").addEventListener("click", () => piloter({ duree: 300 }).catch((e) => toast(e.message, "err")));
+  $("#sel-tw").addEventListener("change", (e) => changerNouveaute(e.target.value));
   $("#brawl").addEventListener("click", demarrerBrawl);
   let longPrec = null;
   const tick = () => {
@@ -78,7 +82,7 @@ function scProg(st) {
     const long = estIllimite();
     if (long !== longPrec) {   // manche à temps illimité : pas de compte à rebours
       longPrec = long;
-      $("#plus").classList.toggle("cache", long); $("#chrono5").classList.toggle("cache", !long);
+      $("#plus").classList.toggle("cache", long); $("#chrono5").classList.toggle("cache", !long); $("#changer-tw").classList.toggle("cache", !long);
       $("#stop").textContent = long ? "⏹ Fermer les envois" : "⏹ Terminer le chrono";
       $("#aide-prog").innerHTML = long
         ? "♾️ <b>Temps illimité</b> : les élèves programment et renvoient leur tortue quand ils veulent, même depuis chez eux (avec leur <b>code de session</b>), jusqu'à ce que vous lanciez le brawl."
@@ -90,6 +94,16 @@ function scProg(st) {
   };
   tick(); S.chrono = setInterval(tick, 250);
   majEnvois();
+}
+
+// pendant une manche longue (devoir…), la nouveauté peut encore changer avant le brawl
+async function changerNouveaute(nouveaute) {
+  try {
+    const c = configActuelle();
+    if (c) await db.definirConfig(S.code, S.secret, { ...c, nouveaute });
+    await piloter({ nouveaute });
+    toast(`🌊 Nouveauté : ${TWISTS[nouveaute].icone} ${TWISTS[nouveaute].nom}`);
+  } catch (e) { toast(e.message, "err"); }
 }
 
 export function majEnvois() {

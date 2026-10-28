@@ -24,7 +24,7 @@ export function majInfo() {
   if (MODE === "demo") info.append(el("span", { class: "pill mode-demo" }, "Mode démo"));
 }
 
-let etatCle = "", cfgCle = "";
+let etatCle = "", cfgCle = "", twCle = "";
 export async function rafraichir(premier = false) {
   try {
     const s = await db.salle(SALLE);
@@ -33,18 +33,20 @@ export async function rafraichir(premier = false) {
     $("#info").classList.remove("hors-ligne");
   } catch { $("#info").classList.add("hors-ligne"); return; }
   const s = S.salle, cle = s.manche + "/" + s.phase + "/" + (s.duel || []).join(",");
-  if (cle !== etatCle) { etatCle = cle; cfgCle = JSON.stringify(s.config || null); await changementPhase(premier); }
-  else if (JSON.stringify(s.config || null) !== cfgCle) { cfgCle = JSON.stringify(s.config || null); majCarteManche(true); }
+  if (cle !== etatCle) { etatCle = cle; cfgCle = JSON.stringify(s.config || null); twCle = s.nouveaute; await changementPhase(premier); return; }
+  if (s.nouveaute !== twCle) {   // l'enseignant a changé la nouveauté pendant une manche longue
+    twCle = s.nouveaute; afficherNouveaute(); majTwistSB();
+    const T = TWISTS[s.nouveaute] || TWISTS.calme;
+    toast(`🌊 Nouveauté de la manche : ${T.icone} ${T.nom}`);
+  }
+  if (JSON.stringify(s.config || null) !== cfgCle) { cfgCle = JSON.stringify(s.config || null); majCarteManche(true); }
 }
 
 async function changementPhase(premier) {
   const s = S.salle;
   majInfo(); majTwistSB();
   const T = TWISTS[s.nouveaute] || TWISTS.calme;
-  $("#twist").innerHTML = "";
-  if (s.manche > 0 && s.phase !== "fin") $("#twist").append(el("div", { class: "petit muted" }, `Nouveauté (${titreManche()}) :`), twistCarte(s.nouveaute));
-  $("#twist").append(el("div", { id: "manche-info" }));
-  majCarteManche();
+  afficherNouveaute();
   overlay(null);
   switch (s.phase) {
     case "attente":
@@ -70,6 +72,15 @@ async function changementPhase(premier) {
   }
   if (premier && s.phase !== "resultats" && s.phase !== "fin") await chargerResultats(false);
   majEnvoi();
+}
+
+// la nouveauté de la manche en cours, puis la carte « manche »
+function afficherNouveaute() {
+  const s = S.salle;
+  $("#twist").innerHTML = "";
+  if (s.manche > 0 && s.phase !== "fin") $("#twist").append(el("div", { class: "petit muted" }, `Nouveauté (${titreManche()}) :`), twistCarte(s.nouveaute));
+  $("#twist").append(el("div", { id: "manche-info" }));
+  majCarteManche();
 }
 
 // la carte « manche » : nouveauté, points, temps illimité… et MON ÉQUIPE (pour préparer une stratégie)

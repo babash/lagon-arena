@@ -229,6 +229,12 @@ table.scores td.num, table.scores th.num { text-align: right; font-variant-numer
 .mini:hover { background: var(--lagon-pale); }
 .mini .ico { font-size: 2rem; }
 .mini b { font-family: var(--titre); font-size: 1.15rem; color: var(--ocean-800); }
+/* pied de page de l'accueil : code source, outil, contact */
+.pied { text-align: center; color: var(--gris); font-size: .9rem; padding: 18px 18px 30px; border-top: 1px solid var(--gris-clair); max-width: 980px; margin: 0 auto; }
+.pied p { margin: 4px 0; }
+.pied a { color: var(--ocean-700); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.pied a:hover { text-decoration: underline; }
+.pied .gh { vertical-align: -3px; margin-right: 2px; }
 .choix .card { display: flex; flex-direction: column; gap: 10px; }
 .choix .card .ico { font-size: 2.6rem; }
 .choix .card p { margin: 0; }
