@@ -6,14 +6,15 @@
 // =====================================================================
 import { check } from "../interp.js";
 import { W, H, manh, inside, bfs, carteDe, CARTE_CLASSIQUE } from "./carte.js";
-import { P, TICKS, TWISTS, heureDe, estNuit } from "./regles.js";
+import { P, TICKS, heureDe, estNuit, reglesManche, optionsCarte, normaliserLagon } from "./regles.js";
 import { rng } from "./hasard.js";
 
-export function creerMonde({ joueurs, graine, twist, ticks, scenario, version, leger }) {
-  const T = TWISTS[twist] || TWISTS.calme;
+export function creerMonde({ joueurs, graine, twist, ticks, scenario, version, leger, lagon }) {
   const sc = scenario || {};
-  if (scenario) version = 1;   // tutoriels et missions : toujours la carte classique
-  const C = version >= 2 ? carteDe(graine, joueurs.length) : CARTE_CLASSIQUE;
+  if (scenario) { version = 1; lagon = null; }   // tutoriels et missions : toujours la carte classique
+  lagon = version >= 2 ? normaliserLagon(lagon) : null;   // (lagon personnalisé : seulement sur les cartes aléatoires)
+  const T = reglesManche(twist, lagon);
+  const C = version >= 2 ? carteDe(graine, joueurs.length, optionsCarte(lagon)) : CARTE_CLASSIQUE;
   const { tuile: tileAt, turtleOK, sharkOK } = C;
   const SPAWNS = C.spawns;
   ticks = ticks || sc.ticks || TICKS;
@@ -130,7 +131,7 @@ export function creerMonde({ joueurs, graine, twist, ticks, scenario, version, l
 
   return {
     // réglages de la partie
-    twist, graine, version, leger, sc, T, C, ticks, heureDepart, R, ri, tileAt, turtleOK, sharkOK,
+    twist, graine, version, leger, lagon, sc, T, C, ticks, heureDepart, R, ri, tileAt, turtleOK, sharkOK,
     // état
     turtles, sharks, plastics, herbes, repousses, sharkCells, frames, events, traces, nids,
     // outils

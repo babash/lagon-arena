@@ -3,7 +3,7 @@
 //    attente → programmation → brawl → résultats → … → fin
 // =====================================================================
 import { db, secondesRestantes } from "../db.js";
-import { TWISTS, BONUS_PROGRESSION, equipeInfo, resultatEquipes } from "../engine.js";
+import { TWISTS, BONUS_PROGRESSION, equipeInfo, resultatEquipes, decrireLagon } from "../engine.js";
 import { MatchViewer } from "../viewer.js";
 import { botsPourCompleter, lancerSimulation, calculerScores, classementCumule, meilleureProgression, estBot, infosManche, equipesCompletes } from "../brawl.js";
 import { $, el, esc, toast, mmss, twistCarte, cartesEquipesHTML, annonceEquipes } from "../common.js";
@@ -64,6 +64,7 @@ function scProg(st) {
     <p class="petit muted" id="aide-prog">Les élèves peuvent renvoyer leur tortue jusqu'à la fin du chrono. À 0, les tortues modifiées sont envoyées automatiquement.</p>
   </div>`;
   $("#tw").append(twistCarte(S.salle.nouveaute));
+  if (c.lagon) $("#tw").append(el("p", { class: "lagon-perso-ligne" }, "🗺️ Lagon personnalisé : " + decrireLagon(c.lagon, S.salle.nouveaute)));
   $("#plus").addEventListener("click", () => {
     const r = Math.max(0, secondesRestantes(S.salle.fin_chrono) || 0);
     piloter({ duree: Math.round(r + 60) }).catch((e) => toast(e.message, "err"));
@@ -155,10 +156,10 @@ async function scBrawl(st) {
   pseudos = [...pseudos, ...botsPourCompleter(pseudos.length, c.bots ?? reglages.min)];
   if (!pseudos.length) { toast("Aucune tortue dans le lagon !", "err"); return; }
   const equipes = c.mode === "equipes" ? equipesCompletes(pseudos, c.equipes || {}, c.nbEquipes) : null;
-  const sim = lancerSimulation(S.salle, m, pseudos, S.joueurs, tortues, S.salle.nouveaute, null, equipes);
+  const sim = lancerSimulation(S.salle, m, pseudos, S.joueurs, tortues, S.salle.nouveaute, null, equipes, undefined, c.lagon || null);
   const T = TWISTS[S.salle.nouveaute] || TWISTS.calme;
   st.innerHTML = `<div class="brawl-grid">
-    <div><h2 class="titre-scene gauche">🎬 ${esc(titreManche())} · ${T.icone} ${esc(T.nom)}</h2><div id="vue"></div></div>
+    <div><h2 class="titre-scene gauche">🎬 ${esc(titreManche())} · ${T.icone} ${esc(T.nom)}${sim.lagon ? ' <span class="pill lagon-perso" title="' + esc(decrireLagon(sim.lagon, S.salle.nouveaute)) + '">🗺️ lagon personnalisé</span>' : ""}</h2><div id="vue"></div></div>
     <div class="cote-brawl">
       ${equipes ? `<div class="card score-equipes" id="score-eq"></div>` : ""}
       <div class="card"><h3>🏆 En direct</h3><ol class="live-rank" id="live"></ol></div>
@@ -217,7 +218,7 @@ async function scResultats(st) {
   if (!info) { st.innerHTML = `<p>Pas de scores pour cette manche.</p>`; return; }
   const T = TWISTS[info.twist] || TWISTS.calme;
   const sm = scores.filter((s) => s.manche === info.manche && !estBot(s.pseudo)).sort((a, b) => a.rang - b.rang || b.nids - a.nids);
-  const sim = lancerSimulation(S.salle, info.manche, info.pseudos, S.joueurs, tortues, info.twist, null, info.equipes, info.version);
+  const sim = lancerSimulation(S.salle, info.manche, info.pseudos, S.joueurs, tortues, info.twist, null, info.equipes, info.version, info.lagon);
   const cap = Object.fromEntries(sim.resultats.map((r) => [r.id, r.captures]));
   const progres = sm.filter((s) => s.bonus > 0);
   const cls = classementCumule(scores);

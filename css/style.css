@@ -701,3 +701,12 @@ button.confirmer { background: var(--faux) !important; color: #fff !important; }
 .aide-section table.prims td.ic { width: 2.6em; }
 .aide-section table.prims td:nth-child(2) { width: 42%; }
 @media (max-width: 700px) { .aide-section table.prims td:nth-child(2) { width: 48%; } }
+/* ---------- lagon personnalisé ---------- */
+.prep-lagon { margin: 10px 0; background: #f5fafc; border-radius: 12px; padding: 8px 12px; }
+.prep-lagon > summary { cursor: pointer; font-weight: 800; color: var(--ocean-800); }
+.prep-lagon[open] > summary { margin-bottom: 8px; }
+.lagon-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px 12px; }
+.lagon-grille input.modifie { border-color: var(--lagon); background: var(--lagon-pale); font-weight: 800; }
+.lagon-grille input::placeholder { color: #9aa8b5; }
+.pill.lagon-perso { background: var(--lagon-pale); color: var(--ocean-800); font-weight: 700; white-space: normal; }
+.lagon-perso-ligne { font-weight: 700; color: var(--ocean-800); margin: 6px 0 0; }

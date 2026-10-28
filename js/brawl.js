@@ -59,7 +59,7 @@ export function infosManche(scores, manche) {
   if (!l.length) return null;
   const equipes = l.some((s) => s.equipe > 0) ? Object.fromEntries(l.map((s) => [s.pseudo, s.equipe || 0])) : null;
   const { twist, version } = lireNouveaute(l[0].nouveaute);
-  return { manche, pseudos: l.map((s) => s.pseudo), twist, version, duel: !!l[0].duel, equipes };
+  return { manche, pseudos: l.map((s) => s.pseudo), twist, version, duel: !!l[0].duel, equipes, lagon: l[0].lagon || null };
 }
 
 // Équipes de TOUS les participants d'un brawl : les élèves selon la composition choisie
@@ -87,10 +87,11 @@ export function construireJoueurs(pseudos, joueurs, tortues, manche, equipes = n
 }
 
 // version : la carte (1 = classique pour les manches déjà jouées avant, 2 = aléatoire) ; nouvelle manche = VERSION_CARTE
-export function lancerSimulation(salle, manche, pseudos, joueurs, tortues, twist, remplacer = null, equipes = null, version = VERSION_CARTE) {
+// lagon : les réglages du lagon personnalisé de la manche (null = lagon normal de la nouveauté)
+export function lancerSimulation(salle, manche, pseudos, joueurs, tortues, twist, remplacer = null, equipes = null, version = VERSION_CARTE, lagon = null) {
   const liste = construireJoueurs(pseudos, joueurs, tortues, manche, equipes);
   if (remplacer) for (const j of liste) if (j.id === remplacer.pseudo) j.code = remplacer.code;
-  return simulate({ joueurs: liste, graine: graineManche(salle.graine, manche), twist, version });
+  return simulate({ joueurs: liste, graine: graineManche(salle.graine, manche), twist, version, lagon });
 }
 
 // Scores de la manche.
@@ -116,7 +117,7 @@ export function calculerScores(sim, manche, anciensScores, { coef = 1 } = {}) {
     out.push({ pseudo: r.id, nids: r.nids, rang, points: pointsPourRang(rang) * coef, bonus, equipe: 0 });
   });
   for (const r of sim.resultats.filter((r) => estBot(r.id))) out.push({ pseudo: r.id, nids: r.nids, rang: 0, points: 0, bonus: 0, equipe: r.equipe || 0 });
-  for (const o of out) { o.nouveaute = nouveauteAvecVersion(sim.twist, sim.version || 1); o.duel = horsClassement; }
+  for (const o of out) { o.nouveaute = nouveauteAvecVersion(sim.twist, sim.version || 1); o.duel = horsClassement; if (sim.lagon) o.lagon = sim.lagon; }
   return out;
 }
 

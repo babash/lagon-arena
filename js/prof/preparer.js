@@ -4,19 +4,19 @@
 //  et leur équipe, pour préparer une stratégie AVANT la manche.
 // =====================================================================
 import { db } from "../db.js";
-import { TWISTS, TWIST_ORDER, TWIST_DUEL, MAX_EQUIPES, equipeInfo, styleEquipe } from "../engine.js";
+import { TWISTS, TWIST_ORDER, TWIST_DUEL, MAX_EQUIPES, equipeInfo, styleEquipe, LAGON_REGLAGES, normaliserLagon, decrireLagon } from "../engine.js";
 import { classementCumule, baremeEquipes } from "../brawl.js";
 import { $, esc, toast, store, nomEquipe } from "../common.js";
 import { S, reglages, configActuelle, piloter, DUREE_ILLIMITEE } from "./etat.js";
 import { envoyerFaux } from "./demo.js";
 import { fenetreLienEleves } from "./liens.js";
 
-let prep = null, publierTimer = null, scoresPrep = [], selection = null;
+let prep = null, publierTimer = null, scoresPrep = [], selection = null, lagonOuvert = false;
 const clePrep = () => "lagon:prep:" + S.code;
 function prepDefaut(manche, scores) {
   const nb = new Set(scores.filter((x) => !x.duel).map((x) => x.manche)).size;
   return { manche, nouveaute: TWIST_ORDER[Math.min(TWIST_ORDER.length - 1, nb)], duree: manche === 1 ? reglages.duree1 : reglages.duree,
-    coef: 1, bots: reglages.min, qui: "tous", participants: [], mode: "solo", equipes: {}, nbEquipes: 2, titre: "", illimite: false };
+    coef: 1, bots: reglages.min, qui: "tous", participants: [], mode: "solo", equipes: {}, nbEquipes: 2, titre: "", illimite: false, lagon: null };
 }
 export function chargerPrep(manche, scores) {
   scoresPrep = scores;
@@ -25,7 +25,7 @@ export function chargerPrep(manche, scores) {
   prep.nbEquipes ||= 2;
 }
 const configDe = (p) => ({ manche: p.manche, mode: p.mode, equipes: p.mode === "equipes" ? p.equipes : null, nbEquipes: p.mode === "equipes" ? p.nbEquipes : null, coef: p.coef, bots: p.bots,
-  titre: p.titre, nouveaute: p.nouveaute, participants: p.qui === "choix" ? p.participants : null, illimite: !!p.illimite });
+  titre: p.titre, nouveaute: p.nouveaute, participants: p.qui === "choix" ? p.participants : null, illimite: !!p.illimite, lagon: normaliserLagon(p.lagon) });
 function publierPrep(immediat = false) {
   store.set(clePrep(), prep);
   clearTimeout(publierTimer);
@@ -84,9 +84,9 @@ export function rostersHTML(equipes, liste, nb) {
 }
 
 const PRESETS = {
-  rematch: { label: "🔁 Rematch", titre: "", f: () => ({ mode: "solo", coef: 1, qui: "tous", titre: "", illimite: false, nouveaute: prepDefaut(prep.manche, scoresPrep).nouveaute, duree: prep.manche === 1 ? reglages.duree1 : reglages.duree }) },
+  rematch: { label: "🔁 Rematch", titre: "", f: () => ({ mode: "solo", coef: 1, qui: "tous", titre: "", illimite: false, lagon: null, nouveaute: prepDefaut(prep.manche, scoresPrep).nouveaute, duree: prep.manche === 1 ? reglages.duree1 : reglages.duree }) },
   equipes: { label: "👥 En équipes", f: () => ({ mode: "equipes", coef: 1, qui: "tous", titre: "Manche en équipes", nbEquipes: prep.nbEquipes || 2 }) },
-  duel: { label: "⛈️ Duel des champions", f: () => ({ mode: "solo", coef: 0, illimite: false, qui: "choix", participants: classementCumule(scoresPrep).slice(0, 3).map((t) => t.pseudo), nouveaute: TWIST_DUEL, duree: reglages.dureeDuel, titre: "Duel des champions" }) },
+  duel: { label: "⛈️ Duel des champions", f: () => ({ mode: "solo", coef: 0, illimite: false, lagon: null, qui: "choix", participants: classementCumule(scoresPrep).slice(0, 3).map((t) => t.pseudo), nouveaute: TWIST_DUEL, duree: reglages.dureeDuel, titre: "Duel des champions" }) },
   entrainement: { label: "🏋️ Entraînement", f: () => ({ coef: 0, titre: "Manche d'entraînement" }) },
   longue: { label: "♾️ Manche longue", f: () => ({ illimite: true, titre: prep.titre || "Manche longue" }) },
 };
@@ -108,6 +108,7 @@ export function panneauPrep(box, scores) {
       <label class="champ petit">🧮 Points<select data-k="coef"><option value="1" ${prep.coef === 1 ? "selected" : ""}>normaux</option><option value="2" ${prep.coef === 2 ? "selected" : ""}>doubles (×2)</option><option value="0" ${prep.coef === 0 ? "selected" : ""}>hors classement</option></select></label>
       <label class="champ petit">🤖 Compléter jusqu'à (tortues)<input type="number" data-k="bots" min="0" max="20" value="${prep.bots}"></label>
     </div>
+    ${panneauLagon()}
     <div class="prep-ligne"><b>🐢 Qui joue ?</b>
       <label><input type="radio" name="qui" value="tous" ${prep.qui === "tous" ? "checked" : ""}> toute la classe</label>
       <label><input type="radio" name="qui" value="choix" ${prep.qui === "choix" ? "checked" : ""}> seulement :</label>
@@ -139,7 +140,7 @@ export function panneauPrep(box, scores) {
     else if (k === "illimite") prep.illimite = i.checked;
     else if (k === "coef" || k === "bots") prep[k] = parseInt(i.value, 10) || 0;
     else prep[k] = i.value;
-    maj(k === "coef" || k === "illimite");
+    maj(k === "coef" || k === "illimite" || k === "nouveaute");   // (la nouveauté change les valeurs par défaut du lagon)
   }));
   box.querySelectorAll("input[name=qui]").forEach((r) => r.addEventListener("change", () => { prep.qui = r.value; if (prep.qui === "choix" && !prep.participants.length) prep.participants = tous.slice(); maj(); }));
   box.querySelectorAll("input[name=mode]").forEach((r) => r.addEventListener("change", () => { prep.mode = r.value; if (prep.mode === "equipes" && !Object.keys(prep.equipes).length) equipesHasard(); maj(); }));
@@ -161,8 +162,39 @@ export function panneauPrep(box, scores) {
     z.addEventListener("dragleave", () => z.classList.remove("survol"));
     z.addEventListener("drop", (ev) => { ev.preventDefault(); const p = ev.dataTransfer.getData("text/plain"); if (p && p in prep.equipes) deplacer(p, e); });
   });
+  // le lagon personnalisé
+  const det = box.querySelector(".prep-lagon");
+  det.addEventListener("toggle", () => { lagonOuvert = det.open; });
+  box.querySelectorAll("[data-lagon]").forEach((i) => i.addEventListener("change", () => {
+    const k = i.dataset.lagon, R = LAGON_REGLAGES[k];
+    const v = R.type === "oui-non" ? (i.value === "" ? null : i.value === "1") : i.value === "" ? null : Number(i.value);
+    prep.lagon = normaliserLagon({ ...(prep.lagon || {}), [k]: v });
+    lagonOuvert = true; maj();
+  }));
+  const raz = box.querySelector("[data-lagon-raz]");
+  if (raz) raz.addEventListener("click", () => { prep.lagon = null; maj(); });
   $("#go", box).addEventListener("click", lancerManche);
   publierPrep();
+}
+
+// 🗺️ le lagon : gros grain (la nouveauté, au-dessus) et grain fin (ici) ; une case vide garde la valeur de la nouveauté
+function panneauLagon() {
+  const T = TWISTS[prep.nouveaute] || TWISTS.calme, L = prep.lagon || {};
+  const valeurNouveaute = { requins: T.requins, rapides: T.rapides, vision: T.vision, plastiques: T.plastiques, plastiqueHerbier: T.plastiqueHerbier, nuitDebut: T.nuit[0], nuitFin: T.nuit[1] };
+  const champ = (k, R) => {
+    const def = R.carte ? R.defaut : valeurNouveaute[k];
+    if (R.type === "oui-non") return `<label class="champ petit">${R.icone} ${esc(R.nom)}<select data-lagon="${k}">
+        <option value="" ${L[k] === undefined ? "selected" : ""}>comme la nouveauté (${def ? "oui" : "non"})</option>
+        <option value="1" ${L[k] === true ? "selected" : ""}>oui</option><option value="0" ${L[k] === false ? "selected" : ""}>non</option></select></label>`;
+    return `<label class="champ petit">${R.icone} ${esc(R.nom)}<input type="number" data-lagon="${k}" min="${R.min}" max="${R.max}" step="1" value="${L[k] ?? ""}" placeholder="${esc(String(def))}" class="${L[k] !== undefined ? "modifie" : ""}"></label>`;
+  };
+  const resume = decrireLagon(prep.lagon, prep.nouveaute);
+  return `<details class="prep-lagon" ${lagonOuvert || resume ? "open" : ""}>
+    <summary>🗺️ Personnaliser le lagon ${resume ? `<span class="pill lagon-perso">${esc(resume)}</span>` : `<span class="petit muted">(facultatif : par défaut, le lagon de la nouveauté ${T.icone})</span>`}</summary>
+    <div class="lagon-grille">${Object.entries(LAGON_REGLAGES).map(([k, R]) => champ(k, R)).join("")}</div>
+    <p class="petit muted">Une case vide garde la valeur de la nouveauté (en gris). Le corail et les algues changent la carte, toujours vérifiée sans blocage. Les élèves s'entraînent dans ce lagon dans leur bac à sable.
+      ${resume ? `<button type="button" class="btn small ghost" data-lagon-raz>↺ Revenir au lagon de la nouveauté</button>` : ""}</p>
+  </details>`;
 }
 
 // lancer la manche préparée

@@ -34,7 +34,7 @@ export async function chargerResultats(montrer) {
 
 function afficherResultats(info, scores, tortues, joueurs) {
   const m = info.manche, T = TWISTS[info.twist] || TWISTS.calme;
-  const sim = lancerSimulation(S.salle, m, info.pseudos, joueurs, tortues, info.twist, null, info.equipes, info.version);
+  const sim = lancerSimulation(S.salle, m, info.pseudos, joueurs, tortues, info.twist, null, info.equipes, info.version, info.lagon);
   const joue = info.pseudos.includes(PSEUDO);
   const moi = scores.find((s) => s.manche === m && s.pseudo === PSEUDO);
   const titre = `📊 Manche ${m}${info.equipes ? " 👥" : ""}${info.duel ? " (hors classement)" : ""}`;
@@ -88,7 +88,7 @@ function blocSolo(sim, moi, info, scores) {
 function etSi(sim, info, joueurs, tortues) {
   const c = verifier();
   if (!c.ok) { toast("Corrige d'abord l'erreur de ton code.", "err"); return; }
-  const sim2 = lancerSimulation(S.salle, info.manche, info.pseudos, joueurs, tortues, info.twist, { pseudo: PSEUDO, code: ed.value }, info.equipes, info.version);
+  const sim2 = lancerSimulation(S.salle, info.manche, info.pseudos, joueurs, tortues, info.twist, { pseudo: PSEUDO, code: ed.value }, info.equipes, info.version, info.lagon);
   const a = sim.resultats.find((r) => r.id === PSEUDO), b = sim2.resultats.find((r) => r.id === PSEUDO);
   const fleche = b.nids > a.nids ? "📈" : b.nids < a.nids ? "📉" : "➖";
   $("#etsi-res").innerHTML = `<div class="compare" style="margin-top:12px">

@@ -4,6 +4,8 @@
 //  1. chaque mission du tutoriel doit ÉCHOUER avec son code et RÉUSSIR une fois corrigée ;
 //  2. une même partie rejouée donne exactement le même résultat (déterminisme) ;
 //  3. cartes aléatoires : jamais de blocage (zone fermée, cul-de-sac, départ mal placé…) ;
+//  3 bis. lagons personnalisés : réglages appliqués, parties reproductibles, partie normale inchangée ;
+//  3 ter. Panthéon : banc d'essai reproductible, copies refusées ; primitives toutes rangées par catégorie ;
 //  4. équilibrage : nombre moyen de nids des tortues d'entraînement selon la nouveauté.
 // =====================================================================
 import { simulate, MISSIONS, MISSIONS_AVANCEES, BOTS, TWISTS, CODE_DEPART, genererCarte, carteSansBlocage, CARTE_CLASSIQUE, W, H } from "../js/engine.js";
@@ -86,6 +88,44 @@ console.log("3. Cartes aléatoires : 3000 cartes (1 à 32 tortues) sans blocage,
   const b2 = coincees === 0 && sansPlage <= N / 100;
   console.log(`   ${b2 ? "✔" : "✘"} ${N} parties : ${coincees} tortue coincée · la tortue qui fuit atteint une plage dans ${(100 - 100 * sansPlage / N).toFixed(1)} % des parties (99 % au moins)`);
   ok &&= b2;
+}
+
+console.log("3 bis. Lagons personnalisés (requins, plastique, nuit, corail, algues…)");
+{
+  const { normaliserLagon, reglesManche } = await import("../js/engine.js");
+  const js = BOTS.map((b, i) => ({ id: "b" + i, nom: b.nom, couleur: "#000", code: b.code }));
+  const n = (r) => r.resultats.map((x) => x.id + ":" + x.nids).join(",");
+  const normale = n(simulate({ joueurs: js, graine: 31337, twist: "plastique" }));
+  const b1 = normale === n(simulate({ joueurs: js, graine: 31337, twist: "plastique", lagon: {} })) && normale === n(simulate({ joueurs: js, graine: 31337, twist: "plastique", lagon: null }));
+  console.log(`   ${b1 ? "✔" : "✘"} sans réglage, la partie est exactement la même qu'avant`); ok &&= b1;
+  const L = { requins: 6, rapides: true, vision: 6, plastiques: 30, plastiqueHerbier: false, nuitDebut: 21, nuitFin: 4, coraux: 12, algues: 10 };
+  const r = simulate({ joueurs: js, graine: 4242, twist: "calme", lagon: L }), f = r.frames[0];
+  const carte = r.carte.join("");
+  const b2 = f.requins.length === 6 && f.plastiques.length === 30 && (carte.match(/h/g) || []).length === 10 && JSON.stringify(reglesManche("calme", L).nuit) === "[21,4]"
+    && n(r) === n(simulate({ joueurs: js, graine: 4242, twist: "calme", lagon: L }));
+  console.log(`   ${b2 ? "✔" : "✘"} réglages appliqués (6 requins, 30 sacs, 10 touffes, nuit 21 h – 4 h) et partie reproductible`); ok &&= b2;
+  const b3 = JSON.stringify(normaliserLagon({ requins: 99, vision: "3", rapides: "oui", algues: 1, inconnu: 4 })) === '{"requins":6,"vision":3,"algues":8}' && normaliserLagon({}) === null;
+  console.log(`   ${b3 ? "✔" : "✘"} réglages hors bornes ramenés dans les bornes, réglages inconnus ignorés`); ok &&= b3;
+  let replis = 0, bloquees = 0;
+  for (const opts of [{ coraux: 14, algues: 35 }, { coraux: 14, algues: 8 }, { coraux: 0, algues: 35 }]) for (let g = 0; g < 150; g++) {
+    const C = genererCarte(5000 + g * 37, 24, opts); if (C === CARTE_CLASSIQUE) replis++; else if (!carteSansBlocage(C)) bloquees++;
+  }
+  const b4 = replis === 0 && bloquees === 0;
+  console.log(`   ${b4 ? "✔" : "✘"} réglages extrêmes de corail et d'algues : 450 cartes, ${bloquees} bloquante, ${replis} repli sur la carte classique`); ok &&= b4;
+}
+
+console.log("3 ter. Panthéon et primitives");
+{
+  const { evaluerBanc, reperes, codeConnu, BANC } = await import("../js/pantheon.js");
+  const { CAPTEURS, ACTIONS_INFO } = await import("../js/primitives.js");
+  const a = await evaluerBanc(BOTS[4].code), b = await evaluerBanc(BOTS[4].code);
+  const refs = await reperes();
+  const b1 = a.moyenne === b.moyenne && a.nids.join() === b.nids.join() && a.nids.length === BANC.parties;
+  console.log(`   ${b1 ? "✔" : "✘"} banc d'essai reproductible (${BANC.parties} parties) · repères : ${refs.map((r) => `${r.nom} ${r.moyenne}`).join(" · ")}`); ok &&= b1;
+  const b2 = BOTS.every((x) => codeConnu(x.code + "\n# ma version\n")) && !codeConnu("def tour():\n    if sur_plage():\n        pondre()\n    else:\n        aller_vers_plage()\n");
+  console.log(`   ${b2 ? "✔" : "✘"} copie d'une tortue d'entraînement refusée (même avec un commentaire), tortue inventée acceptée`); ok &&= b2;
+  const sans = [...CAPTEURS, ...ACTIONS_INFO].filter((p) => !p.cat).map((p) => p.nom);
+  console.log(`   ${sans.length ? "✘" : "✔"} toutes les primitives ont une catégorie${sans.length ? " (manque : " + sans.join(", ") + ")" : ""}`); ok &&= !sans.length;
 }
 
 console.log("4. Équilibrage : nids moyens sur 30 parties de 20 tortues, cartes aléatoires (entre parenthèses : part des parties sans aucun nid)");

@@ -129,7 +129,8 @@ export function carteSansBlocage(C, { distRequin = 5 } = {}) {
 }
 
 // Carte aléatoire tirée de la graine (nbTortues départs). Si un tirage n'est pas valable, on en tire un autre.
-export function genererCarte(graine, nbTortues = 8) {
+// opts : { coraux, algues } (lagon personnalisé) ; sans eux, la carte est exactement celle d'avant
+export function genererCarte(graine, nbTortues = 8, opts = {}) {
   const n = Math.max(1, nbTortues);
   const base = preparerCarte(MAP.map((l) => l.replace(/[^P]/g, ".")));
   const dP0 = base.distPlage;
@@ -140,7 +141,7 @@ export function genererCarte(graine, nbTortues = 8) {
     const eauLoin = [];   // cases d'eau à 2 cases ou plus des plages
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (g[y][x] === "." && dP0[y][x] >= 2) eauLoin.push([x, y]);
     // 1. corail : 5 à 8 massifs de 1 à 3 cases (jamais collés à la plage)
-    const massifs = 5 + ri(4);
+    const massifs = opts.coraux ?? 5 + ri(4);
     for (let m = 0; m < massifs; m++) {
       let [x, y] = eauLoin[ri(eauLoin.length)];
       for (let k = 1 + ri(3); k > 0; k--) {
@@ -149,7 +150,7 @@ export function genererCarte(graine, nbTortues = 8) {
       }
     }
     // 2. herbiers : 19 à 23 touffes, par petits groupes, à 2 cases ou plus des plages
-    const cible = 19 + ri(5);
+    const cible = opts.algues ?? 19 + ri(5);
     let touffes = 0;
     for (let garde = 0; touffes < cible && garde < 400; garde++) {
       let [x, y] = eauLoin[ri(eauLoin.length)];
@@ -198,8 +199,8 @@ export function genererCarte(graine, nbTortues = 8) {
   return CARTE_CLASSIQUE;   // (n'arrive pas en pratique : vérifié par outils/verifier.mjs)
 }
 const cacheCartes = new Map();
-export function carteDe(graine, nbTortues) {
-  const k = graine + "/" + nbTortues;
-  if (!cacheCartes.has(k)) { if (cacheCartes.size > 50) cacheCartes.clear(); cacheCartes.set(k, genererCarte(graine, nbTortues)); }
+export function carteDe(graine, nbTortues, opts = {}) {
+  const k = graine + "/" + nbTortues + "/" + (opts.coraux ?? "") + "/" + (opts.algues ?? "");
+  if (!cacheCartes.has(k)) { if (cacheCartes.size > 50) cacheCartes.clear(); cacheCartes.set(k, genererCarte(graine, nbTortues, opts)); }
   return cacheCartes.get(k);
 }

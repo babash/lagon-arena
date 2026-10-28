@@ -4,7 +4,7 @@
 //   • 🔁 Rejouer ce lagon : le même lagon (pour vérifier une correction) ;
 //   • 📊 Estimer : le nombre d'œufs MOYEN sur plusieurs parties, sans les afficher (mode léger).
 // =====================================================================
-import { simulate, BOTS, BOT_PIRATE, TWISTS } from "../engine.js";
+import { simulate, BOTS, BOT_PIRATE, TWISTS, decrireLagon } from "../engine.js";
 import { MatchViewer, rapportHTML, tableauMatch } from "../viewer.js";
 import { estAvance, estEquipe } from "../primitives.js";
 import { $, el, esc, toast, store } from "../common.js";
@@ -17,10 +17,15 @@ let graineSB = null, viewerSB = null;
 // la nouveauté : celle de la manche en cours (salle), ou choisie (bac à sable seul)
 let twistLibre = store.get("lagon:twistLibre", "calme");
 const twistActuel = () => (LIBRE ? twistLibre : S.salle && S.salle.manche > 0 ? S.salle.nouveaute : "calme");
+// le lagon personnalisé de la manche en cours (réglé par l'enseignant), pour s'entraîner dans les mêmes conditions
+const lagonActuel = () => (LIBRE ? null : (configActuelle() || {}).lagon || null);
 const selT = $("#sel-twist");
 for (const [k, T] of Object.entries(TWISTS)) selT.append(el("option", { value: k, selected: k === twistLibre }, `${T.icone} ${T.nom}`));
 selT.addEventListener("change", () => { twistLibre = selT.value; store.set("lagon:twistLibre", twistLibre); majTwistSB(); tester(); });
-export function majTwistSB() { const T = TWISTS[twistActuel()]; $("#sb-twist").textContent = `nouveauté : ${T.icone} ${T.nom}`; }
+export function majTwistSB() {
+  const T = TWISTS[twistActuel()], L = lagonActuel();
+  $("#sb-twist").textContent = `nouveauté : ${T.icone} ${T.nom}` + (L ? ` (lagon personnalisé : ${decrireLagon(L, twistActuel())})` : "");
+}
 majTwistSB();
 
 // les tortues du bac à sable : la mienne + les tortues d'entraînement (+ la Pirate en mode avancé)
@@ -41,7 +46,7 @@ export function tester(memeLagon = false) {
   if (!c.ok) { toast("Corrige d'abord l'erreur de ton code (en rouge).", "err"); return; }
   if (!memeLagon || graineSB == null) graineSB = 1 + Math.floor(Math.random() * 2e9);
   $("#autre").disabled = false;
-  const sim = simulate({ joueurs: joueursSB(), graine: graineSB, twist: twistActuel() });
+  const sim = simulate({ joueurs: joueursSB(), graine: graineSB, twist: twistActuel(), lagon: lagonActuel() });
   if (viewerSB) viewerSB.destroy();
   viewerSB = new MatchViewer($("#sb-vue"), { sim, focus: "moi", code: ed.value, vitesse: 5 });
   const r = sim.resultats.find((x) => x.id === "moi");
@@ -63,7 +68,7 @@ async function estimer() {
   if (estimEnCours) return;
   const c = verifier();
   if (!c.ok) { toast("Corrige d'abord l'erreur de ton code (en rouge).", "err"); return; }
-  const n = parseInt($("#nb-estim").value, 10) || 20, twist = twistActuel(), code = ed.value;
+  const n = parseInt($("#nb-estim").value, 10) || 20, twist = twistActuel(), lagon = lagonActuel(), code = ed.value;
   const joueurs = joueursSB(), box = $("#estim-res"), btn = $("#estimer");
   estimEnCours = true; btn.disabled = true;
   box.innerHTML = `<div class="jauge"><div id="estim-jg" style="width:0"></div></div><p class="petit muted" id="estim-txt">Partie 0 / ${n}…</p>`;
@@ -71,7 +76,7 @@ async function estimer() {
   for (const j of joueurs) par[j.id] = { nom: j.nom, nids: [], captures: 0, plastiques: 0, epuisee: 0 };
   const t0 = performance.now();
   for (let i = 0; i < n; i++) {
-    const sim = simulate({ joueurs, graine: 900001 + i * 7919, twist, leger: true });
+    const sim = simulate({ joueurs, graine: 900001 + i * 7919, twist, lagon, leger: true });
     for (const t of sim.tortues) {
       const p = par[t.id]; p.nids.push(t.nids);
       p.captures += t.stats.captures.length; p.plastiques += t.stats.plastiques.length; p.epuisee += t.stats.epuisee.length;
@@ -83,7 +88,7 @@ async function estimer() {
     }
   }
   estimEnCours = false; btn.disabled = false;
-  afficherEstimation(box, par, { n, twist, code });
+  afficherEstimation(box, par, { n, twist: twist + (lagon ? "|" + JSON.stringify(lagon) : ""), code });
 }
 $("#estimer").addEventListener("click", estimer);
 
@@ -101,9 +106,9 @@ function afficherEstimation(box, par, { n, twist, code }) {
   const memeCode = avant && avant.code === code;
   if (!memeCode) hist.push({ twist, n, salle: SALLE || "", m, code, quand: Date.now() });
   store.set(cleEstim, store.get(cleEstim, []).filter((h) => !memeSerie(h)).concat(hist.slice(-6)).slice(-30));
-  const T = TWISTS[twist] || TWISTS.calme;
+  const T = TWISTS[twist.split("|")[0]] || TWISTS.calme;
   box.innerHTML = `<div class="estim-moy"><b>${virgule(m)}</b> œuf${m >= 2 ? "s" : ""} par partie en moyenne</div>
-    <p class="petit">Sur ${n} lagons (${T.icone} ${esc(T.nom)}) : entre ${Math.min(...moi.nids)} et ${max} œufs · ${Math.round(100 * zero / n)} % des parties sans œuf ·
+    <p class="petit">Sur ${n} lagons (${T.icone} ${esc(T.nom)}${twist.includes("|") ? ", personnalisé" : ""}) : entre ${Math.min(...moi.nids)} et ${max} œufs · ${Math.round(100 * zero / n)} % des parties sans œuf ·
       🦈 ${virgule(moi.captures / n)} capture par partie · 🛍️ ${virgule(moi.plastiques / n)} sac · 😵 ${virgule(moi.epuisee / n)} épuisement.</p>
     ${avant && !memeCode ? `<p class="estim-avant">${m > avant.m + 0.05 ? "📈" : m < avant.m - 0.05 ? "📉" : "➖"} Estimation précédente : ${virgule(avant.m)} → maintenant <b>${virgule(m)}</b></p>` : ""}
     ${hist.length > 1 ? `<p class="petit muted">Tes estimations : ${hist.slice(-6).map((h) => virgule(h.m)).join(" → ")}</p>` : ""}

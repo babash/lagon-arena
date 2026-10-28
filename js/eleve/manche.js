@@ -3,7 +3,7 @@
 //    attente → programmation → brawl → résultats → … → fin
 // =====================================================================
 import { db, MODE } from "../db.js";
-import { TWISTS, styleEquipe } from "../engine.js";
+import { TWISTS, styleEquipe, decrireLagon } from "../engine.js";
 import { setEquipe } from "../primitives.js";
 import { $, el, esc, toast, twistCarte, nomEquipe } from "../common.js";
 import { S, SALLE, PSEUDO, couleur, configActuelle, configProchaine, titreManche, estFinaliste } from "./etat.js";
@@ -39,7 +39,7 @@ export async function rafraichir(premier = false) {
     const T = TWISTS[s.nouveaute] || TWISTS.calme;
     toast(`🌊 Nouveauté de la manche : ${T.icone} ${T.nom}`);
   }
-  if (JSON.stringify(s.config || null) !== cfgCle) { cfgCle = JSON.stringify(s.config || null); majCarteManche(true); }
+  if (JSON.stringify(s.config || null) !== cfgCle) { cfgCle = JSON.stringify(s.config || null); majCarteManche(true); majTwistSB(); }
 }
 
 async function changementPhase(premier) {
@@ -93,6 +93,7 @@ function majCarteManche(annoncer = false) {
   const T = TWISTS[c.nouveaute] || null;
   const morceaux = [];
   if (prochaine && T) morceaux.push(`${T.icone} ${esc(T.nom)}`);
+  if (c.lagon) morceaux.push(`🗺️ lagon personnalisé : ${esc(decrireLagon(c.lagon, c.nouveaute || s.nouveaute))}`);
   if (c.coef === 2) morceaux.push("⭐ points doubles");
   if (c.coef === 0) morceaux.push("hors classement");
   if (c.illimite) morceaux.push("♾️ temps illimité : tu peux continuer chez toi (🏠 Mon code de session)");

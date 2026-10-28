@@ -2,7 +2,8 @@
 //  Lagon Arena — moteur : la SIMULATION d'une partie (déterministe)
 //  Même graine + mêmes codes  =>  exactement le même match, sur tout navigateur.
 //
-//  simulate({ joueurs:[{id, nom, couleur, code, equipe}], graine, twist, ticks, scenario, version, leger })
+//  simulate({ joueurs:[{id, nom, couleur, code, equipe}], graine, twist, ticks, scenario, version, leger, lagon })
+//   • lagon   : réglages fins d'un lagon personnalisé (requins, plastique, nuit, corail, algues…), voir regles.js ;
 //   • version : 1 = carte classique, 2 = carte aléatoire tirée de la graine (par défaut, hors scénario) ;
 //   • leger   : sans images ni « pensées » (pour estimer une moyenne sur beaucoup de parties) ;
 //   • scenario (tutoriels) : { energie, requins:[[x,y]], plastiques:[[x,y]], heureDepart, ticks,
@@ -21,8 +22,8 @@ import { capteurs } from "./capteurs.js";
 import { agir } from "./actions.js";
 import { deplacerRequins, captures } from "./requins.js";
 
-export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario = null, version = VERSION_CARTE, leger = false }) {
-  const m = creerMonde({ joueurs, graine, twist, ticks, scenario, version, leger });
+export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario = null, version = VERSION_CARTE, leger = false, lagon = null }) {
+  const m = creerMonde({ joueurs, graine, twist, ticks, scenario, version, leger, lagon });
   m.snapshot(0);
   for (let tick = 0; tick < m.ticks; tick++) {
     const tour = debutTour(m, tick);
@@ -107,7 +108,7 @@ function resultats(m) {
   for (const r of res) r.equipe = turtles.find((t) => t.id === r.id).equipe;
   return {
     twist: m.twist, graine: m.graine, ticks: m.ticks, heureDepart: m.heureDepart,
-    frames: m.frames, events: m.events, traces: m.traces, nids: m.nids, version: m.version, carte: m.C.lignes,
+    frames: m.frames, events: m.events, traces: m.traces, nids: m.nids, version: m.version, lagon: m.lagon, carte: m.C.lignes,
     tortues: turtles.map((t) => ({ id: t.id, nom: t.nom, couleur: t.couleur, equipe: t.equipe, sx: t.sx, sy: t.sy, stats: t.stats, nids: t.nids, compileError: t.compileError })),
     resultats: res,
     equipes: resultatEquipes(turtles.map((t) => ({ id: t.id, nom: t.nom, equipe: t.equipe, nids: t.nids }))),

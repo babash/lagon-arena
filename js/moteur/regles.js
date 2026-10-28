@@ -44,6 +44,60 @@ export const TWISTS = {
 export const TWIST_ORDER = ["calme", "plastique", "finale"];
 export const TWIST_DUEL = "tempete";
 
+// ---------- LAGON PERSONNALISÉ : des réglages fins par-dessus une nouveauté ----------
+//  Chaque réglage absent (ou null) garde la valeur de la nouveauté. Les cartes sans réglage de corail
+//  ni d'algues sont exactement celles d'avant (les anciennes manches se rejouent à l'identique).
+export const LAGON_REGLAGES = {
+  requins:          { nom: "Requins", icone: "🦈", min: 0, max: 6 },
+  rapides:          { nom: "Requins rapides", icone: "💨", type: "oui-non" },
+  vision:           { nom: "Vue des requins (cases)", icone: "👁️", min: 2, max: 7 },
+  plastiques:       { nom: "Sacs plastique", icone: "🛍️", min: 0, max: 40 },
+  plastiqueHerbier: { nom: "Plastique surtout sur les algues", icone: "🌿", type: "oui-non" },
+  nuitDebut:        { nom: "Début de la nuit (h)", icone: "🌙", min: 17, max: 23 },
+  nuitFin:          { nom: "Fin de la nuit (h)", icone: "🌅", min: 3, max: 8 },
+  coraux:           { nom: "Massifs de corail", icone: "🪸", min: 0, max: 14, carte: true, defaut: "5 à 8" },
+  algues:           { nom: "Touffes d'algues", icone: "🌿", min: 8, max: 35, carte: true, defaut: "19 à 23" },
+};
+// garde seulement des réglages valides (entiers dans les bornes, oui/non) ; null s'il n'y en a aucun
+export function normaliserLagon(l) {
+  if (!l || typeof l !== "object") return null;
+  const out = {};
+  for (const [k, R] of Object.entries(LAGON_REGLAGES)) {
+    const v = l[k];
+    if (v === null || v === undefined || v === "") continue;
+    if (R.type === "oui-non") { if (typeof v === "boolean") out[k] = v; continue; }
+    const n = Math.round(Number(v));
+    if (Number.isFinite(n)) out[k] = Math.min(R.max, Math.max(R.min, n));
+  }
+  return Object.keys(out).length ? out : null;
+}
+// les règles d'une manche : la nouveauté, puis les réglages du lagon personnalisé
+export function reglesManche(twist, lagon) {
+  const T = TWISTS[twist] || TWISTS.calme, L = normaliserLagon(lagon);
+  if (!L) return T;
+  return { ...T, perso: true,
+    requins: L.requins ?? T.requins, rapides: L.rapides ?? T.rapides, vision: L.vision ?? T.vision,
+    plastiques: L.plastiques ?? T.plastiques, plastiqueHerbier: L.plastiqueHerbier ?? T.plastiqueHerbier,
+    nuit: [L.nuitDebut ?? T.nuit[0], L.nuitFin ?? T.nuit[1]] };
+}
+// ce que change un lagon personnalisé, en quelques mots (pour l'afficher aux élèves)
+export function decrireLagon(lagon, twist = "calme") {
+  const L = normaliserLagon(lagon), T = TWISTS[twist] || TWISTS.calme;
+  if (!L) return "";
+  const m = [];
+  if (L.requins !== undefined) m.push(`${L.requins} requin${L.requins > 1 ? "s" : ""}`);
+  if (L.rapides !== undefined) m.push(L.rapides ? "requins rapides" : "requins lents");
+  if (L.vision !== undefined) m.push(`les requins voient à ${L.vision} cases`);
+  if (L.plastiques !== undefined) m.push(`${L.plastiques} sac${L.plastiques > 1 ? "s" : ""} plastique`);
+  if (L.plastiqueHerbier !== undefined) m.push(L.plastiqueHerbier ? "plastique sur les algues" : "plastique n'importe où");
+  if (L.nuitDebut !== undefined || L.nuitFin !== undefined) m.push(`nuit de ${L.nuitDebut ?? T.nuit[0]} h à ${L.nuitFin ?? T.nuit[1]} h`);
+  if (L.coraux !== undefined) m.push(`${L.coraux} massif${L.coraux > 1 ? "s" : ""} de corail`);
+  if (L.algues !== undefined) m.push(`${L.algues} touffes d'algues`);
+  return m.join(", ");
+}
+// les réglages qui changent la CARTE (corail, algues)
+export const optionsCarte = (lagon) => { const L = normaliserLagon(lagon) || {}; return { coraux: L.coraux, algues: L.algues }; };
+
 export const heureDe = (tick, depart = 8) => (depart + Math.floor(tick * 24 / 60)) % 24;
 export const estNuit = (h, nuit) => h >= nuit[0] || h < nuit[1];
 
