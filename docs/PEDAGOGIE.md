@@ -151,7 +151,6 @@ Ce qui suit est volontairement franc : un outil pédagogique s'améliore en rega
 | **Dépendances techniques** | le projet Supabase gratuit se met en pause après une semaine sans activité ; les salles sont lisibles par l'API publique (n'importe qui peut lister les codes et rejoindre une salle) | aucune donnée personnelle ; l'enseignant peut retirer un élève (✕) | ménage automatique et compteurs ; un code de salle plus long pour les devoirs |
 | **Pas d'évaluation mesurée** | les choix s'appuient sur la recherche, mais aucun gain d'apprentissage n'a été mesuré | — | un test court avant / après (prédire le résultat de chaînes `if`/`elif` et d'expressions booléennes), comparé à une séance classique |
 | **Maintenance** | un seul mainteneur ; tests de navigateur hors du dépôt | code commenté en français, documentation, vérificateur automatique | tests de bout en bout et intégration continue dans le dépôt ; ouvrir aux contributions |
-| **Pas de licence** | sans licence, personne n'a juridiquement le droit de réutiliser ou d'adapter le code | — | choisir une licence libre (par exemple AGPL ou MIT pour le code, CC BY-SA pour la documentation) |
 
 ## 6. Le discours
 

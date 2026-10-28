@@ -89,3 +89,7 @@ En préparation :
 
 Conçu pour les classes de NSI de l'académie de Mayotte, développé avec [Claude Code](https://claude.com/claude-code).
 Une question, une idée, un bug ? [victor.connes@ac-mayotte.fr](mailto:victor.connes@ac-mayotte.fr) ou les [issues GitHub](https://github.com/babash/lagon-arena/issues).
+
+## Licence
+
+Lagon Arena (code, textes, images) est sous licence [**CC BY-SA 4.0**](https://creativecommons.org/licenses/by-sa/4.0/deed.fr) : vous pouvez l'utiliser, le copier, l'adapter et le partager, y compris pour vos classes, à condition de **citer l'auteur** et de **partager vos modifications sous la même licence**. Texte complet : [LICENSE](LICENSE).
