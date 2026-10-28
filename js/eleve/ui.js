@@ -1,7 +1,7 @@
 // =====================================================================
 //  Lagon Arena — élève : onglets, bandeau, fenêtre par-dessus la page, dates
 // =====================================================================
-import { $, $$, el, AIDE_HTML } from "../common.js";
+import { $, $$, el, store, AIDE_HTML } from "../common.js";
 
 export function onglet(t) {
   $$("#tabs .tab").forEach((b) => b.classList.toggle("on", b.dataset.t === t));
@@ -36,8 +36,7 @@ export const jourHeure = (iso) => {
 {
   const grille = $("#prog-grid"), b = $("#reduire");
   const appliquer = (r) => { grille.classList.toggle("reduite", r); b.textContent = r ? "▶ Agrandir" : "◀ Réduire"; b.title = r ? "Afficher à nouveau ton code" : "Réduire ce panneau pour agrandir le lagon"; };
-  let reduite = false;
-  try { reduite = localStorage.getItem("lagon:reduite") === "1"; } catch { /* rien */ }
+  let reduite = !!store.get("lagon:reduite", false);
   appliquer(reduite);
-  b.addEventListener("click", () => { reduite = !reduite; appliquer(reduite); try { localStorage.setItem("lagon:reduite", reduite ? "1" : "0"); } catch { /* rien */ } });
+  b.addEventListener("click", () => { reduite = !reduite; appliquer(reduite); store.set("lagon:reduite", reduite); });
 }

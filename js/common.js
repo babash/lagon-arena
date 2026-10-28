@@ -59,11 +59,9 @@ export function activerCopie(racine = document.body) {
   new MutationObserver((ms) => { for (const m of ms) m.addedNodes.forEach(scan); }).observe(racine, { childList: true, subtree: true });
 }
 
-export const store = {
-  get(k, def = null) { try { const v = localStorage.getItem(k); return v === null ? def : JSON.parse(v); } catch { return def; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* stockage indisponible */ } },
-  del(k) { try { localStorage.removeItem(k); } catch { /* rien */ } },
-};
+// le stockage local (avec une durée de vie : 1 jour pour les élèves, 60 jours pour l'enseignant)
+export { store } from "./stockage.js";
+import { store } from "./stockage.js";
 // ---------- liens à donner (élèves, enseignant, QR code) ----------
 //  Toujours vers l'adresse publique du site (CONFIG.URL_SITE), même si la page est ouverte ailleurs.
 //  En mode démo (sans base de données), tout reste dans ce navigateur : on garde l'adresse de la page.
@@ -76,8 +74,8 @@ export const sansProtocole = (url) => url.replace(/^https?:\/\//, "");
 // pour le ramener dans cette salle après le tutoriel
 export function salleInvitee() {
   const q = new URLSearchParams(location.search).get("salle");
-  if (q) { try { localStorage.setItem("lagon:invitation", q.toUpperCase()); } catch { /* rien */ } return q.toUpperCase(); }
-  try { return localStorage.getItem("lagon:invitation") || ""; } catch { return ""; }
+  if (q) { store.set("lagon:invitation", q.toUpperCase()); return q.toUpperCase(); }
+  return String(store.get("lagon:invitation", "") || "");
 }
 export const lienPartie = () => { const s = salleInvitee(); return "index.html" + (s ? "?salle=" + encodeURIComponent(s) : ""); };
 

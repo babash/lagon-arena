@@ -12,24 +12,8 @@ import { ALG_C, table, carteFin } from "./commun.js";
 export const ETAPES_EXPERT = [];
 
 // une stratégie d'expert (elle bat la Championne en moyenne : vérifié par simulation)
-export const CODE_EXPERT = `def tour():
-    if requin_proche() and not sur_plage():
-        fuir()
-    elif sur_plage() and est_la_nuit() and energie() >= 6:
-        pondre()
-    elif est_la_nuit() and energie() >= 6:
-        aller_vers_plage()
-    elif requins_autour() >= 2 and algues_autour() == 0 and not sur_plage():
-        aller_vers_plage()
-    elif heure() >= 16 and energie() >= 8 and not algue_pres_plage():
-        aller_vers_plage()
-    elif algue_ici() and not plastique_ici() and energie() < 10:
-        manger()
-    elif portions_algue() <= 1 and algues_autour() >= 2:
-        aller_vers_algue_libre()
-    else:
-        aller_vers_algue()
-`;
+export { CODE_EXPERT } from "./strategies.js";
+import { CODE_EXPERT } from "./strategies.js";
 
 // ---------- 1. Lire le lagon ----------
 ETAPES_EXPERT.push({

@@ -3,6 +3,7 @@
 //  Source unique utilisée par l'autocomplétion, la boîte à outils, l'aide…
 // =====================================================================
 import { P } from "./engine.js";
+import { store } from "./stockage.js";
 
 // Capteurs = des QUESTIONS que se pose la tortue (réponse True ou False, ou un nombre)
 export const CAPTEURS = [
@@ -72,7 +73,7 @@ export const MOTS = [
 
 // ---------- mode avancé (primitives avancées visibles ou non) ----------
 let avance = false;
-try { avance = localStorage.getItem("lagon:avance") === "1"; } catch { /* stockage indisponible */ }
+avance = !!store.get("lagon:avance", false);
 export const estAvance = () => avance;
 // mode équipes : activé par l'écran élève quand la manche se joue en équipes
 let equipe = false;
@@ -83,7 +84,7 @@ export const visible = (p, forcerAvance = null) => !p.avance && !p.equipe ? true
   : p.avance ? (forcerAvance ?? avance) : (equipe || (forcerAvance ?? avance));
 export function setAvance(v) {
   avance = !!v;
-  try { localStorage.setItem("lagon:avance", avance ? "1" : "0"); } catch { /* rien */ }
+  store.set("lagon:avance", avance);
   document.dispatchEvent(new CustomEvent("lagon:avance", { detail: avance }));
 }
 

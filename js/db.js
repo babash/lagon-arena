@@ -5,6 +5,7 @@
 //    partagé entre les onglets (pratique pour tester prof + élèves sur un seul poste).
 // =====================================================================
 import { CONFIG } from "./config.js";
+import { store } from "./stockage.js";
 
 const params = new URLSearchParams(location.search);
 // ?demo force le mode démo (mémorisé pour cet onglet), ?demo=0 l'annule
@@ -65,14 +66,25 @@ class Supabase {
   retirerJoueur(code, secret, pseudo) { return this.rpc("retirer_joueur", { p_code: code, p_secret: secret, p_pseudo: pseudo }); }
   libererPseudo(code, secret, pseudo) { return this.rpc("liberer_pseudo", { p_code: code, p_secret: secret, p_pseudo: pseudo }); }
   definirConfig(code, secret, config) { return this.rpc("definir_config", { p_code: code, p_secret: secret, p_config: config }); }
+  // l'accueil et le Panthéon
+  statistiques() { return this.rpc("statistiques"); }
+  proposerPantheon({ pseudo, lycee, code, moyenne, banc, jeton }) {
+    return this.rpc("proposer_pantheon", { p_pseudo: pseudo, p_lycee: lycee || null, p_code: code, p_moyenne: moyenne, p_banc: banc, p_jeton: jeton });
+  }
+  pantheonTop(limite = 100, lycee = null) { return this.rpc("pantheon_top", { p_limite: limite, p_lycee: lycee || null }); }
+  pantheonLycees() { return this.rpc("pantheon_lycees"); }
+  async maTortuePantheon(jeton) { const r = await this.rpc("ma_tortue_pantheon", { p_jeton: jeton }); return (r && r[0]) || null; }
+  pantheonAdmin(secret) { return this.rpc("pantheon_admin", { p_secret: secret }); }
+  pantheonValider(secret, id, moyenne) { return this.rpc("pantheon_valider", { p_secret: secret, p_id: id, p_moyenne: moyenne }); }
+  pantheonRetirer(secret, id) { return this.rpc("pantheon_retirer", { p_secret: secret, p_id: id }); }
 }
 
 // ---------------------------------------------------------------------
 const KEY = "lagon-demo-v1";
 class Demo {
-  load() { try { return JSON.parse(localStorage.getItem(KEY)) || this.vide(); } catch { return this.vide(); } }
-  vide() { return { salles: {}, secrets: {}, joueurs: {}, jetons: {}, tortues: [], scores: [] }; }
-  save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch { /* stockage plein ou indisponible */ } }
+  load() { return store.get(KEY) || this.vide(); }
+  vide() { return { salles: {}, secrets: {}, joueurs: {}, jetons: {}, tortues: [], scores: [], pantheon: [] }; }
+  save(s) { store.set(KEY, s); }
   async pause() { await new Promise((r) => setTimeout(r, 30)); }
   verifProf(s, code, secret) { if (s.secrets[code] !== secret) throw new Error("Accès refusé : cette salle appartient à un autre enseignant."); }
 
@@ -182,6 +194,53 @@ class Demo {
     s.tortues = s.tortues.filter((t) => !(t.salle === code && t.pseudo === pseudo));
     this.save(s);
   }
+  // l'accueil et le Panthéon (mêmes règles que supabase.sql, dans ce navigateur)
+  async statistiques() {
+    const s = this.load();
+    return { parties: new Set(s.scores.map((x) => x.salle + "/" + x.manche)).size, participants: Object.values(s.joueurs).reduce((n, l) => n + l.length, 0),
+      salles: Object.keys(s.salles).length, pantheon: (s.pantheon || []).length };
+  }
+  classementPantheon(s) {
+    return (s.pantheon || []).slice().sort((a, b) => b.moyenne - a.moyenne || a.cree_le.localeCompare(b.cree_le)).map((p, i) => ({ ...p, rang: i + 1 }));
+  }
+  async proposerPantheon({ pseudo, lycee, code, moyenne, banc, jeton }) {
+    await this.pause();
+    const s = this.load(); s.pantheon = s.pantheon || [];
+    pseudo = pseudo.trim(); lycee = (lycee || "").trim().replace(/\s+/g, " ") || null;
+    if (banc !== 1) throw new Error("Ta page est trop ancienne : recharge-la (Ctrl+F5).");
+    if (pseudo.length < 2 || pseudo.length > 14 || !/^[A-Za-z0-9À-ÿ _-]+$/.test(pseudo)) throw new Error("Pseudo invalide : 2 à 14 lettres ou chiffres.");
+    if (lycee && (lycee.length > 60 || !/^[A-Za-z0-9À-ÿ '’.,()&/-]+$/.test(lycee))) throw new Error("Nom de lycée invalide : 60 caractères au plus, lettres et chiffres.");
+    const empreinte = code.replace(/#[^\n]*/g, "").replace(/\s+/g, "");
+    if (s.pantheon.some((p) => p.empreinte === empreinte && p.jeton !== jeton)) throw new Error("Cette tortue est déjà au Panthéon (même programme) : invente ta propre stratégie !");
+    if (s.pantheon.some((p) => p.pseudo.toLowerCase() === pseudo.toLowerCase() && p.jeton !== jeton)) throw new Error("Ce pseudo est déjà au Panthéon. Choisis-en un autre, ou tape ton code Panthéon si c'est le tien.");
+    const m = Math.round(moyenne * 100) / 100, now = new Date().toISOString();
+    let p = s.pantheon.find((x) => x.jeton === jeton), statut;
+    if (!p) { p = { id: Date.now(), pseudo, lycee, moyenne: m, banc, code, empreinte, jeton, verifie: false, cree_le: now }; s.pantheon.push(p); statut = "nouveau"; }
+    else if (m > p.moyenne) { Object.assign(p, { pseudo, lycee, moyenne: m, code, empreinte, verifie: false }); statut = "ameliore"; }
+    else { Object.assign(p, { pseudo, lycee }); statut = "moins_bien"; }
+    this.save(s);
+    return { statut, moyenne: p.moyenne, rang: this.classementPantheon(s).find((x) => x.id === p.id).rang };
+  }
+  async pantheonTop(limite = 100, lycee = null) {
+    await this.pause();
+    return this.classementPantheon(this.load()).filter((p) => !lycee || (p.lycee || "").toLowerCase() === lycee.trim().toLowerCase())
+      .slice(0, limite).map(({ rang, pseudo, lycee: l, moyenne, verifie, cree_le }) => ({ rang, pseudo, lycee: l, moyenne, verifie, cree_le }));
+  }
+  async pantheonLycees() {
+    const n = {};
+    for (const p of this.load().pantheon || []) if (p.lycee) { const k = p.lycee.toLowerCase(); n[k] = n[k] || { lycee: p.lycee, tortues: 0 }; n[k].tortues++; }
+    return Object.values(n).sort((a, b) => b.tortues - a.tortues);
+  }
+  async maTortuePantheon(jeton) {
+    const p = this.classementPantheon(this.load()).find((x) => x.jeton === jeton);
+    return p ? { pseudo: p.pseudo, lycee: p.lycee, moyenne: p.moyenne, verifie: p.verifie, rang: p.rang } : null;
+  }
+  async pantheonAdmin(secret) { if (!secret) throw new Error("Mot de passe administrateur incorrect."); return this.classementPantheon(this.load()); }
+  async pantheonValider(secret, id, moyenne) {
+    const s = this.load(), p = (s.pantheon || []).find((x) => x.id === id);
+    if (p) { p.moyenne = Math.round(moyenne * 100) / 100; p.verifie = true; this.save(s); }
+  }
+  async pantheonRetirer(secret, id) { const s = this.load(); s.pantheon = (s.pantheon || []).filter((x) => x.id !== id); this.save(s); }
 }
 
 export const db = MODE === "db" ? new Supabase(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY) : new Demo();

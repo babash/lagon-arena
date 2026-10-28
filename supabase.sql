@@ -8,7 +8,19 @@
 --   * le code des tortues n'est lisible qu'une fois le brawl lancé (pas de copie
 --     pendant la phase de programmation) ;
 --   * on ne peut ÉCRIRE que par des fonctions qui vérifient un jeton secret :
---     le jeton « prof » (donné à la création de la salle) ou le jeton de l'élève.
+--     le jeton « prof » (donné à la création de la salle) ou le jeton de l'élève ;
+--   * le code des tortues du Panthéon n'est jamais lisible (seulement par l'administrateur).
+--
+--  Ménage automatique (au plus une fois par heure, à la création d'une salle ou à l'affichage
+--  de l'accueil) : séances terminées depuis 7 jours, salles jamais commencées depuis 7 jours,
+--  salles sans aucune activité (enseignant ou élèves) depuis 60 jours. Les compteurs de
+--  l'accueil (parties jouées, participants) sont gardés à part : le ménage ne les fait pas baisser.
+--
+--  Administrer le Panthéon (vérifier les scores, retirer un pseudo) : choisissez un mot de passe
+--  d'au moins 12 caractères et exécutez UNE FOIS, dans le SQL Editor :
+--    insert into public.admin_secret (secret) values ('votre-mot-de-passe')
+--      on conflict (id) do update set secret = excluded.secret;
+--  puis ouvrez pantheon.html?admin
 -- =====================================================================
 
 create table if not exists public.salles (
@@ -68,6 +80,45 @@ alter table public.scores add column if not exists equipe int not null default 0
 -- réglages de la manche (préparés par l'enseignant, visibles par les élèves AVANT la manche) :
 --   { "mode": "solo" | "equipes", "nbEquipes": 2..6, "equipes": {"pseudo": 1..6}, "coef": 1|2|0, "bots": 8, "titre": "…" }
 alter table public.salles add column if not exists config jsonb;
+-- le lagon personnalisé de la manche (nombre de requins, de coraux…) : pour la rejouer à l'identique (null = lagon normal)
+alter table public.scores add column if not exists lagon jsonb;
+
+-- compteurs de l'accueil (gardés à part : le ménage des vieilles salles ne les fait pas baisser)
+create table if not exists public.compteurs (
+  nom    text primary key,
+  valeur bigint not null default 0,
+  maj    timestamptz not null default now()
+);
+-- première installation : on part de ce qui existe déjà
+insert into public.compteurs (nom, valeur) select 'parties', count(*) from (select distinct salle, manche from public.scores) x on conflict (nom) do nothing;
+insert into public.compteurs (nom, valeur) select 'participants', count(*) from public.joueurs on conflict (nom) do nothing;
+insert into public.compteurs (nom, valeur) select 'salles', count(*) from public.salles on conflict (nom) do nothing;
+
+-- le PANTHÉON : les meilleures tortues de tous les temps (moyenne de nids sur le banc d'essai :
+-- 20 parties « chacun pour soi » contre les 5 tortues d'entraînement, toujours les mêmes lagons)
+create table if not exists public.pantheon (
+  id        bigint generated always as identity primary key,
+  pseudo    text not null,
+  lycee     text,
+  moyenne   numeric(5,2) not null,
+  banc      int not null default 1,               -- version du banc d'essai
+  code      text not null,                        -- jamais lisible par le public
+  empreinte text not null,                        -- md5 du code sans commentaires ni espaces : pas deux fois la même tortue
+  jeton     text not null,                        -- le « code Panthéon » de l'élève : pour améliorer sa tortue plus tard
+  verifie   boolean not null default false,       -- score recalculé par l'administrateur
+  cree_le   timestamptz not null default now(),
+  maj       timestamptz not null default now()
+);
+create unique index if not exists pantheon_empreinte on public.pantheon (empreinte);
+create unique index if not exists pantheon_pseudo on public.pantheon (lower(pseudo));
+create unique index if not exists pantheon_jeton on public.pantheon (jeton);
+create index if not exists pantheon_classement on public.pantheon (moyenne desc, cree_le);
+
+-- le mot de passe de l'administrateur du Panthéon (une seule ligne, voir l'en-tête)
+create table if not exists public.admin_secret (
+  id     int primary key default 1 check (id = 1),
+  secret text not null
+);
 
 -- ---------- droits de lecture (Row Level Security) ----------
 alter table public.salles         enable row level security;
@@ -76,6 +127,9 @@ alter table public.joueurs        enable row level security;
 alter table public.joueurs_secret enable row level security;
 alter table public.tortues        enable row level security;
 alter table public.scores         enable row level security;
+alter table public.compteurs      enable row level security;
+alter table public.pantheon       enable row level security;
+alter table public.admin_secret   enable row level security;
 
 drop policy if exists lecture on public.salles;
 create policy lecture on public.salles for select using (true);
@@ -90,10 +144,11 @@ create policy lecture on public.tortues for select using (
             and (s.manche > tortues.manche
                  or (s.manche = tortues.manche and s.phase in ('brawl', 'resultats', 'fin'))))
 );
--- aucune politique sur salles_secret et joueurs_secret : personne ne peut les lire.
+-- aucune politique sur salles_secret, joueurs_secret, compteurs, pantheon et admin_secret :
+-- personne ne peut les lire directement (seulement par les fonctions ci-dessous).
 
 revoke insert, update, delete on public.salles, public.joueurs, public.tortues, public.scores from anon, authenticated;
-revoke all on public.salles_secret, public.joueurs_secret from anon, authenticated;
+revoke all on public.salles_secret, public.joueurs_secret, public.compteurs, public.pantheon, public.admin_secret from anon, authenticated;
 
 -- ---------- fonctions ----------
 create or replace function public.heure_serveur() returns timestamptz
@@ -107,14 +162,50 @@ begin
   end if;
 end $$;
 
+-- ajouter n à un compteur de l'accueil
+create or replace function public.compter(p_nom text, p_n int default 1) returns void
+language sql security definer set search_path = public as $$
+  insert into compteurs (nom, valeur) values (p_nom, p_n)
+  on conflict (nom) do update set valeur = compteurs.valeur + excluded.valeur, maj = now();
+$$;
+
+-- le ménage (au plus une fois par heure)
+create or replace function public.menage() returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if exists (select 1 from compteurs where nom = 'dernier_menage' and maj > now() - interval '1 hour') then return; end if;
+  insert into compteurs (nom, valeur) values ('dernier_menage', 0)
+  on conflict (nom) do update set valeur = compteurs.valeur + 1, maj = now();
+  -- séances terminées depuis 7 jours (le temps de revoir les résultats et d'exporter le CSV)
+  delete from salles where phase = 'fin' and maj < now() - interval '7 days';
+  -- salles jamais commencées depuis 7 jours, où personne n'est arrivé récemment
+  delete from salles s where s.manche = 0 and greatest(s.cree_le, s.maj) < now() - interval '7 days'
+    and not exists (select 1 from joueurs j where j.salle = s.code and j.rejoint_le > now() - interval '7 days');
+  -- salles sans aucune activité depuis 60 jours (ni l'enseignant, ni un élève qui rejoint ou envoie sa tortue)
+  delete from salles s where greatest(s.cree_le, s.maj,
+      coalesce((select max(t.depose_le) from tortues t where t.salle = s.code), s.cree_le),
+      coalesce((select max(j.rejoint_le) from joueurs j where j.salle = s.code), s.cree_le)) < now() - interval '60 days';
+end $$;
+
+-- les chiffres de l'accueil
+create or replace function public.statistiques() returns json
+language plpgsql security definer set search_path = public as $$
+begin
+  perform menage();
+  return json_build_object(
+    'parties',      coalesce((select valeur from compteurs where nom = 'parties'), 0),
+    'participants', coalesce((select valeur from compteurs where nom = 'participants'), 0),
+    'salles',       coalesce((select valeur from compteurs where nom = 'salles'), 0),
+    'pantheon',     (select count(*) from pantheon));
+end $$;
+
 create or replace function public.creer_salle() returns json
 language plpgsql security definer set search_path = public as $$
 declare
   lettres constant text := 'ABCDEFGHJKLMNPQRSTUVWXYZ';
   v_code text; v_secret text; i int;
 begin
-  -- ménage : les salles inutilisées depuis 60 jours sont supprimées (séances longues : plusieurs semaines possibles)
-  delete from salles where greatest(cree_le, maj) < now() - interval '60 days';
+  perform menage();
   loop
     v_code := '';
     for i in 1..4 loop
@@ -125,6 +216,7 @@ begin
   v_secret := md5(random()::text || clock_timestamp()::text || v_code);
   insert into salles (code, graine) values (v_code, 1 + floor(random() * 1000000)::int);
   insert into salles_secret (code, secret) values (v_code, v_secret);
+  perform compter('salles');
   return json_build_object('code', v_code, 'secret', v_secret);
 end $$;
 
@@ -194,6 +286,7 @@ begin
     end if;
     insert into joueurs (salle, pseudo, couleur) values (upper(p_salle), v_pseudo, p_couleur);
     insert into joueurs_secret (salle, pseudo, jeton) values (upper(p_salle), v_pseudo, p_jeton);
+    perform compter('participants');
   elsif v_jeton <> p_jeton then
     raise exception 'Ce pseudo est déjà pris dans cette salle. Si c''est le tien (autre ordinateur), demande à ton enseignant de le débloquer.';
   else
@@ -263,25 +356,150 @@ language sql security definer set search_path = public as $$
   select t.pseudo, t.depose_le from tortues t where t.salle = p_salle and t.manche = p_manche
 $$;
 
--- p_scores : [{"pseudo": "...", "nids": 3, "rang": 1, "points": 25, "bonus": 3, "nouveaute": "calme", "duel": false}, ...]
+-- p_scores : [{"pseudo": "...", "nids": 3, "rang": 1, "points": 25, "bonus": 3, "nouveaute": "calme|v2", "duel": false,
+--             "equipe": 0, "lagon": {"requins": 4, …} (facultatif)}, ...]
 create or replace function public.enregistrer_scores(p_code text, p_secret text, p_manche int, p_scores jsonb)
 returns void language plpgsql security definer set search_path = public as $$
+declare v_nouvelle boolean;
 begin
   perform verifier_prof(p_code, p_secret);
+  v_nouvelle := not exists (select 1 from scores where salle = p_code and manche = p_manche);
   delete from scores where salle = p_code and manche = p_manche;
-  insert into scores (salle, manche, pseudo, nids, rang, points, bonus, nouveaute, duel, equipe)
+  insert into scores (salle, manche, pseudo, nids, rang, points, bonus, nouveaute, duel, equipe, lagon)
   select p_code, p_manche, left(x->>'pseudo', 20), (x->>'nids')::int, (x->>'rang')::int, (x->>'points')::int,
          coalesce((x->>'bonus')::int, 0), coalesce(left(x->>'nouveaute', 20), 'calme'), coalesce((x->>'duel')::boolean, false),
-         coalesce((x->>'equipe')::int, 0)
+         coalesce((x->>'equipe')::int, 0),
+         case when jsonb_typeof(x->'lagon') = 'object' and length((x->'lagon')::text) <= 500 then x->'lagon' end
   from jsonb_array_elements(p_scores) as x;
+  if v_nouvelle and jsonb_array_length(p_scores) > 0 then perform compter('parties'); end if;
 end $$;
 
-revoke execute on function public.verifier_prof(text, text) from public, anon, authenticated;
+-- ---------- le Panthéon ----------
+-- l'élève propose sa tortue, avec la moyenne calculée par son navigateur sur le banc d'essai.
+-- p_jeton : son « code Panthéon » (s'il a déjà une tortue au Panthéon, elle est remplacée si la nouvelle fait mieux).
+create or replace function public.proposer_pantheon(p_pseudo text, p_lycee text, p_code text, p_moyenne numeric, p_banc int, p_jeton text)
+returns json language plpgsql security definer set search_path = public as $$
+declare
+  v_pseudo text := btrim(p_pseudo);
+  v_lycee text := nullif(regexp_replace(btrim(coalesce(p_lycee, '')), '\s+', ' ', 'g'), '');
+  v_empreinte text;
+  v pantheon%rowtype;
+  v_id bigint; v_statut text;
+begin
+  if p_banc is distinct from 1 then raise exception 'Ta page est trop ancienne : recharge-la (Ctrl+F5).'; end if;
+  if length(v_pseudo) < 2 or length(v_pseudo) > 14 or v_pseudo !~ '^[A-Za-z0-9À-ÿ _-]+$' then
+    raise exception 'Pseudo invalide : 2 à 14 lettres ou chiffres.';
+  end if;
+  if v_lycee is not null and (length(v_lycee) > 60 or v_lycee !~ '^[A-Za-z0-9À-ÿ ''’.,()&/-]+$') then
+    raise exception 'Nom de lycée invalide : 60 caractères au plus, lettres et chiffres.';
+  end if;
+  if length(coalesce(p_code, '')) < 10 or length(p_code) > 4000 then raise exception 'Programme vide ou trop long.'; end if;
+  if p_moyenne is null or p_moyenne < 0 or p_moyenne > 30 then raise exception 'Moyenne impossible.'; end if;
+  if length(coalesce(p_jeton, '')) < 16 then raise exception 'Jeton invalide.'; end if;
+  if (select count(*) from pantheon where maj > now() - interval '1 minute') >= 30 then
+    raise exception 'Beaucoup de tortues arrivent en ce moment : réessaie dans une minute.';
+  end if;
+  v_empreinte := md5(regexp_replace(regexp_replace(p_code, '#[^\n]*', '', 'g'), '\s+', '', 'g'));
+  select * into v from pantheon where jeton = p_jeton;
+  if exists (select 1 from pantheon where empreinte = v_empreinte and jeton <> p_jeton) then
+    raise exception 'Cette tortue est déjà au Panthéon (même programme) : invente ta propre stratégie !';
+  end if;
+  if exists (select 1 from pantheon where lower(pseudo) = lower(v_pseudo) and jeton <> p_jeton) then
+    raise exception 'Ce pseudo est déjà au Panthéon. Choisis-en un autre, ou tape ton code Panthéon si c''est le tien.';
+  end if;
+  if v.id is null then
+    insert into pantheon (pseudo, lycee, moyenne, banc, code, empreinte, jeton)
+      values (v_pseudo, v_lycee, round(p_moyenne, 2), p_banc, p_code, v_empreinte, p_jeton) returning id into v_id;
+    v_statut := 'nouveau';
+  elsif v.maj > now() - interval '10 seconds' then
+    raise exception 'Doucement : attends quelques secondes avant de reproposer ta tortue.';
+  elsif round(p_moyenne, 2) > v.moyenne then
+    update pantheon set pseudo = v_pseudo, lycee = v_lycee, moyenne = round(p_moyenne, 2), banc = p_banc, code = p_code,
+      empreinte = v_empreinte, verifie = false, maj = now() where id = v.id;
+    v_id := v.id; v_statut := 'ameliore';
+  else
+    update pantheon set pseudo = v_pseudo, lycee = v_lycee, maj = now() where id = v.id;
+    v_id := v.id; v_statut := 'moins_bien';
+  end if;
+  -- on ne garde que les 1000 meilleures
+  delete from pantheon where id in (select id from pantheon order by moyenne desc, cree_le offset 1000);
+  return json_build_object('statut', v_statut,
+    'moyenne', (select moyenne from pantheon where id = v_id),
+    'rang', (select 1 + count(*) from pantheon p, pantheon m where m.id = v_id
+              and (p.moyenne > m.moyenne or (p.moyenne = m.moyenne and p.cree_le < m.cree_le))));
+end $$;
+
+-- le classement (sans le code) : tout le Panthéon, ou un seul lycée
+create or replace function public.pantheon_top(p_limite int default 100, p_lycee text default null)
+returns table (rang bigint, pseudo text, lycee text, moyenne numeric, verifie boolean, cree_le timestamptz)
+language sql security definer set search_path = public as $$
+  select * from (
+    select row_number() over (order by p.moyenne desc, p.cree_le) as rang, p.pseudo, p.lycee, p.moyenne, p.verifie, p.cree_le
+    from pantheon p) x
+  where p_lycee is null or lower(x.lycee) = lower(btrim(p_lycee))
+  order by x.rang limit least(greatest(coalesce(p_limite, 100), 1), 1000)
+$$;
+
+-- les lycées déjà inscrits (pour proposer leur nom)
+create or replace function public.pantheon_lycees()
+returns table (lycee text, tortues bigint)
+language sql security definer set search_path = public as $$
+  select min(p.lycee), count(*) from pantheon p where p.lycee is not null group by lower(p.lycee) order by 2 desc, 1 limit 300
+$$;
+
+-- ma tortue au Panthéon (avec mon code Panthéon)
+create or replace function public.ma_tortue_pantheon(p_jeton text)
+returns table (pseudo text, lycee text, moyenne numeric, verifie boolean, rang bigint)
+language sql security definer set search_path = public as $$
+  select m.pseudo, m.lycee, m.moyenne, m.verifie,
+         (select 1 + count(*) from pantheon p where p.moyenne > m.moyenne or (p.moyenne = m.moyenne and p.cree_le < m.cree_le))
+  from pantheon m where m.jeton = p_jeton
+$$;
+
+-- ---------- l'administrateur du Panthéon ----------
+create or replace function public.verifier_admin(p_secret text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from admin_secret where length(secret) >= 12 and secret = p_secret) then
+    raise exception 'Mot de passe administrateur incorrect.';
+  end if;
+end $$;
+
+create or replace function public.pantheon_admin(p_secret text)
+returns table (id bigint, pseudo text, lycee text, moyenne numeric, banc int, code text, verifie boolean, cree_le timestamptz)
+language plpgsql security definer set search_path = public as $$
+begin
+  perform verifier_admin(p_secret);
+  return query select p.id, p.pseudo, p.lycee, p.moyenne, p.banc, p.code, p.verifie, p.cree_le
+    from pantheon p order by p.moyenne desc, p.cree_le limit 1000;
+end $$;
+
+-- l'administrateur a recalculé le score : on le corrige et on le marque vérifié
+create or replace function public.pantheon_valider(p_secret text, p_id bigint, p_moyenne numeric) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  perform verifier_admin(p_secret);
+  update pantheon set moyenne = round(p_moyenne, 2), verifie = true where id = p_id;
+end $$;
+
+create or replace function public.pantheon_retirer(p_secret text, p_id bigint) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  perform verifier_admin(p_secret);
+  delete from pantheon where id = p_id;
+end $$;
+
+revoke execute on function public.verifier_prof(text, text), public.verifier_admin(text),
+  public.compter(text, int), public.menage() from public, anon, authenticated;
 grant execute on function public.heure_serveur(), public.creer_salle(),
   public.piloter_salle(text, text, int, text, int, int, text, text[]),
   public.retirer_joueur(text, text, text), public.liberer_pseudo(text, text, text), public.definir_config(text, text, jsonb),
   public.rejoindre(text, text, text, text),
   public.deposer_tortue(text, text, text, int, text), public.etat_depots(text, int),
   public.changer_jeton(text, text, text, text), public.ma_tortue(text, text, text), public.codes_session(text, text),
-  public.enregistrer_scores(text, text, int, jsonb)
+  public.enregistrer_scores(text, text, int, jsonb),
+  public.statistiques(),
+  public.proposer_pantheon(text, text, text, numeric, int, text), public.pantheon_top(int, text),
+  public.pantheon_lycees(), public.ma_tortue_pantheon(text),
+  public.pantheon_admin(text), public.pantheon_valider(text, bigint, numeric), public.pantheon_retirer(text, bigint)
 to anon, authenticated;

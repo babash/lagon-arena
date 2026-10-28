@@ -14,6 +14,7 @@ import { majEnvoi } from "./envoi.js";
 import { recupererDerniereTortue, annoncerCodeSession } from "./session.js";
 import { majInfo, rafraichir } from "./manche.js";
 import "./resultats.js";
+import "./pantheon.js";
 
 document.body.classList.add(LIBRE ? "mode-libre" : "mode-salle");
 

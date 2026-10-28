@@ -11,22 +11,8 @@ import { EQ_C, EQ_A, RIVALE_C, table, carteFin } from "./commun.js";
 
 export const ETAPES_EQUIPE = [];
 
-export const CODE_EQUIPE = `def tour():
-    if requin_proche() and not sur_plage() and not equipiere_a_cote():
-        fuir()
-    elif equipiere_fatiguee() and energie() >= 8:
-        donner()
-    elif rivale_a_cote() and requin_derriere_adversaire() and energie() >= 4:
-        pousser()
-    elif sur_plage() and est_la_nuit() and energie() >= 6:
-        pondre()
-    elif est_la_nuit() and energie() >= 6:
-        aller_vers_plage()
-    elif algue_ici() and not plastique_ici() and energie() < 10:
-        manger()
-    else:
-        aller_vers_algue_libre()
-`;
+export { CODE_EQUIPE } from "./strategies.js";
+import { CODE_EQUIPE } from "./strategies.js";
 
 // ---------- 1. Jouer en équipe ----------
 ETAPES_EQUIPE.push({

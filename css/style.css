@@ -641,3 +641,24 @@ a.niveau:hover { transform: translateY(-3px); }
 .niveau .btn { align-self: flex-start; margin-top: auto; }
 .niveau.fini { border: 3px solid var(--algue, #3cb44b); }
 .topbar a.pill { color: inherit; text-decoration: none; }
+
+/* ---------- Panthéon ---------- */
+.overlay .boite { max-height: 92vh; overflow: auto; }
+.pantheon-cta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--gris-clair); }
+.form-pantheon { text-align: left; margin-top: 12px; display: grid; gap: 10px; }
+.form-pantheon details summary { cursor: pointer; font-weight: 800; color: var(--ocean-800); }
+.form-pantheon details[open] summary { margin-bottom: 8px; }
+.code-perso-box { margin: 12px 0; }
+.pantheon { max-width: 1000px; }
+.pantheon-tete h1 { font-family: var(--titre); color: var(--ocean-800); margin: 0 0 6px; }
+.pantheon-tete .row { margin: 10px 0; }
+.pantheon .filtre { display: flex; align-items: center; gap: 6px; font-weight: 800; }
+.pantheon .filtre select { width: auto; max-width: 320px; }
+.pantheon-table tr.top3 td { font-weight: 800; }
+.pantheon-table td:first-child { width: 48px; }
+.pantheon-table tr.repere td { background: #f6f9fb; }
+.pantheon-table td a { color: var(--ocean-700); text-decoration: none; }
+.pantheon-table td a:hover { text-decoration: underline; }
+.code-admin { font-family: var(--mono); font-size: .8rem; background: #f4f7f9; border-radius: 8px; padding: 8px; white-space: pre; overflow: auto; max-width: 420px; }
+.ecart { color: var(--faux); }
+button.confirmer { background: var(--faux) !important; color: #fff !important; }
