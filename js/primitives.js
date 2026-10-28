@@ -59,6 +59,44 @@ export const ACTIONS_INFO = [
   { nom: "aller_vers_equipiere", icone: "➡️🤝", role: "Nager vers l'équipière la plus proche (deux équipières collées sont protégées des requins).", equipe: true },
 ];
 
+// ---------- les CATÉGORIES : pour s'y retrouver (boîte à outils, aide, autocomplétion) ----------
+//  cles : des mots qu'un élève peut taper pour trouver les primitives de la catégorie
+export const CATEGORIES = {
+  // questions
+  requins:  { icone: "🦈", nom: "Les requins", cles: ["requin", "danger"] },
+  algues:   { icone: "🌿", nom: "Les algues", cles: ["algue", "nourriture", "repas", "plastique"] },
+  plage:    { icone: "🏖️", nom: "La plage et l'heure", cles: ["plage", "nuit", "jour", "heure", "temps"] },
+  moi:      { icone: "⚡", nom: "Moi", cles: ["moi", "energie", "fatigue"] },
+  voisines: { icone: "🐢", nom: "Les tortues autour", cles: ["tortue", "voisine", "cote", "autour"] },
+  equipe:   { icone: "👥", nom: "Mon équipe", cles: ["equipe", "rivale", "rang", "classement"] },
+  // ordres
+  vivre:    { icone: "🥚", nom: "Manger et pondre", cles: ["manger", "pondre", "nid"] },
+  bouger:   { icone: "🧭", nom: "Se déplacer", cles: ["aller", "nager", "bouger", "deplacer"] },
+  proteger: { icone: "🛡️", nom: "Se protéger", cles: ["fuir", "cacher", "proteger", "danger"] },
+  autres:   { icone: "🤝", nom: "Agir sur les autres", cles: ["pousser", "donner", "aider"] },
+};
+export const ORDRE_QUESTIONS = ["requins", "algues", "plage", "moi", "voisines", "equipe"];
+export const ORDRE_ORDRES = ["vivre", "bouger", "proteger", "autres"];
+const CAT = {
+  requin_proche: "requins", distance_requin: "requins", requins_autour: "requins",
+  algue_ici: "algues", plastique_ici: "algues", distance_algue: "algues", algues_autour: "algues", portions_algue: "algues",
+  requins_pres_algue: "algues", distance_algue_sure: "algues", algue_pres_plage: "algues",
+  sur_plage: "plage", est_la_nuit: "plage", heure: "plage", distance_plage: "plage",
+  energie: "moi", mes_nids: "moi",
+  tortue_a_cote: "voisines", requin_derriere_tortue: "voisines", nids_voisine: "voisines", equipiere_a_cote: "voisines",
+  equipiere_fatiguee: "voisines", adversaire_a_cote: "voisines", rivale_a_cote: "voisines", requin_derriere_adversaire: "voisines",
+  mon_equipe: "equipe", nids_equipe: "equipe", rang_equipe: "equipe", equipe_en_tete: "equipe", equipe_rivale: "equipe", nids_adversaires: "equipe",
+  manger: "vivre", pondre: "vivre",
+  aller_vers_algue: "bouger", aller_vers_plage: "bouger", aller_vers_algue_libre: "bouger", aller_vers_equipiere: "bouger",
+  fuir: "proteger", se_cacher: "proteger",
+  pousser: "autres", donner: "autres",
+};
+for (const p of [...CAPTEURS, ...ACTIONS_INFO]) p.cat = CAT[p.nom];
+// une liste de primitives rangée par catégories : [{ cat, ...CATEGORIES[cat], items }]
+export function parCategorie(liste, ordre = [...ORDRE_QUESTIONS, ...ORDRE_ORDRES]) {
+  return ordre.map((cat) => ({ cat, ...CATEGORIES[cat], items: liste.filter((p) => p.cat === cat) })).filter((g) => g.items.length);
+}
+
 // Mots-clés Python, avec leur traduction (on peut les retrouver en tapant le mot français)
 export const MOTS = [
   { nom: "if", fr: "si", role: "si … (la condition est vraie) : alors on fait le bloc en dessous" },

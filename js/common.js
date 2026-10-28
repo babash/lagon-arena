@@ -1,10 +1,9 @@
 // =====================================================================
 //  Lagon Arena — petits outils partagés + aide-mémoire des règles
 // =====================================================================
-import { P, TWISTS, equipeInfo, styleEquipe } from "./engine.js";
+import { TWISTS, equipeInfo, styleEquipe } from "./engine.js";
 import { CONFIG } from "./config.js";
 import { MODE } from "./db.js";
-import { CAPTEURS, ACTIONS_INFO } from "./primitives.js";
 
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -102,56 +101,6 @@ export function jeton() {
 export const mmss = (s) => { s = Math.max(0, Math.ceil(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
 export const heureTxt = (h) => `${h} h`;
 export const plural = (n, mot) => `${n} ${mot}${n > 1 ? "s" : ""}`;
-
-// ---------- aide-mémoire (onglet Aide de l'écran élève) ----------
-const ligneP = (p) => `<tr><td class="ic">${p.icone}</td><td><code>${p.nom}()</code></td><td>${esc(p.role)}</td></tr>`;
-export const AIDE_HTML = `
-<ol class="regles-or">
-  <li>À chaque tour, le jeu lance <code>tour()</code> : ta tortue fait <b>un seul ordre</b>.</li>
-  <li>Python lit de <b>haut en bas</b> : il fait seulement le <b>premier <code>if</code> vrai</b>.</li>
-  <li>1 point = <code>pondre()</code> <b>sur la plage</b>, <b>la nuit</b>, avec <b>${P.energiePonte} ⚡ ou plus</b>.</li>
-</ol>
-<h3>❓ Les questions (capteurs) : réponse True ou False</h3>
-<table class="prims">${CAPTEURS.filter((c) => !c.avance && !c.equipe).map(ligneP).join("")}</table>
-<h3>❗ Les ordres (actions) : un seul par tour</h3>
-<table class="prims">${ACTIONS_INFO.filter((a) => !a.avance && !a.equipe).map(ligneP).join("")}</table>
-<h3>✍️ Le modèle à suivre</h3>
-<pre class="modele"><span class="tok-kw">def</span> tour():
-    <span class="tok-kw">if</span> <i>question</i>:          <span class="tok-com"># si…</span>
-        <i>ordre</i>()
-    <span class="tok-kw">elif</span> <i>autre question</i>:  <span class="tok-com"># sinon, si…</span>
-        <i>ordre</i>()
-    <span class="tok-kw">else</span>:                 <span class="tok-com"># sinon</span>
-        <i>ordre</i>()</pre>
-<p>Pour relier des questions : <code>and</code> (et), <code>or</code> (ou), <code>not</code> (pas). Pour comparer : <code>energie() >= 6</code>, <code>heure() < 19</code>…</p>
-<h3>⚠️ À savoir</h3>
-<ul>
-  <li>⚡ L'énergie baisse de 1 tous les ${P.perteEnergie} tours. À 0 : épuisée, retour au départ.</li>
-  <li>🦈 Attrapée par un requin : retour au départ et <b>−1 nid</b>. Refuges : la <b>plage</b> et les <b>algues</b> (sauf quand tu manges).</li>
-  <li>🛍️ Manger un sac plastique : <b>−${P.pertePlastique} ⚡</b>.</li>
-  <li>🕐 Un match = 180 tours = 3 jours. Nuit de 19 h à 6 h (sauf nouveauté).</li>
-  <li>🌿 Une touffe d'algues mangée jusqu'au bout disparaît : une nouvelle pousse ailleurs. Les sacs plastique dérivent et réapparaissent ailleurs.</li>
-  <li>☀️ Le jour, sur la plage, le soleil fatigue : l'énergie baisse plus vite.</li>
-</ul>
-<details class="aide-avancee aide-equipe"><summary>👥 Jouer en équipes (<a href="tuto-avance.html?niveau=equipe">tutoriel 👥 Équipe</a>)</summary>
-<p>Pendant une manche en équipes, <b>seul le score de l'équipe compte</b> (on classe les équipes selon la moyenne de nids de leurs tortues). Il peut y avoir 2 équipes ou plus (🔵 Bleue, 🔴 Rouge, 🟢 Verte, 🟡 Jaune…) : chaque tortue a un halo de la couleur de son équipe. Les 🤖 ne sont dans aucune équipe. Deux équipières <b>collées</b> sont protégées des requins, et on ne peut pas pousser une équipière.</p>
-<h3>❓ Questions d'équipe</h3>
-<table class="prims">${CAPTEURS.filter((c) => c.equipe).map(ligneP).join("")}</table>
-<h3>❗ Ordres d'équipe</h3>
-<table class="prims">${ACTIONS_INFO.filter((a) => a.equipe).map(ligneP).join("")}</table>
-<p>Exemple : <code>if equipiere_fatiguee() and energie() >= 8:</code> puis <code>donner()</code></p>
-<p><b>Plus de 2 équipes ?</b> L'équipe <b>rivale</b> est la meilleure des autres équipes en ce moment. <code>rang_equipe()</code> dit à quelle place est ton équipe, <code>equipe_en_tete()</code> si elle mène, <code>rivale_a_cote()</code> si une rivale est collée à toi ; <code>pousser()</code> vise l'équipe rivale en premier. Exemple : <code>if rivale_a_cote() and requin_derriere_adversaire():</code> puis <code>pousser()</code></p>
-</details>
-<details class="aide-avancee"><summary>🚀 Niveau avancé (voir le <a href="tuto-avance.html">tutoriel avancé</a>)</summary>
-<h3>❓ Questions avancées</h3>
-<table class="prims">${CAPTEURS.filter((c) => c.avance && !c.groupe).map(ligneP).join("")}</table>
-<h3>🌿 Choisir ses algues (<a href="tuto-avance.html?niveau=expert">tutoriel 🥇 Expert</a>)</h3>
-<table class="prims">${CAPTEURS.filter((c) => c.groupe === "algues").map(ligneP).join("")}</table>
-<p>Exemple : <code>if requins_autour() >= 2 and not sur_plage():</code> puis <code>aller_vers_plage()</code> (zone dangereuse : direction le refuge).</p>
-<h3>❗ Ordres avancés</h3>
-<table class="prims">${ACTIONS_INFO.filter((a) => a.avance).map(ligneP).join("")}</table>
-<p>Combiner : <code>if distance_requin() <= 2 or energie() < 3:</code> · <code>if not tortue_a_cote():</code> · <code>if est_la_nuit() and (sur_plage() or distance_plage() <= 1):</code></p>
-</details>`;
 
 export function twistCarte(key) {
   const T = TWISTS[key] || TWISTS.calme;

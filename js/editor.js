@@ -10,7 +10,7 @@
 //  + vue « pensée de la tortue » (lignes exécutées, conditions vraies/fausses)
 // =====================================================================
 import { SENSORS, ACTIONS } from "./interp.js";
-import { INFO, CAPTEURS, ACTIONS_INFO, MOTS, estAvance, visible } from "./primitives.js";
+import { INFO, CAPTEURS, ACTIONS_INFO, MOTS, CATEGORIES, parCategorie, ORDRE_QUESTIONS, ORDRE_ORDRES, estAvance, visible } from "./primitives.js";
 import { esc, copier } from "./common.js";
 
 const KW = new Set(["if", "elif", "else", "and", "or", "not", "def", "pass", "return"]);
@@ -202,13 +202,14 @@ export class CodeEditor {
       else if (fr && fr.startsWith(m)) score = 1;
       else if (m.length >= 2 && n.includes(m)) score = 2;
       else if (m.length >= 2 && fr && fr.includes(m)) score = 3;
+      else if (m.length >= 3 && i.cat && CATEGORIES[i.cat].cles.some((c) => c.startsWith(m))) score = 4;   // « danger », « nourriture »…
       if (score == null) continue;
       if (nom === mot) continue;                                          // déjà écrit en entier
       const bonus = (ctx === "condition" && i.type === "capteur") || (ctx === "debut" && i.type !== "capteur") ? -0.5 : 0;
       out.push({ nom, i, score: score + bonus });
     }
     out.sort((a, b) => a.score - b.score || a.nom.length - b.nom.length);
-    return out.slice(0, 6);
+    return out.slice(0, 7);
   }
   motAvant() {
     const v = this.ta.value, s = this.ta.selectionStart;
@@ -235,7 +236,7 @@ export class CodeEditor {
       li.className = k === this.sel ? "on" : "";
       const nom = c.i.type === "mot" ? c.nom : c.nom + "()";
       li.innerHTML = `<span class="ic">${c.i.icone}</span><span class="nm">${nom}</span>` +
-        (c.i.type === "mot" ? `<span class="fr">${esc(c.i.fr)}</span>` : "") +
+        (c.i.type === "mot" ? `<span class="fr">${esc(c.i.fr)}</span>` : c.i.cat ? `<span class="fr" title="${esc(CATEGORIES[c.i.cat].nom)}">${CATEGORIES[c.i.cat].icone}</span>` : "") +
         `<span class="rl">${esc(c.i.type === "mot" ? c.i.role : c.i.role)}</span>`;
       li.addEventListener("mousedown", (e) => { e.preventDefault(); this.sel = k; this.accepter(); });
       this.popup.append(li);
@@ -350,11 +351,17 @@ export function boiteOutils(container, editor, { capteurs = null, actions = null
     const A = ACTIONS_INFO.filter((a) => (!actions || actions.includes(a.nom)) && editor.voit(a.nom));
     const M = MOTS.filter((m) => mots.includes(m.nom) || (m.nom === "or" && !capteurs && editor.voit("distance_algue")));
     const chip = (nom, html, cls) => `<button type="button" class="chip ${cls}${INFO[nom].avance ? " c-avance" : INFO[nom].equipe ? " c-equipe" : ""}" data-p="${nom}" title="${esc(INFO[nom].type === "mot" ? INFO[nom].fr + " : " + INFO[nom].role : INFO[nom].role)}">${html}</button>`;
+    // rangées par catégories quand il y en a beaucoup (sinon, une simple ligne)
+    const groupes = (liste, ordre, cls) => {
+      const g = parCategorie(liste, ordre), puce = (p) => chip(p.nom, `${p.icone} <code>${p.nom}()</code>`, cls);
+      if (g.length < 2 || liste.length <= 10) return liste.map(puce).join("");
+      return `<div class="sous-groupes">${g.map((x) => `<span class="sg" title="${esc(x.nom)}"><span class="sg-lab">${x.icone} ${esc(x.nom)}</span>${x.items.map(puce).join("")}</span>`).join("")}</div>`;
+    };
     container.innerHTML = `<div class="outils">
       ${titre ? `<div class="outils-titre">🧰 Clique pour insérer dans ton code :</div>` : ""}
       ${M.length ? `<div class="outils-groupe"><span class="lab">Mots</span>${M.map((m) => chip(m.nom, `<code>${m.nom}</code> <small>${esc(m.fr)}</small>`, "c-mot")).join("")}</div>` : ""}
-      ${C.length ? `<div class="outils-groupe"><span class="lab">❓ Questions</span>${C.map((c) => chip(c.nom, `${c.icone} <code>${c.nom}()</code>`, "c-capt")).join("")}</div>` : ""}
-      ${A.length ? `<div class="outils-groupe"><span class="lab">❗ Ordres</span>${A.map((a) => chip(a.nom, `${a.icone} <code>${a.nom}()</code>`, "c-act")).join("")}</div>` : ""}
+      ${C.length ? `<div class="outils-groupe"><span class="lab">❓ Questions</span>${groupes(C, ORDRE_QUESTIONS, "c-capt")}</div>` : ""}
+      ${A.length ? `<div class="outils-groupe"><span class="lab">❗ Ordres</span>${groupes(A, ORDRE_ORDRES, "c-act")}</div>` : ""}
     </div>`;
     container.querySelectorAll("[data-p]").forEach((b) => {
       b.addEventListener("mousedown", (e) => e.preventDefault());            // garder le curseur dans l'éditeur

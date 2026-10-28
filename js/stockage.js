@@ -16,7 +16,7 @@ const JOUR = 24 * 3600 * 1000;
 export const DUREE_ELEVE = JOUR;
 export const DUREE_ENSEIGNANT = 60 * JOUR;
 // les clés de l'enseignant (le reste est « élève » : 1 jour)
-const CLES_ENSEIGNANT = [/^lagon:prof$/, /^lagon:reglages$/, /^lagon:prep:/, /^lagon:faux:/, /^lagon-demo-v\d+$/];
+const CLES_ENSEIGNANT = [/^lagon:prof$/, /^lagon:reglages$/, /^lagon:prep:/, /^lagon:faux:/, /^lagon-demo-v\d+$/, /^lagon:profil$/];
 export const dureeDe = (cle) => (CLES_ENSEIGNANT.some((r) => r.test(cle)) ? DUREE_ENSEIGNANT : DUREE_ELEVE);
 const estNotre = (cle) => cle.startsWith("lagon:") || cle.startsWith("lagon-demo-v");
 

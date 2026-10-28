@@ -662,3 +662,42 @@ a.niveau:hover { transform: translateY(-3px); }
 .code-admin { font-family: var(--mono); font-size: .8rem; background: #f4f7f9; border-radius: 8px; padding: 8px; white-space: pre; overflow: auto; max-width: 420px; }
 .ecart { color: var(--faux); }
 button.confirmer { background: var(--faux) !important; color: #fff !important; }
+/* ---------- accueil : élève / enseignant ---------- */
+.hero .compteurs { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 18px; margin-top: 14px; font-size: 1.05rem; }
+.hero .compteurs span, .hero .compteurs a { background: rgba(255,255,255,.12); border-radius: 999px; padding: 4px 14px; color: #fff; text-decoration: none; }
+.hero .compteurs a:hover { background: rgba(255,255,255,.22); }
+.profils { display: inline-flex; gap: 4px; margin-top: 18px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.14); position: relative; z-index: 2; }
+.profil { font: inherit; font-weight: 800; font-size: 1.05rem; border: 0; border-radius: 999px; padding: 9px 20px; cursor: pointer; background: transparent; color: #fff; }
+.profil[aria-selected="true"] { background: #fff; color: var(--ocean-800); box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+.profil:focus-visible { outline: 3px solid var(--or); outline-offset: 2px; }
+.liste-tuto { margin: 0; padding-left: 4px; list-style: none; line-height: 1.8; }
+.choix-prof { grid-template-columns: minmax(300px, 1.35fr) minmax(280px, 1fr); }
+.choix-prof .apercu { width: 100%; border-radius: 10px; box-shadow: var(--ombre); }
+.etapes-prof { margin: 0; padding-left: 20px; line-height: 1.7; }
+.actions-prof .btn { align-self: stretch !important; text-align: center; margin-top: 0 !important; }
+.actions-prof hr { border: 0; border-top: 1px solid var(--gris-clair); width: 100%; margin: 4px 0; }
+.liens-prof { margin: 0; padding-left: 18px; line-height: 1.7; }
+@media (max-width: 720px) { .choix-prof { grid-template-columns: 1fr; } .profil { padding: 8px 14px; font-size: .98rem; } .profil .long { display: none; } }
+/* boîte à outils : sous-groupes par catégorie */
+.sous-groupes { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; min-width: 0; }
+.sg { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 3px 6px 3px 4px; border-radius: 12px; background: rgba(10, 53, 82, .045); }
+.sg-lab { font-size: .72rem; font-weight: 800; color: var(--gris); padding: 0 2px; white-space: nowrap; }
+/* ---------- aide en deux onglets ---------- */
+.aide-tete { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.aide-tete h2 { margin: 0; }
+.aide-onglets { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--gris-clair); }
+.aide-onglets button { font: inherit; font-weight: 800; border: 0; border-radius: 999px; padding: 7px 18px; cursor: pointer; background: transparent; color: var(--ocean-800); }
+.aide-onglets button[aria-selected="true"] { background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.essentiel { background: var(--lagon-pale); border-radius: 12px; padding: 10px 16px; margin-bottom: 12px; }
+.essentiel h3 { margin: 4px 0; }
+.essentiel ol { margin: 6px 0; padding-left: 22px; line-height: 1.65; }
+.aide-section { border-top: 1px solid var(--gris-clair); padding: 4px 0; }
+.aide-section > summary { cursor: pointer; font-weight: 800; color: var(--ocean-800); padding: 8px 2px; font-size: 1.05rem; }
+.aide-section > summary:hover { color: var(--lagon); }
+.aide-section > div { padding: 0 2px 10px; }
+.aide-section h4 { margin: 10px 0 4px; color: var(--ocean-700); }
+.badge-av, .badge-eq { font-size: .8em; }
+.aide-section table.prims { table-layout: fixed; }
+.aide-section table.prims td.ic { width: 2.6em; }
+.aide-section table.prims td:nth-child(2) { width: 42%; }
+@media (max-width: 700px) { .aide-section table.prims td:nth-child(2) { width: 48%; } }

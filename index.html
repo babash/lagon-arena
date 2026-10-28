@@ -12,26 +12,25 @@
 </head>
 <body>
 <header class="hero">
-  <img src="img/tortue.svg" alt="" width="96" height="96">
+  <img src="img/tortue.svg" alt="" width="88" height="88">
   <h1>Lagon Arena</h1>
   <p>Programme ta tortue avec des <b>conditions Python</b>, ponds un maximum de nids… et survis aux requins !</p>
-  <p id="mode" class="petit" style="margin-top:12px"></p>
+  <p id="compteurs" class="compteurs cache"></p>
+  <p id="mode" class="petit" style="margin-top:8px"></p>
+  <div class="profils" role="tablist" aria-label="Qui es-tu ?">
+    <button type="button" role="tab" class="profil" data-profil="eleve" aria-selected="true">🐢 <span class="long">Je suis </span>élève</button>
+    <button type="button" role="tab" class="profil" data-profil="prof" aria-selected="false">👩‍🏫 <span class="long">Je suis </span>enseignant·e</button>
+  </div>
   <svg class="vague" viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0 30 C 240 0, 480 60, 720 30 S 1200 0, 1440 30 V 60 H 0 Z" fill="#f2f7fa"/></svg>
 </header>
 
+<!-- ================= ÉLÈVE ================= -->
+<div class="vue" id="vue-eleve">
 <div id="invitation" class="invitation cache"></div>
 <main class="choix">
   <section class="card">
-    <div class="ico">📘</div>
-    <h2>1. Le tutoriel</h2>
-    <p>Pas besoin de savoir programmer : des exemples à manipuler, puis tes premiers <code>if</code>, pas à pas.</p>
-    <p><b>Commence ici si tu n'as jamais joué !</b></p>
-    <a class="btn big" href="tuto.html" id="lien-tuto">Commencer le tutoriel →</a>
-  </section>
-
-  <section class="card">
     <div class="ico">🐢</div>
-    <h2>2. Rejoindre la partie</h2>
+    <h2>Rejoindre la partie</h2>
     <form id="rejoindre" class="form-rejoindre">
       <label class="champ">Code de la salle (affiché au tableau)
         <input type="text" id="salle" maxlength="4" placeholder="ABCD" autocomplete="off" class="input-code" required>
@@ -51,11 +50,58 @@
       <div id="erreur" class="msg err cache"></div>
     </form>
   </section>
+
+  <section class="card">
+    <div class="ico">📘</div>
+    <h2>Première fois ? Le tutoriel</h2>
+    <p>Pas besoin de savoir programmer : des exemples à manipuler, puis tes premiers <code>if</code>, pas à pas. <b>15 minutes</b>, et tu sais tout.</p>
+    <ul class="petit liste-tuto">
+      <li>🎮 le jeu et le lagon</li>
+      <li>❓ les questions et ❗ les ordres de ta tortue</li>
+      <li>✍️ <code>if</code>, <code>else</code>, <code>elif</code>, <code>and</code></li>
+      <li>🔧 4 tortues à réparer</li>
+    </ul>
+    <a class="btn big" href="tuto.html" id="lien-tuto">Commencer le tutoriel →</a>
+  </section>
 </main>
 <div class="choix-bas">
-  <a class="mini" href="eleve.html?libre=1"><span class="ico">🧪</span><span><b>Bac à sable</b><br>Entraîne-toi seul contre les tortues d'entraînement.</span></a>
-  <a class="mini" href="tuto-avance.html"><span class="ico">🚀</span><span><b>Tutoriel avancé</b><br>3 niveaux : 🥈 intermédiaire (pousser…), 🥇 expert (choisir ses algues), 👥 équipe.</span></a>
-  <a class="mini" href="prof.html"><span class="ico">👩‍🏫</span><span><b>Espace enseignant</b><br>Créer une salle, lancer les manches, projeter les brawls.</span></a>
+  <a class="mini" href="eleve.html?libre=1"><span class="ico">🧪</span><span><b>Bac à sable</b><br>Entraîne-toi seul, n'importe quand, contre les tortues d'entraînement.</span></a>
+  <a class="mini" href="tuto-avance.html"><span class="ico">🚀</span><span><b>Tutoriel avancé</b><br>🥈 intermédiaire (pousser…), 🥇 expert (choisir ses algues), 👥 équipe.</span></a>
+  <a class="mini" href="pantheon.html"><span class="ico">🏛️</span><span><b>Le Panthéon</b><br>Les 100 meilleures tortues de tous les temps. Et la tienne ?</span></a>
+</div>
+</div>
+
+<!-- ================= ENSEIGNANT ================= -->
+<div class="vue cache" id="vue-prof">
+<main class="choix choix-prof">
+  <section class="card">
+    <h2>🌊 Le chapitre des conditions, en tournoi de tortues</h2>
+    <p>Vos élèves écrivent le cerveau d'une tortue de mer avec des <code>if</code> / <code>elif</code> / <code>else</code>. Toutes les tortues de la classe plongent <b>en même temps</b> dans le même lagon, projeté au tableau. Après le match, chacun revoit ce que sa tortue a « pensé », la corrige… et c'est le rematch.</p>
+    <img class="apercu" src="docs/img/brawl.webp" alt="Le brawl projeté : toutes les tortues de la classe dans le même lagon" loading="lazy">
+    <ol class="etapes-prof">
+      <li><b>Créez une salle</b> : un code de 4 lettres s'affiche au tableau.</li>
+      <li>Les élèves font le <b>tutoriel</b> (15 min), puis tapent le code ici.</li>
+      <li>Vous lancez les manches : <b>programmation → brawl → rapport → rematch</b>.</li>
+    </ol>
+    <p class="petit muted">Gratuit, sans compte, rien à installer. Des pseudos, aucune donnée personnelle.</p>
+  </section>
+
+  <section class="card actions-prof">
+    <h2>👩‍🏫 Espace enseignant</h2>
+    <div id="mes-salles"></div>
+    <a class="btn big corail" href="prof.html">➕ Créer une salle (séance en classe)</a>
+    <a class="btn big" href="prof.html">📚 Créer un devoir à la maison</a>
+    <a class="btn ghost" href="prof.html?demo">🧪 Essayer seul, en mode démo</a>
+    <hr>
+    <h3>📖 Pour préparer</h3>
+    <ul class="liens-prof">
+      <li><a href="https://github.com/babash/lagon-arena/blob/main/docs/GUIDE-ENSEIGNANT.md" target="_blank" rel="noopener">Guide de l'enseignant</a> : déroulé de 55 min, quoi dire aux élèves, devoir</li>
+      <li><a href="https://github.com/babash/lagon-arena/blob/main/docs/REGLES.md" target="_blank" rel="noopener">Règles du jeu</a> et toutes les primitives</li>
+      <li><a href="https://github.com/babash/lagon-arena/blob/main/docs/PEDAGOGIE.md" target="_blank" rel="noopener">Pédagogie</a> : pourquoi ça marche, limites, argumentaire</li>
+      <li><a href="tuto.html">Le tutoriel des élèves</a> · <a href="pantheon.html">Le Panthéon</a></li>
+    </ul>
+  </section>
+</main>
 </div>
 
 <footer class="pied">
@@ -68,71 +114,6 @@
   </p>
 </footer>
 
-<script type="module">
-import { db, MODE } from "./js/db.js";
-import { COULEURS } from "./js/engine.js";
-import { $, el, store, salleInvitee, nouveauCodePerso, normaliserCode, codeValide, jetonDuCode, cleJeton, cleCodePerso } from "./js/common.js";
-
-if (MODE === "db") {
-  $("#mode").textContent = "⏳ Connexion à la base de données…";
-  db.heureServeur()
-    .then(() => { $("#mode").textContent = "🟢 Connecté à la base de données de la classe"; })
-    .catch((e) => { $("#mode").textContent = "🔴 " + e.message; });
-} else $("#mode").innerHTML = `<span class="pill mode-demo">Mode démo</span> la base de données n'est pas configurée : tout reste dans ce navigateur.`;
-
-let couleur = store.get("lagon:couleur") || COULEURS[Math.floor(Math.random() * COULEURS.length)];
-const pal = $("#palette");
-for (const c of COULEURS) {
-  const b = el("button", { type: "button", style: `background:${c}`, title: c, "aria-label": "couleur " + c });
-  if (c === couleur) b.classList.add("on");
-  b.addEventListener("click", () => { couleur = c; pal.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); });
-  pal.append(b);
-}
-const der = store.get("lagon:derniere");
-if (der) { $("#salle").value = der.salle; $("#pseudo").value = der.pseudo; }
-const q = new URLSearchParams(location.search);
-if (q.get("salle")) {   // arrivé·e par le lien d'accès donné par l'enseignant
-  const s = q.get("salle").toUpperCase();
-  $("#salle").value = s;
-  salleInvitee();   // (gardée en mémoire pour revenir ici après le tutoriel)
-  $("#lien-tuto").href = "tuto.html?salle=" + encodeURIComponent(s);
-  $("#invitation").innerHTML = `<div class="card"><h2>🔗 Tu es invité·e dans la salle <span class="gros-code">${s.replace(/[^A-Z0-9]/g, "")}</span></h2>
-    <ol><li>Tu n'as jamais joué ? Commence par le <a href="tuto.html?salle=${encodeURIComponent(s)}"><b>tutoriel</b></a> (tu reviendras ici à la fin).</li>
-    <li>Choisis un <b>pseudo</b> (pas ton vrai nom) et une couleur, puis <b>plonge dans le lagon</b>.</li>
-    <li>Note ton <b>code de session</b> (bouton « 🏠 Mon code de session ») pour revenir depuis un autre ordinateur.</li></ol></div>`;
-  $("#invitation").classList.remove("cache");
-  if (!$("#pseudo").value) setTimeout(() => $("#pseudo").focus(), 300);
-}
-if (q.get("pseudo")) $("#pseudo").value = q.get("pseudo");
-// lien personnel (…#code=K7PQ2XMA) : le code de session est déjà rempli
-const h = new URLSearchParams(location.hash.slice(1));
-if (h.get("code")) { $("#codeperso").value = h.get("code"); $("#reprise").open = true; history.replaceState(null, "", location.pathname + location.search); }
-
-$("#rejoindre").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const salle = $("#salle").value.trim().toUpperCase(), pseudo = $("#pseudo").value.trim();
-  const saisi = normaliserCode($("#codeperso").value);
-  const erreur = (t) => { $("#erreur").innerHTML = t; $("#erreur").classList.remove("cache"); };
-  $("#erreur").classList.add("cache");
-  if (saisi && !codeValide(saisi)) return erreur("Code de session incorrect : 8 lettres ou chiffres, par exemple <b>K7PQ-2XMA</b>.");
-  // le jeton : celui du code de session tapé, sinon celui déjà connu sur ce poste, sinon un nouveau code de session
-  let code = saisi || store.get(cleCodePerso(salle, pseudo)), j;
-  if (code) j = jetonDuCode(code);
-  else if (store.get(cleJeton(salle, pseudo))) j = store.get(cleJeton(salle, pseudo));   // (ancien jeton, sans code perso)
-  else { code = nouveauCodePerso(); j = jetonDuCode(code); }
-  try {
-    const p = await db.rejoindre(salle, pseudo, j, couleur);
-    store.set(cleJeton(salle, p), j); if (code) store.set(cleCodePerso(salle, p), code);
-    store.set("lagon:couleur", couleur); store.set("lagon:derniere", { salle, pseudo: p });
-    location.href = `eleve.html?salle=${encodeURIComponent(salle)}&pseudo=${encodeURIComponent(p)}`;
-  } catch (err) {
-    if (/déjà pris/.test(err.message)) {
-      erreur(saisi ? "Ce code de session ne correspond pas à ce pseudo. Vérifie la salle, le pseudo et le code (ou demande à ton enseignant de débloquer ton pseudo)."
-        : "Ce pseudo est déjà pris dans cette salle. <b>Si c'est le tien</b> (tu viens d'un autre ordinateur), ouvre « 🏠 Tu reviens depuis un autre ordinateur ? » et tape ton <b>code de session</b>. Sinon, choisis un autre pseudo.");
-      if (!saisi) $("#reprise").open = true;
-    } else erreur(err.message);
-  }
-});
-</script>
+<script type="module" src="js/accueil.js"></script>
 </body>
 </html>

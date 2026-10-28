@@ -1,7 +1,8 @@
 // =====================================================================
 //  Lagon Arena — élève : onglets, bandeau, fenêtre par-dessus la page, dates
 // =====================================================================
-import { $, $$, el, store, AIDE_HTML } from "../common.js";
+import { $, $$, el, store } from "../common.js";
+import { brancherAide } from "../aide.js";
 
 export function onglet(t) {
   $$("#tabs .tab").forEach((b) => b.classList.toggle("on", b.dataset.t === t));
@@ -11,7 +12,7 @@ export function onglet(t) {
 $$("#tabs .tab").forEach((b) => b.addEventListener("click", () => onglet(b.dataset.t)));
 // une pastille sur un onglet (nouveau contenu)
 export const notifier = (t) => { const b = $(`#tabs [data-t="${t}"]`); if (!b.classList.contains("on") && !b.querySelector(".notif")) b.append(el("span", { class: "notif" })); };
-$("#aide").innerHTML = "<h2>❓ Aide-mémoire</h2>" + AIDE_HTML;
+brancherAide($("#aide"));
 
 export function bandeau(html, type = "info") {
   const b = $("#bandeau");
