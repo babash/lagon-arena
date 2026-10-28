@@ -77,7 +77,9 @@ Les principes, les limites (franchement) et un argumentaire pour présenter le j
 
 ## Feuille de route
 
-Pistes pour la suite :
+Les chantiers en cours (téléphones, rendu graphique, erreurs de logique, galerie des gagnantes, page « Tester », fluidité) sont détaillés dans **[TODO.md](TODO.md)**.
+
+Autres pistes :
 
 - **défier les champions** du Panthéon (top 1 à top 100) sans révéler leur programme : il faudra faire jouer ces matchs par le serveur ;
 - **classer une manche sur plusieurs lagons** pour réduire la part de chance d'un seul brawl ;
