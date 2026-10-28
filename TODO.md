@@ -49,7 +49,7 @@ Chantiers retenus après l'audit du 28 octobre 2026 (design, fluidité, pédagog
 
 *Les élèves font le devoir sur leur téléphone ; le tableau est souvent en 1024×768.*
 
-- [ ] **Page élève**, sur téléphone, en onglets **✍️ Programmer / 🧪 Tester / 📊 Résultats / ❓ Aide** (voir le chantier 3), barre d'onglets fixée en bas de l'écran.
+- [ ] **Page élève**, sur téléphone, avec les onglets du chantier 3 (**✍️ Programmer / 🧪 Tester / 📊 Résultats / 🏆 Classement / ❓ Aide / 💡 Conseils**) dans une barre fixée en bas de l'écran : une icône et un mot court par onglet.
 - [ ] **Éditeur au doigt** :
   - [ ] la boîte à outils devient un « clavier de primitives » sous l'éditeur : un appui insère `if`, une question, un ordre, avec l'indentation ;
   - [ ] des boutons « → » (indenter) et « ← » (désindenter) ;
@@ -88,10 +88,11 @@ Chantiers retenus après l'audit du 28 octobre 2026 (design, fluidité, pédagog
 
 **C'est fini quand** les captures avant et après des 5 tailles d'écran sont validées par l'enseignant.
 
-## 3. Séparer « Programmer » et « Tester » pour voir la tête de la tortue
+## 3. Séparer « Programmer », « Tester », « Aide » et « Conseils »
 
 *Aujourd'hui, le bac à sable partage l'écran avec l'éditeur : « Dans la tête de ta tortue » est petit et loin, alors que c'est l'outil qui fait comprendre.*
 
+- [ ] **Les onglets de la page élève, tous au même niveau** : **✍️ Programmer · 🧪 Tester · 📊 Résultats · 🏆 Classement · ❓ Aide · 💡 Conseils**. L'aide (les règles) et les conseils deviennent deux onglets principaux, à la place de l'unique onglet ❓ Aide qui les contient aujourd'hui en sous-onglets. Chacun garde son « essentiel en 5 lignes » et ses sections à déplier.
 - [ ] **✍️ Programmer** : l'éditeur, la boîte à outils, le coup de pouce, les avertissements (chantier 4), les boutons **▶ Tester** et **📤 Envoyer**.
 - [ ] **🧪 Tester** : le lagon et **« Dans la tête de ta tortue »** côte à côte, en grand et synchronisés. On y trouve :
   - le code avec ses lignes vraies, fausses et exécutées ;
