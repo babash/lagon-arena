@@ -113,6 +113,15 @@ Chantiers retenus après l'audit du 28 octobre 2026 (design, fluidité, pédagog
 
 *Aujourd'hui, l'éditeur ne signale que 2 cas (« un capteur seul ne fait rien », « aucune action »). C'est le cœur du chapitre : « le premier vrai gagne ».*
 
+- [ ] **Les 4 actions clés, repérées automatiquement** : `pondre()`, `aller_vers_plage()`, `manger()`, `aller_vers_algue()` (ou `aller_vers_algue_libre()`).
+  - [ ] sous l'éditeur, une petite liste toujours visible, mise à jour pendant la frappe : « Ta tortue sait : ✅ manger · ✅ aller vers les algues · ❌ pondre · ❌ aller vers la plage » ;
+  - [ ] pour chaque action absente, un message clair :
+    - pas de `pondre()` : « elle ne pond jamais : 0 point » ;
+    - pas de `aller_vers_plage()` : « elle ne rejoint la plage que par hasard » ;
+    - pas de `manger()` : « elle ne mange jamais : elle va s'épuiser » ;
+    - pas de `aller_vers_algue()` : « elle ne cherche jamais à manger » ;
+  - [ ] repérage sur le programme analysé, pas sur le texte : une action en commentaire ne compte pas, et une action présente mais **jamais atteinte** (voir plus bas) compte comme absente ;
+  - [ ] le 💡 coup de pouce et le rapport après le match utilisent ce même repérage.
 - [ ] **Explorer les situations possibles** :
   - [ ] pour les questions de débutant, essayer toutes les combinaisons (5 questions vrai/faux, l'énergie de 0 à 10, l'heure de 0 à 23 : au plus 8 500 situations), en respectant les liens évidents : `est_la_nuit()` dépend de l'heure (et de la nouveauté) ;
   - [ ] pour les questions avancées, utiliser des **situations réelles** relevées dans des parties simulées, pour ne pas inventer des cas impossibles (`sur_plage()` vrai avec `distance_plage()` à 5, par exemple).
