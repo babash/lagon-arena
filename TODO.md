@@ -2,6 +2,8 @@
 
 Chantiers retenus après l'audit du 28 octobre 2026 (design, fluidité, pédagogie). Ils se développent sur la branche `dev`, puis sont fusionnés dans `main`.
 
+La réflexion d'ensemble sur les interfaces, moment par moment, est dans [docs/INTERFACES.md](docs/INTERFACES.md) : les idées qui y sont retenues seront reportées ici.
+
 **Règles communes à tous les chantiers**
 
 - **Aucune fonctionnalité perdue.** Tout ce qui existe aujourd'hui doit encore marcher après le chantier, sur ordinateur comme sur téléphone.
