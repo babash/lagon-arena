@@ -35,7 +35,7 @@ def tour():
 |---|---|
 | Durée d'un match | **180 tours** = 3 jours et 3 nuits (1 journée = 60 tours) |
 | Début | 8 h du matin |
-| Nuit | de 19 h à 6 h (de 20 h à 5 h avec les nouveautés « Nuits courtes », « Finale » et « Tempête ») |
+| Nuit | de 19 h à 6 h (de 20 h à 5 h avec les nouveautés « Nuits courtes », « Finale » et « Tempête ») ; `debut_nuit()` et `fin_nuit()` donnent les heures de la manche en cours |
 
 ## 3. L'énergie ⚡
 
@@ -83,7 +83,7 @@ Les **tutoriels** gardent la carte classique (les missions doivent être reprodu
 
 ## 5. Les requins 🦈
 
-- Ils voient à **4 cases** (5 pour les requins affamés) et chassent la tortue visible la plus proche ; sinon, ils patrouillent.
+- Ils voient à **4 cases** (5 pour les requins affamés ; `vision_requin()` donne la valeur de la manche en cours) et chassent la tortue visible la plus proche ; sinon, ils patrouillent.
 - Ils bougent **2 tours sur 3** (à chaque tour s'ils sont « rapides »).
 - Une tortue attrapée **perd 1 nid** (si elle en a), retourne à son point de départ et reste **bloquée 5 tours**. Le requin repart vers le départ de requin **le plus éloigné** de la tortue attrapée (il ne campe pas sur sa route).
 - `requin_proche()` répond `True` quand un requin est à **3 cases ou moins**.
@@ -222,6 +222,9 @@ Dans la boîte à outils et dans l'aide, les primitives sont aussi rangées par 
 | 📏🌿 | `distance_algue()` | À combien de cases sont les algues propres les plus proches ? (0 = ici) | un nombre |
 | 📏🏖️ | `distance_plage()` | À combien de cases est la plage ? (0 = j'y suis) | un nombre |
 | 📏🦈 | `distance_requin()` | À combien de cases est le requin le plus proche ? | un nombre |
+| 👁️🦈 | `vision_requin()` | À combien de cases les requins voient-ils dans cette manche ? (4 d'habitude, 5 quand ils sont affamés). Plus loin, ou cachée dans les algues, ils ne te voient pas. | un nombre |
+| 🌆 | `debut_nuit()` | À quelle heure commence la nuit dans cette manche ? (19 d'habitude, 20 quand les nuits sont courtes) | un nombre |
+| 🌅 | `fin_nuit()` | À quelle heure finit la nuit dans cette manche ? (6 d'habitude, 5 quand les nuits sont courtes) | un nombre |
 | 🐢🐢 | `tortue_a_cote()` | Une autre tortue est-elle collée à moi ? | True / False |
 | 🐢🦈 | `requin_derriere_tortue()` | Si je pousse la tortue voisine, tombe-t-elle sur un requin ? | True / False |
 | ➡️🌿✨ | `aller_vers_algue_libre()` | Nager vers les algues propres où il n'y a PAS d'autre tortue. | ordre |

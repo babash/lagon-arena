@@ -34,6 +34,11 @@ export function capteurs(m, t, tour) {
     est_la_nuit: () => tour.nuit,
     energie: () => t.energie,
     heure: () => tour.heure,
+    // les heures de la nuit de CETTE manche (nouveauté et lagon personnalisé : 19 h – 6 h d'habitude, 20 h – 5 h quand les nuits sont courtes)
+    debut_nuit: () => m.T.nuit[0],
+    fin_nuit: () => m.T.nuit[1],
+    // jusqu'où les requins voient dans CETTE manche (4 cases d'habitude, 5 quand ils sont affamés, ou le lagon personnalisé)
+    vision_requin: () => m.T.vision,
     // --- avancé ---
     distance_algue: () => (tour.distAlgue[t.y][t.x] === Infinity ? 99 : tour.distAlgue[t.y][t.x]),
     distance_plage: () => m.C.distPlage[t.y][t.x],

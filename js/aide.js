@@ -45,7 +45,8 @@ function regles() {
   ${section("🕐 Le temps", `<ul>
     <li>Un match dure <b>${TICKS} tours</b>, soit 3 jours et 3 nuits (une journée = 60 tours). Il commence à 8 h.</li>
     <li>La nuit va de <b>19 h à 6 h</b> (de 20 h à 5 h avec les nuits courtes, la finale et la tempête).</li>
-    <li><code>heure()</code> donne l'heure (0 à 23) : pratique pour <b>partir vers la plage avant la nuit</b>.</li></ul>`)}
+    <li><code>heure()</code> donne l'heure (0 à 23) : pratique pour <b>partir vers la plage avant la nuit</b>.</li>
+    <li>🚀 <code>debut_nuit()</code> et <code>fin_nuit()</code> donnent les heures de la nuit <b>de la manche en cours</b> (elles changent avec la nouveauté et le lagon choisi par ton enseignant).</li></ul>`)}
   ${section("⚡ L'énergie", `<table class="prims">
     <tr><td>Départ</td><td>${P.energieDepart} ⚡ (maximum ${P.energieMax})</td></tr>
     <tr><td>Faim</td><td>−1 ⚡ tous les ${P.perteEnergie} tours</td></tr>
@@ -60,7 +61,7 @@ function regles() {
     <li>🛍️ Les sacs plastique dérivent, coulent, puis réapparaissent ailleurs.</li>
     <li>🪸 Le corail bloque le passage : les ordres « aller vers… » le contournent tout seuls.</li></ul>`)}
   ${section("🦈 Les requins", `<ul>
-    <li>Ils voient à 4 cases (5 quand ils sont affamés) et chassent la tortue la plus proche ; sinon, ils patrouillent.</li>
+    <li>Ils voient à 4 cases (5 quand ils sont affamés) et chassent la tortue la plus proche ; sinon, ils patrouillent. 🚀 <code>vision_requin()</code> donne cette distance pour la manche en cours.</li>
     <li>Ils nagent 2 tours sur 3 (à chaque tour quand ils sont rapides).</li>
     <li><code>requin_proche()</code> est vrai quand un requin est à <b>${P.porteeRequin} cases ou moins</b>.</li>
     <li>Attrapée : <b>−1 nid</b> (si tu en as), retour au départ, bloquée ${P.bloqueeCapture} tours.</li>
@@ -118,8 +119,9 @@ function conseils() {
     <li><b>Un <code>else</code> qui ne sert à rien</b> : rien n'est lu après le premier ordre exécuté.</li>
     <li><b>Manger à 10 ⚡</b> ne sert à rien : <code>energie() &lt; ${P.energieMax}</code>.</li></ul>`)}
   ${section("🥈 Pour aller plus loin", `<ul>
-    <li><b>Anticiper la nuit</b> : si la plage est loin, pars avant 19 h : <code>if heure() &gt;= 17 and energie() &gt;= 8:</code> puis <code>aller_vers_plage()</code>.</li>
+    <li><b>Anticiper la nuit</b> : si la plage est loin, pars avant la nuit : <code>if heure() &gt;= 17 and energie() &gt;= 8:</code> puis <code>aller_vers_plage()</code>. Mieux, avec les primitives avancées : <code>if heure() &gt;= debut_nuit() - 2:</code> s'adapte toute seule aux nuits courtes.</li>
     <li><b>Se cacher</b> plutôt que fuir quand tu es déjà dans les algues : <code>if requin_proche() and algue_ici():</code> puis <code>se_cacher()</code>.</li>
+    <li><b>Hors de vue</b> : un requin plus loin que <code>vision_requin()</code> cases ne te voit pas. <code>if distance_requin() &lt;= vision_requin() and not algue_ici():</code> veut dire « il peut me voir ».</li>
     <li><b>Les algues sont prises ?</b> <code>aller_vers_algue_libre()</code> évite celles où mange déjà une autre tortue.</li>
     <li><b>Les distances</b> (<code>distance_plage()</code>, <code>distance_requin()</code>…) permettent des règles plus fines que True / False.</li>
     <li>Lis le code des tortues d'entraînement (la Championne, la Pirate…) dans le <a href="tuto-avance.html">tutoriel avancé</a>, et essaie de les battre.</li></ul>`)}

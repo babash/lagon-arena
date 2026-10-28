@@ -18,6 +18,9 @@ export const CAPTEURS = [
   { nom: "distance_algue", icone: "📏🌿", role: "À combien de cases sont les algues propres les plus proches ? (0 = ici)", rep: "un nombre", avance: true },
   { nom: "distance_plage", icone: "📏🏖️", role: "À combien de cases est la plage ? (0 = j'y suis)", rep: "un nombre", avance: true },
   { nom: "distance_requin", icone: "📏🦈", role: "À combien de cases est le requin le plus proche ?", rep: "un nombre", avance: true },
+  { nom: "vision_requin", icone: "👁️🦈", role: "À combien de cases les requins voient-ils dans cette manche ? (4 d'habitude, 5 quand ils sont affamés). Plus loin, ou cachée dans les algues, ils ne te voient pas.", rep: "un nombre", avance: true },
+  { nom: "debut_nuit", icone: "🌆", role: "À quelle heure commence la nuit dans cette manche ? (19 d'habitude, 20 quand les nuits sont courtes)", rep: "un nombre", avance: true },
+  { nom: "fin_nuit", icone: "🌅", role: "À quelle heure finit la nuit dans cette manche ? (6 d'habitude, 5 quand les nuits sont courtes)", rep: "un nombre", avance: true },
   { nom: "tortue_a_cote", icone: "🐢🐢", role: "Une autre tortue est-elle collée à moi ?", rep: "True / False", avance: true },
   { nom: "requin_derriere_tortue", icone: "🐢🦈", role: "Si je pousse la tortue voisine, tombe-t-elle sur un requin ?", rep: "True / False", avance: true },
   // avancé : choisir ses algues (lire le lagon autour de soi)
@@ -78,10 +81,10 @@ export const CATEGORIES = {
 export const ORDRE_QUESTIONS = ["requins", "algues", "plage", "moi", "voisines", "equipe"];
 export const ORDRE_ORDRES = ["vivre", "bouger", "proteger", "autres"];
 const CAT = {
-  requin_proche: "requins", distance_requin: "requins", requins_autour: "requins",
+  requin_proche: "requins", distance_requin: "requins", requins_autour: "requins", vision_requin: "requins",
   algue_ici: "algues", plastique_ici: "algues", distance_algue: "algues", algues_autour: "algues", portions_algue: "algues",
   requins_pres_algue: "algues", distance_algue_sure: "algues", algue_pres_plage: "algues",
-  sur_plage: "plage", est_la_nuit: "plage", heure: "plage", distance_plage: "plage",
+  sur_plage: "plage", est_la_nuit: "plage", heure: "plage", distance_plage: "plage", debut_nuit: "plage", fin_nuit: "plage",
   energie: "moi", mes_nids: "moi",
   tortue_a_cote: "voisines", requin_derriere_tortue: "voisines", nids_voisine: "voisines", equipiere_a_cote: "voisines",
   equipiere_fatiguee: "voisines", adversaire_a_cote: "voisines", rivale_a_cote: "voisines", requin_derriere_adversaire: "voisines",

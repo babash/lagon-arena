@@ -13,7 +13,7 @@ export const SENSORS = {
   requin_proche: "booléen", algue_ici: "booléen", plastique_ici: "booléen",
   sur_plage: "booléen", est_la_nuit: "booléen", energie: "nombre", heure: "nombre",
   // niveau avancé
-  distance_algue: "nombre", distance_plage: "nombre", distance_requin: "nombre",
+  distance_algue: "nombre", distance_plage: "nombre", distance_requin: "nombre", debut_nuit: "nombre", fin_nuit: "nombre", vision_requin: "nombre",
   tortue_a_cote: "booléen", requin_derriere_tortue: "booléen",
   // jeu en équipes
   mon_equipe: "nombre", mes_nids: "nombre", nids_voisine: "nombre", nids_equipe: "nombre", nids_adversaires: "nombre",

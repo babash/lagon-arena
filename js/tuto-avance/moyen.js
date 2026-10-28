@@ -40,6 +40,7 @@ ETAPES_MOYEN.push({
       <h2>📏 Des questions qui répondent un nombre</h2>
       ${table(AV_BASE.filter((c) => c.rep === "un nombre"))}
       <p>On les <b>compare</b> : <code>&lt;</code> <code>&lt;=</code> <code>&gt;</code> <code>&gt;=</code> <code>==</code> (égal) <code>!=</code> (différent).</p>
+      <p class="petit">${capt("vision_requin")}, ${capt("debut_nuit")} et ${capt("fin_nuit")} dépendent de la <b>manche</b> (nouveauté, lagon choisi par ton enseignant) : avec elles, ton code s'adapte tout seul. Exemple : <code>distance_requin() &lt;= vision_requin()</code> veut dire « un requin peut me voir ».</p>
       <h3>🔬 Essaie :</h3><div id="ex"></div>
     </div><div class="card" id="q"></div></div>`;
     exemple($("#ex", box), "if distance_requin() <= 2:\n    fuir()\nelif distance_algue() == 0:\n    manger()\nelse:\n    aller_vers_algue()",
@@ -144,6 +145,7 @@ ETAPES_MOYEN.push({
         <li>1 heure ≈ <b>2,5 tours</b> : la tortue avance d'environ 2 cases par heure.</li>
         <li>Si la plage est loin (<code>distance_plage()</code> grand), il faut <b>partir avant</b> la nuit.</li>
         <li>Les « nuits courtes » ne durent que de 20 h à 5 h : chaque tour compte !</li>
+        <li>${capt("debut_nuit")} et ${capt("fin_nuit")} donnent les heures de la nuit <b>de la manche en cours</b> : ton code marche quelle que soit la nouveauté. Par exemple, partir 2 heures avant la nuit : <code>if heure() &gt;= debut_nuit() - 2:</code></li>
       </ul>
       <h3>🔬 Essaie :</h3><div id="ex"></div>
     </div><div class="card" id="exo"></div></div>`;

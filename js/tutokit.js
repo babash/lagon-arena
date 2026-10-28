@@ -75,7 +75,7 @@ export const act = (nom) => { const a = ACTIONS_INFO.find((x) => x.nom === nom);
 
 // exécute UN tour d'un programme dans une situation donnée
 export const SITUATION_BASE = {
-  requin_proche: false, algue_ici: false, plastique_ici: false, sur_plage: false, est_la_nuit: false, energie: 8, heure: 12,
+  requin_proche: false, algue_ici: false, plastique_ici: false, sur_plage: false, est_la_nuit: false, energie: 8, heure: 12, debut_nuit: 19, fin_nuit: 6, vision_requin: 4,
   distance_algue: 4, distance_plage: 6, distance_requin: 9, tortue_a_cote: false, requin_derriere_tortue: false,
   mon_equipe: 1, mes_nids: 0, nids_voisine: 0, equipiere_a_cote: false, adversaire_a_cote: false, equipiere_fatiguee: false,
   requin_derriere_adversaire: false, nids_equipe: 0, nids_adversaires: 0,

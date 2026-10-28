@@ -106,6 +106,10 @@ console.log("3 bis. Lagons personnalisés (requins, plastique, nuit, corail, alg
   console.log(`   ${b2 ? "✔" : "✘"} réglages appliqués (6 requins, 30 sacs, 10 touffes, nuit 21 h – 4 h) et partie reproductible`); ok &&= b2;
   const b3 = JSON.stringify(normaliserLagon({ requins: 99, vision: "3", rapides: "oui", algues: 1, inconnu: 4 })) === '{"requins":6,"vision":3,"algues":8}' && normaliserLagon({}) === null;
   console.log(`   ${b3 ? "✔" : "✘"} réglages hors bornes ramenés dans les bornes, réglages inconnus ignorés`); ok &&= b3;
+  // debut_nuit(), fin_nuit(), vision_requin() suivent la manche (nouveauté et lagon personnalisé)
+  const vus = (tw, lagon) => { const c = simulate({ joueurs: js, graine: 77, twist: tw, lagon }).traces.b0.find((x) => x.capteurs).capteurs; return [c.debut_nuit, c.fin_nuit, c.vision_requin].join("/"); };
+  const b5 = vus("calme") === "19/6/4" && vus("nuits") === "20/5/4" && vus("affames") === "19/6/5" && vus("tempete") === "20/5/5" && vus("calme", { nuitDebut: 21, nuitFin: 4, vision: 2 }) === "21/4/2";
+  console.log(`   ${b5 ? "✔" : "✘"} debut_nuit(), fin_nuit(), vision_requin() suivent la nouveauté et le lagon personnalisé`); ok &&= b5;
   let replis = 0, bloquees = 0;
   for (const opts of [{ coraux: 14, algues: 35 }, { coraux: 14, algues: 8 }, { coraux: 0, algues: 35 }]) for (let g = 0; g < 150; g++) {
     const C = genererCarte(5000 + g * 37, 24, opts); if (C === CARTE_CLASSIQUE) replis++; else if (!carteSansBlocage(C)) bloquees++;
