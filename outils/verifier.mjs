@@ -25,7 +25,7 @@ for (const M of MISSIONS) {
 
 console.log("1 bis. Missions du tutoriel avancé");
 for (const M of MISSIONS_AVANCEES) {
-  const jouer = (code) => simulate({ joueurs: [{ id: "t", nom: "t", couleur: "#f00", code }, ...M.autres], graine: 7, scenario: M.scenario });
+  const jouer = (code) => simulate({ joueurs: [{ id: "t", nom: "t", couleur: "#f00", code, equipe: M.equipe || 0 }, ...M.autres], graine: 7, scenario: M.scenario });
   const a = jouer(M.code), b = jouer(M.solution);
   const bon = !M.reussi(a) && M.reussi(b);
   ok &&= bon;

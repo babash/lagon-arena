@@ -58,7 +58,10 @@ export const P = {
   nidPerduCapture: true, // attrapée par un requin : −1 nid (s'il y en a)
   porteeRequin: 3,      // requin_proche() : un requin à 3 cases ou moins
   coutPousse: 2,        // pousser() une tortue voisine coûte 2 d'énergie
+  don: 3,               // donner() : 3 d'énergie passent à une équipière collée à moi
+  protectionEquipe: true, // deux équipières collées : les requins n'attaquent pas
 };
+export const EQUIPES = { 1: { nom: "Bleue", icone: "🔵", couleur: "#2f6fdb" }, 2: { nom: "Rouge", icone: "🔴", couleur: "#e5484d" } };
 
 const TILE = { ".": "eau", "#": "corail", "h": "eau", "P": "plage", "T": "eau" };
 export const tileAt = (x, y) => TILE[MAP[y][x]];
@@ -237,11 +240,11 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
     const c = check(j.code || "");
     const e0 = (sc.energies && sc.energies[j.id]) ?? sc.energie ?? P.energieDepart;
     return {
-      id: j.id, nom: j.nom, couleur: j.couleur, x: sp[0], y: sp[1], sx: sp[0], sy: sp[1], dir: 1,
+      id: j.id, nom: j.nom, couleur: j.couleur, equipe: j.equipe || 0, x: sp[0], y: sp[1], sx: sp[0], sy: sp[1], dir: 1,
       energie: e0, nids: 0, bloquee: 0, immunite: 0, mange: false, pousseePar: null,
       compiled: c.ok ? c.compiled : null, compileError: c.ok ? null : c.error,
       stats: { captures: [], plastiques: [], epuisee: [], refus: {}, rienAManger: 0, pasFaim: 0, immobile: 0, erreurs: 0, actions: {}, pontes: [], repas: 0, energieMax: e0,
-        pousses: [], poussee: [], victimes: 0 },
+        pousses: [], poussee: [], victimes: 0, dons: 0, recus: 0 },
     };
   });
 
@@ -287,7 +290,11 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
   const algueIci = (x, y) => { const h = touffe(x, y); return !!h && h.n > 0; };
   // cachée = dans des algues ET ne mange pas ce tour-ci (manger fait bouger les algues)
   const cachee = (t) => algueIci(t.x, t.y) && !t.mange;
-  const protegee = (t) => t.bloquee > 0 || t.immunite > 0 || cachee(t) || tileAt(t.x, t.y) === "plage";
+  // équipes : une tortue sans équipe (0) est l'adversaire de toutes les autres
+  const equipiere = (t, u) => t.equipe > 0 && u.equipe === t.equipe;
+  const enDuo = (t) => P.protectionEquipe && t.equipe > 0 && turtles.some((u) => u !== t && u.bloquee === 0 && equipiere(t, u) && manh(u, t) === 1);
+  const protegee = (t) => t.bloquee > 0 || t.immunite > 0 || cachee(t) || tileAt(t.x, t.y) === "plage" || enDuo(t);
+  const nidsEquipe = (t) => turtles.filter((u) => u === t || equipiere(t, u)).reduce((a, u) => a + u.nids, 0);
 
   // --- pousser : tortues voisines, case derrière, requin derrière ---
   const voisines = (t) => turtles.filter((u) => u !== t && u.bloquee === 0 && manh(u, t) === 1);
@@ -344,6 +351,16 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
         distance_requin: () => (sharks.length ? Math.min(...sharks.map((s) => manh(s, t))) : 99),
         tortue_a_cote: () => voisines(t).length > 0,
         requin_derriere_tortue: () => voisines(t).some((u) => versRequin(t, u)),
+        // jeu en équipes
+        mon_equipe: () => t.equipe,
+        mes_nids: () => t.nids,
+        nids_voisine: () => Math.max(0, ...voisines(t).map((u) => u.nids)),
+        equipiere_a_cote: () => voisines(t).some((u) => equipiere(t, u)),
+        adversaire_a_cote: () => voisines(t).some((u) => !equipiere(t, u)),
+        equipiere_fatiguee: () => voisines(t).some((u) => equipiere(t, u) && u.energie < P.energiePonte),
+        requin_derriere_adversaire: () => voisines(t).some((u) => !equipiere(t, u) && versRequin(t, u)),
+        nids_equipe: () => nidsEquipe(t),
+        nids_adversaires: () => turtles.filter((u) => u !== t && !equipiere(t, u)).reduce((a, u) => a + u.nids, 0),
       };
       rec.capteurs = {};
       for (const k of Object.keys(SENSORS)) rec.capteurs[k] = sensors[k]();
@@ -427,8 +444,27 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
           if (s) move(s[0], s[1]); else rec.effet = "déjà sur la plage";
           break;
         }
+        case "donner": {
+          const eq = voisines(t).filter((u) => equipiere(t, u) && u.energie < P.energieMax).sort((a, b) => a.energie - b.energie);
+          if (!eq.length) { rec.effet = "personne à qui donner (il faut une équipière collée à toi)"; break; }
+          if (t.energie <= P.don) { rec.effet = "pas assez d'énergie pour donner"; break; }
+          const u = eq[0], d = Math.min(P.don, P.energieMax - u.energie);
+          t.energie -= d; u.energie += d; t.stats.dons += d; u.stats.recus += d;
+          events.push({ tick, type: "don", id: t.id, cible: u.id, n: d });
+          rec.effet = `donne ${d} ⚡ à ${u.nom}`;
+          break;
+        }
+        case "aller_vers_equipiere": {
+          const eq = turtles.filter((u) => u !== t && u.bloquee === 0 && equipiere(t, u));
+          if (!eq.length) { rec.effet = "pas d'équipière dans le lagon"; break; }
+          if (eq.some((u) => manh(u, t) === 1)) { rec.effet = "déjà collée à une équipière"; break; }
+          const d = bfs(eq.map((u) => [u.x, u.y]), turtleOK);
+          const s = stepDown(d, t.x, t.y);
+          if (s) move(s[0], s[1]); else rec.effet = "aucun chemin vers une équipière";
+          break;
+        }
         case "pousser": {
-          const vs = voisines(t).filter((u) => poussable(t, u));
+          const vs = voisines(t).filter((u) => poussable(t, u) && !equipiere(t, u));   // on ne pousse pas ses équipières
           if (!vs.length) { rec.effet = "personne à pousser ici"; break; }
           const u = vs.find((v) => versRequin(t, v)) || vs[0];
           const surRequin = versRequin(t, u);
@@ -538,11 +574,28 @@ export function simulate({ joueurs, graine = 1, twist = "calme", ticks, scenario
   res.sort((a, b) => (b.nids - a.nids) || (a.captures - b.captures) || (b.energie - a.energie) || String(a.nom).localeCompare(String(b.nom)));
   let rang = 0, prev = null;
   res.forEach((r, i) => { const key = r.nids + "/" + r.captures + "/" + r.energie; if (key !== prev) rang = i + 1; r.rang = rang; prev = key; });
+  for (const r of res) r.equipe = turtles.find((t) => t.id === r.id).equipe;
   return {
     twist, graine, ticks, heureDepart, frames, events, traces, nids,
-    tortues: turtles.map((t) => ({ id: t.id, nom: t.nom, couleur: t.couleur, sx: t.sx, sy: t.sy, stats: t.stats, nids: t.nids, compileError: t.compileError })),
+    tortues: turtles.map((t) => ({ id: t.id, nom: t.nom, couleur: t.couleur, equipe: t.equipe, sx: t.sx, sy: t.sy, stats: t.stats, nids: t.nids, compileError: t.compileError })),
     resultats: res,
+    equipes: resultatEquipes(turtles.map((t) => ({ id: t.id, nom: t.nom, equipe: t.equipe, nids: t.nids }))),
   };
+}
+
+// ---------- résultat d'une manche en équipes ----------
+//  On compare la MOYENNE de nids par tortue (utile si une équipe a une tortue de plus).
+export function resultatEquipes(liste) {
+  if (!liste.some((t) => t.equipe > 0)) return null;
+  const R = {};
+  for (const e of [1, 2]) {
+    const m = liste.filter((t) => t.equipe === e);
+    const nids = m.reduce((a, t) => a + t.nids, 0);
+    R[e] = { nids, n: m.length, moyenne: m.length ? nids / m.length : 0, membres: m.map((t) => t.id) };
+  }
+  const d = R[1].moyenne - R[2].moyenne;
+  R.gagnant = Math.abs(d) < 1e-9 ? 0 : d > 0 ? 1 : 2;
+  return R;
 }
 
 // ---------- points de manche ----------
@@ -580,6 +633,8 @@ export function rapport(sim, id) {
   if (refusTxt) lignes.push(`⛔ pondre() refusé : ${refusTxt}.`);
   if (s.pousses.length) lignes.push(`💥 A poussé ${s.pousses.length} tortue${s.pousses.length > 1 ? "s" : ""}${s.victimes ? ` (dont ${s.victimes} sur un requin !)` : ""}.`);
   if (s.poussee.length) lignes.push(`😤 S'est fait pousser ${s.poussee.length} fois.`);
+  if (s.dons) lignes.push(`🤝 A donné ${s.dons} ⚡ à ses équipières.`);
+  if (s.recus) lignes.push(`🎁 A reçu ${s.recus} ⚡ de ses équipières.`);
   if (s.soleil >= 10) lignes.push(`☀️ A passé beaucoup de temps au soleil sur la plage (−${s.soleil} ⚡).`);
 
   // conseils (2 au maximum, du plus important au moins important) ; `code` = à écrire tel quel
@@ -612,6 +667,7 @@ export function rapport(sim, id) {
     ...s.plastiques.map((p) => ({ tick: p.tick, type: "plastique" })),
     ...s.epuisee.map((tick) => ({ tick, type: "epuisee" })),
     ...s.pousses.map((p) => ({ tick: p.tick, type: "pousse" })),
+    ...sim.events.filter((e) => e.type === "don" && e.id === id).map((e) => ({ tick: e.tick, type: "don" })),
   ].sort((a, b) => a.tick - b.tick);
   return { lignes, conseils: conseils.slice(0, 2), marqueurs };
 }
@@ -745,3 +801,34 @@ export const MISSIONS_AVANCEES = [
     bilan: (sim) => { const s = sim.tortues.find((t) => t.id === "t").stats; return `${s.pousses.length} poussée(s), ${s.victimes} rivale(s) attrapée(s).`; },
   },
 ];
+MISSIONS_AVANCEES.push({
+  id: "A3", titre: "🍼 La nourrice", notion: "donner()", equipe: 1,
+  probleme: "😟 Ton équipière 🔵 est sur la plage, la nuit… mais elle n'a plus assez d'énergie pour pondre. Toi, tu es pleine d'énergie, collée à elle. Mais ta tortue part manger !",
+  objectif: "Que ton équipe ponde au moins 2 nids en 10 tours.",
+  code: `def tour():
+    if algue_ici():
+        manger()
+    else:
+        aller_vers_algue()
+`,
+  solution: `def tour():
+    if equipiere_fatiguee():
+        donner()
+    elif algue_ici():
+        manger()
+    else:
+        aller_vers_algue()
+`,
+  indice: "Si une équipière collée à toi est fatiguée (equipiere_fatiguee()), donne-lui de l'énergie avec donner(). Teste-le en premier !",
+  appris: "<code>donner()</code> passe 3 ⚡ à une équipière collée à toi. En équipe, c'est le <b>total de l'équipe</b> qui compte : aider rapporte autant que pondre soi-même !",
+  scenario: { energie: 10, energies: { t: 10, u1: 3 }, requins: [], plastiques: [], heureDepart: 21, ticks: 10, repousse: false,
+    herbes: [[15, 6, 5]], spawns: { t: [19, 6], u1: [20, 6] } },
+  autres: [{ id: "u1", nom: "Équipière", couleur: "#2f6fdb", equipe: 1, code: `def tour():
+    if sur_plage() and est_la_nuit() and energie() >= 6:
+        pondre()
+    else:
+        se_cacher()
+` }],
+  reussi: (sim) => sim.tortues.filter((t) => t.equipe === 1).reduce((a, t) => a + t.nids, 0) >= 2,
+  bilan: (sim) => `Nids de l'équipe : ${sim.tortues.filter((t) => t.equipe === 1).reduce((a, t) => a + t.nids, 0)} · énergie donnée : ${sim.tortues.find((t) => t.id === "t").stats.dons} ⚡.`,
+});

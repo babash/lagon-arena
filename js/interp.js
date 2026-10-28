@@ -15,9 +15,13 @@ export const SENSORS = {
   // niveau avancé
   distance_algue: "nombre", distance_plage: "nombre", distance_requin: "nombre",
   tortue_a_cote: "booléen", requin_derriere_tortue: "booléen",
+  // jeu en équipes
+  mon_equipe: "nombre", mes_nids: "nombre", nids_voisine: "nombre", nids_equipe: "nombre", nids_adversaires: "nombre",
+  equipiere_a_cote: "booléen", adversaire_a_cote: "booléen", equipiere_fatiguee: "booléen", requin_derriere_adversaire: "booléen",
 };
 export const ACTIONS = ["manger", "pondre", "fuir", "se_cacher", "aller_vers_algue", "aller_vers_plage",
-  /* niveau avancé */ "aller_vers_algue_libre", "pousser"];
+  /* niveau avancé */ "aller_vers_algue_libre", "pousser",
+  /* jeu en équipes */ "donner", "aller_vers_equipiere"];
 const KNOWN = [...Object.keys(SENSORS), ...ACTIONS];
 const KEYWORDS = new Set(["if", "elif", "else", "and", "or", "not", "True", "False", "def", "pass", "return"]);
 

@@ -64,6 +64,10 @@ create table if not exists public.scores (
 -- (mise à jour d'une installation plus ancienne : on ajoute les colonnes manquantes)
 alter table public.scores add column if not exists nouveaute text not null default 'calme';
 alter table public.scores add column if not exists duel boolean not null default false;
+alter table public.scores add column if not exists equipe int not null default 0;    -- 0 = chacun pour soi, 1 = Bleue, 2 = Rouge
+-- réglages de la manche (préparés par l'enseignant, visibles par les élèves AVANT la manche) :
+--   { "mode": "solo" | "equipes", "equipes": {"pseudo": 1|2}, "coef": 1|2|0, "bots": 8, "titre": "…" }
+alter table public.salles add column if not exists config jsonb;
 
 -- ---------- droits de lecture (Row Level Security) ----------
 alter table public.salles         enable row level security;
@@ -148,6 +152,15 @@ begin
   delete from joueurs where salle = p_code and pseudo = p_pseudo;
 end $$;
 
+-- l'enseignant prépare la manche suivante (mode, équipes, points…) : publié tout de suite aux élèves
+create or replace function public.definir_config(p_code text, p_secret text, p_config jsonb) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  perform verifier_prof(p_code, p_secret);
+  if length(coalesce(p_config::text, '')) > 20000 then raise exception 'Réglages trop longs.'; end if;
+  update salles set config = p_config, maj = now() where code = p_code;
+end $$;
+
 -- l'enseignant « débloque » un pseudo : l'élève pourra le reprendre depuis un autre appareil
 create or replace function public.liberer_pseudo(p_code text, p_secret text, p_pseudo text) returns void
 language plpgsql security definer set search_path = public as $$
@@ -225,16 +238,18 @@ returns void language plpgsql security definer set search_path = public as $$
 begin
   perform verifier_prof(p_code, p_secret);
   delete from scores where salle = p_code and manche = p_manche;
-  insert into scores (salle, manche, pseudo, nids, rang, points, bonus, nouveaute, duel)
+  insert into scores (salle, manche, pseudo, nids, rang, points, bonus, nouveaute, duel, equipe)
   select p_code, p_manche, left(x->>'pseudo', 20), (x->>'nids')::int, (x->>'rang')::int, (x->>'points')::int,
-         coalesce((x->>'bonus')::int, 0), coalesce(left(x->>'nouveaute', 20), 'calme'), coalesce((x->>'duel')::boolean, false)
+         coalesce((x->>'bonus')::int, 0), coalesce(left(x->>'nouveaute', 20), 'calme'), coalesce((x->>'duel')::boolean, false),
+         coalesce((x->>'equipe')::int, 0)
   from jsonb_array_elements(p_scores) as x;
 end $$;
 
 revoke execute on function public.verifier_prof(text, text) from public, anon, authenticated;
 grant execute on function public.heure_serveur(), public.creer_salle(),
   public.piloter_salle(text, text, int, text, int, int, text, text[]),
-  public.retirer_joueur(text, text, text), public.liberer_pseudo(text, text, text), public.rejoindre(text, text, text, text),
+  public.retirer_joueur(text, text, text), public.liberer_pseudo(text, text, text), public.definir_config(text, text, jsonb),
+  public.rejoindre(text, text, text, text),
   public.deposer_tortue(text, text, text, int, text), public.etat_depots(text, int),
   public.enregistrer_scores(text, text, int, jsonb)
 to anon, authenticated;

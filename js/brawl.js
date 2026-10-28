@@ -2,7 +2,10 @@
 //  Lagon Arena — logique commune d'un brawl (utilisée par le prof ET par les élèves,
 //  pour que chacun puisse rejouer exactement le même match sur son poste).
 // =====================================================================
-import { simulate, BOTS, CODE_DEPART, graineManche, pointsPourRang, BONUS_PROGRESSION } from "./engine.js";
+import { simulate, BOTS, CODE_DEPART, graineManche, pointsPourRang, BONUS_PROGRESSION, resultatEquipes } from "./engine.js";
+
+// Points d'une manche en équipes : chaque élève de l'équipe gagnante marque POINTS_EQUIPE.gagne…
+export const POINTS_EQUIPE = { gagne: 20, perd: 10, egalite: 15 };
 
 export const BOT_PREFIXE = "Bot-";
 const BOT_COULEURS = ["#c9d6df", "#9fb3c2", "#e0e6eb", "#b3c4d1", "#d6dee5"];
@@ -31,37 +34,62 @@ export function codeDe(pseudo, manche, tortues) {
 export function infosManche(scores, manche) {
   const l = scores.filter((s) => s.manche === manche);
   if (!l.length) return null;
-  return { manche, pseudos: l.map((s) => s.pseudo), twist: l[0].nouveaute || "calme", duel: !!l[0].duel };
+  const equipes = l.some((s) => s.equipe > 0) ? Object.fromEntries(l.map((s) => [s.pseudo, s.equipe || 0])) : null;
+  return { manche, pseudos: l.map((s) => s.pseudo), twist: l[0].nouveaute || "calme", duel: !!l[0].duel, equipes };
+}
+
+// Équipes de TOUS les participants d'un brawl : les élèves selon la composition choisie
+// (un élève arrivé en retard va dans l'équipe la plus petite). Les 🤖 restent NEUTRES (équipe 0) :
+// ce sont des concurrentes de tout le monde, et seuls les nids des élèves font le score des équipes
+// (sinon l'équipe complétée par des 🤖 serait avantagée face à des débutants).
+export function equipesCompletes(pseudos, equipesEleves) {
+  const res = {}, taille = { 1: 0, 2: 0 };
+  const plusPetite = () => (taille[1] <= taille[2] ? 1 : 2);
+  for (const p of pseudos) if (!estBot(p) && (equipesEleves || {})[p]) { res[p] = equipesEleves[p]; taille[res[p]]++; }
+  for (const p of pseudos) if (!estBot(p) && !res[p]) { res[p] = plusPetite(); taille[res[p]]++; }
+  for (const p of pseudos) if (estBot(p)) res[p] = 0;
+  return res;
 }
 export const aDepose = (pseudo, manche, tortues) => tortues.some((t) => t.pseudo === pseudo && t.manche === manche);
 
-export function construireJoueurs(pseudos, joueurs, tortues, manche) {
+export function construireJoueurs(pseudos, joueurs, tortues, manche, equipes = null) {
   return pseudos.map((p, i) => {
     const j = joueurs.find((x) => x.pseudo === p);
-    return { id: p, nom: estBot(p) ? p.slice(BOT_PREFIXE.length) + " 🤖" : p, couleur: j ? j.couleur : BOT_COULEURS[i % BOT_COULEURS.length], code: codeDe(p, manche, tortues) };
+    return { id: p, nom: estBot(p) ? p.slice(BOT_PREFIXE.length) + " 🤖" : p, couleur: j ? j.couleur : BOT_COULEURS[i % BOT_COULEURS.length],
+      code: codeDe(p, manche, tortues), equipe: equipes ? equipes[p] || 0 : 0 };
   });
 }
 
-export function lancerSimulation(salle, manche, pseudos, joueurs, tortues, twist, remplacer = null) {
-  const liste = construireJoueurs(pseudos, joueurs, tortues, manche);
+export function lancerSimulation(salle, manche, pseudos, joueurs, tortues, twist, remplacer = null, equipes = null) {
+  const liste = construireJoueurs(pseudos, joueurs, tortues, manche, equipes);
   if (remplacer) for (const j of liste) if (j.id === remplacer.pseudo) j.code = remplacer.code;
   return simulate({ joueurs: liste, graine: graineManche(salle.graine, manche), twist });
 }
 
-// Scores de la manche : rang parmi les humains, points selon le rang, bonus si progrès.
-export function calculerScores(sim, manche, anciensScores, duel = false) {
+// Scores de la manche.
+//  • chacun pour soi : rang parmi les élèves → points (25, 20, 16…), + bonus si progrès ;
+//  • en équipes : seul le résultat de l'équipe compte (POINTS_EQUIPE) ;
+//  • coef : 1 = normal, 2 = points doubles, 0 = hors classement.
+export function calculerScores(sim, manche, anciensScores, { coef = 1 } = {}) {
+  const horsClassement = coef === 0;
   const humains = sim.resultats.filter((r) => !estBot(r.id));
+  const eq = sim.equipes || resultatEquipes(sim.resultats);
   const out = [];
   let rang = 0, prev = null;
   humains.forEach((r, i) => {
     const key = r.nids + "/" + r.captures + "/" + r.energie;
     if (key !== prev) rang = i + 1; prev = key;
+    if (eq) {
+      const res = eq.gagnant === 0 ? "egalite" : eq.gagnant === r.equipe ? "gagne" : "perd";
+      out.push({ pseudo: r.id, nids: r.nids, rang: res === "perd" ? 2 : 1, points: POINTS_EQUIPE[res] * coef, bonus: 0, equipe: r.equipe });
+      return;
+    }
     const avant = anciensScores.filter((s) => s.pseudo === r.id && s.manche < manche && !s.duel).sort((a, b) => b.manche - a.manche)[0];
-    const bonus = !duel && avant && r.nids > avant.nids ? BONUS_PROGRESSION : 0;
-    out.push({ pseudo: r.id, nids: r.nids, rang, points: duel ? 0 : pointsPourRang(rang), bonus });
+    const bonus = !horsClassement && avant && r.nids > avant.nids ? BONUS_PROGRESSION : 0;
+    out.push({ pseudo: r.id, nids: r.nids, rang, points: pointsPourRang(rang) * coef, bonus, equipe: 0 });
   });
-  for (const r of sim.resultats.filter((r) => estBot(r.id))) out.push({ pseudo: r.id, nids: r.nids, rang: 0, points: 0, bonus: 0 });
-  for (const o of out) { o.nouveaute = sim.twist; o.duel = !!duel; }
+  for (const r of sim.resultats.filter((r) => estBot(r.id))) out.push({ pseudo: r.id, nids: r.nids, rang: 0, points: 0, bonus: 0, equipe: r.equipe || 0 });
+  for (const o of out) { o.nouveaute = sim.twist; o.duel = horsClassement; }
   return out;
 }
 

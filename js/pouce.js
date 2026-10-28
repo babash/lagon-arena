@@ -97,14 +97,34 @@ export const PALIERS = [
   },
 ];
 
-export function coupDePouce(code) {
+// pendant une manche en équipes : une idée d'entraide (après « pondre »)
+export const PALIER_EQUIPE = {
+  manque: (c) => !/donner\s*\(|aller_vers_equipiere\s*\(/.test(c),
+  titre: "Aide ton équipe !",
+  pourquoi: "En équipes, c'est le <b>total de l'équipe</b> qui compte. Une équipière sur la plage sans assez d'énergie ne peut pas pondre : donne-lui de l'énergie ! Et deux équipières <b>collées</b> sont protégées des requins.",
+  ou: "Ajoute les 2 lignes vertes <b>tout en haut</b> (ton ancien premier <code>if</code> devient un <code>elif</code>).",
+  code: `def tour():
++    if equipiere_fatiguee() and energie() >= 8:
++        donner()
+    elif sur_plage() and est_la_nuit():
+        pondre()
+    elif est_la_nuit():
+        aller_vers_plage()
+    elif algue_ici():
+        manger()
+    else:
+        aller_vers_algue()`,
+};
+
+export function coupDePouce(code, { equipe = false } = {}) {
   const c = sansCommentaires(code);
-  const i = PALIERS.findIndex((p) => p.manque(c));
-  return i < 0 ? null : { ...PALIERS[i], numero: i + 1, total: PALIERS.length };
+  const liste = equipe ? [PALIERS[0], PALIER_EQUIPE, ...PALIERS.slice(1)] : PALIERS;
+  const i = liste.findIndex((p) => p.manque(c));
+  return i < 0 ? null : { ...liste[i], numero: i + 1, total: liste.length };
 }
 
-export function coupDePouceHTML(code) {
-  const p = coupDePouce(code);
+export function coupDePouceHTML(code, opts = {}) {
+  const p = coupDePouce(code, opts);
   if (!p) return `<div class="pouce"><h3>🌟 Ta tortue utilise déjà toutes les idées !</h3>
     <p>Pour aller plus loin : fais le <a href="tuto-avance.html" target="_blank"><b>🚀 tutoriel avancé</b></a> (distances, algues libres, pousser une tortue sur un requin…), puis active les <b>primitives avancées</b> sous l'éditeur.</p></div>`;
   const lignes = p.code.split("\n");

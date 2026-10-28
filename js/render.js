@@ -183,6 +183,10 @@ export class Lagon {
       const bloquee = a[4] > 0, immun = a[5] > 0 && !bloquee, cachee = a[7] === 1;
       let alpha = bloquee ? 0.55 : cachee ? 0.6 : immun && Math.floor(temps * 6) % 2 ? 0.45 : 1;
       const gros = z > 1 && t.id === focus;   // en gros plan : tortue plus petite pour voir la case en dessous
+      if (t.equipe) {   // halo de l'équipe (🔵 / 🔴)
+        g.fillStyle = t.equipe === 1 ? "rgba(47,111,219,.55)" : "rgba(229,72,77,.55)";
+        g.beginPath(); g.arc(px, py, c * 0.44, 0, TAU); g.fill();
+      }
       if (t.id === focus) {
         g.strokeStyle = "#fff"; g.lineWidth = Math.max(2, c * 0.08);
         g.beginPath(); g.arc(px, py, c * (0.5 + 0.05 * Math.sin(temps * 5)), 0, TAU); g.stroke();
@@ -254,7 +258,7 @@ export class Player {
 // ---------------------------------------------------------------------
 //  Barre de contrôle : lecture/pause, vitesse, frise avec les événements
 // ---------------------------------------------------------------------
-const ICONES = { nid: "🥚", capture: "🦈", plastique: "🛍️", epuisee: "😵", pousse: "💥" };
+const ICONES = { nid: "🥚", capture: "🦈", plastique: "🛍️", epuisee: "😵", pousse: "💥", don: "🎁" };
 export function controles(player, marqueurs = []) {
   const btn = document.createElement("button"); btn.className = "btn small"; btn.textContent = "▶ Lecture";
   const vit = document.createElement("select");

@@ -19,6 +19,16 @@ export const CAPTEURS = [
   { nom: "distance_requin", icone: "📏🦈", role: "À combien de cases est le requin le plus proche ?", rep: "un nombre", avance: true },
   { nom: "tortue_a_cote", icone: "🐢🐢", role: "Une autre tortue est-elle collée à moi ?", rep: "True / False", avance: true },
   { nom: "requin_derriere_tortue", icone: "🐢🦈", role: "Si je pousse la tortue voisine, tombe-t-elle sur un requin ?", rep: "True / False", avance: true },
+  // jeu en équipes (visibles pendant une manche en équipes, ou en mode avancé)
+  { nom: "mon_equipe", icone: "🏳️", role: "Mon équipe : 1 = 🔵 Bleue, 2 = 🔴 Rouge (0 = chacun pour soi)", rep: "un nombre", equipe: true },
+  { nom: "mes_nids", icone: "🥚", role: "Combien de nids me reste-t-il ?", rep: "un nombre", equipe: true },
+  { nom: "nids_voisine", icone: "🐢🥚", role: "Combien de nids a la tortue collée à moi ? (0 s'il n'y en a pas)", rep: "un nombre", equipe: true },
+  { nom: "nids_equipe", icone: "🥚🥚", role: "Combien de nids a mon équipe en tout ?", rep: "un nombre", equipe: true },
+  { nom: "nids_adversaires", icone: "🥚⚔️", role: "Combien de nids ont les adversaires en tout ?", rep: "un nombre", equipe: true },
+  { nom: "equipiere_a_cote", icone: "🤝", role: "Une tortue de MON équipe est-elle collée à moi ?", rep: "True / False", equipe: true },
+  { nom: "adversaire_a_cote", icone: "⚔️", role: "Une tortue ADVERSE est-elle collée à moi ?", rep: "True / False", equipe: true },
+  { nom: "equipiere_fatiguee", icone: "🤝😓", role: `Une équipière collée à moi a-t-elle moins de ${P.energiePonte} ⚡ (pas assez pour pondre) ?`, rep: "True / False", equipe: true },
+  { nom: "requin_derriere_adversaire", icone: "⚔️🦈", role: "Si je pousse l'adversaire collée à moi, tombe-t-elle sur un requin ?", rep: "True / False", equipe: true },
 ];
 
 // Actions = des ORDRES (une seule par tour)
@@ -32,6 +42,9 @@ export const ACTIONS_INFO = [
   // niveau avancé
   { nom: "aller_vers_algue_libre", icone: "➡️🌿✨", role: "Nager vers les algues propres où il n'y a PAS d'autre tortue.", avance: true },
   { nom: "pousser", icone: "💥", role: `Pousser une tortue collée à moi d'une case (−${P.coutPousse} ⚡). S'il y a un requin derrière elle…`, avance: true },
+  // jeu en équipes
+  { nom: "donner", icone: "🎁", role: `Donner ${P.don} ⚡ à une équipière collée à moi.`, equipe: true },
+  { nom: "aller_vers_equipiere", icone: "➡️🤝", role: "Nager vers l'équipière la plus proche (deux équipières collées sont protégées des requins).", equipe: true },
 ];
 
 // Mots-clés Python, avec leur traduction (on peut les retrouver en tapant le mot français)
@@ -50,6 +63,13 @@ export const MOTS = [
 let avance = false;
 try { avance = localStorage.getItem("lagon:avance") === "1"; } catch { /* stockage indisponible */ }
 export const estAvance = () => avance;
+// mode équipes : activé par l'écran élève quand la manche se joue en équipes
+let equipe = false;
+export const estEquipe = () => equipe;
+export function setEquipe(v) { if (equipe === !!v) return; equipe = !!v; document.dispatchEvent(new CustomEvent("lagon:avance", { detail: avance })); }
+// une primitive est-elle proposée aux élèves en ce moment ?
+export const visible = (p, forcerAvance = null) => !p.avance && !p.equipe ? true
+  : p.avance ? (forcerAvance ?? avance) : (equipe || (forcerAvance ?? avance));
 export function setAvance(v) {
   avance = !!v;
   try { localStorage.setItem("lagon:avance", avance ? "1" : "0"); } catch { /* rien */ }
@@ -72,6 +92,7 @@ export const RAPPELS = [
   "⌨️ Après <code>if …</code> il faut <b>deux-points</b> <code>:</code> et la ligne suivante <b>décalée</b> (touche Tab).",
   "🧠 Un capteur (<code>algue_ici()</code>…) pose une <b>question</b> ; une action (<code>manger()</code>…) donne un <b>ordre</b>.",
   "⚡ L'énergie baisse de 1 tous les 6 tours. À 0, ta tortue est épuisée !",
+  "🌿 Une touffe d'algues mangée jusqu'au bout disparaît : une nouvelle pousse ailleurs.",
   "🏖️ Sur la plage, aucun requin ne peut t'attraper.",
   "✍️ Commence à taper un mot (ou en français : <i>si</i>, <i>sinon</i>, <i>nuit</i>…) : l'éditeur te propose la suite.",
 ];

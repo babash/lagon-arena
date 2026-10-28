@@ -80,9 +80,9 @@ export const AIDE_HTML = `
   <li>1 point = <code>pondre()</code> <b>sur la plage</b>, <b>la nuit</b>, avec <b>${P.energiePonte} ⚡ ou plus</b>.</li>
 </ol>
 <h3>❓ Les questions (capteurs) : réponse True ou False</h3>
-<table class="prims">${CAPTEURS.filter((c) => !c.avance).map(ligneP).join("")}</table>
+<table class="prims">${CAPTEURS.filter((c) => !c.avance && !c.equipe).map(ligneP).join("")}</table>
 <h3>❗ Les ordres (actions) : un seul par tour</h3>
-<table class="prims">${ACTIONS_INFO.filter((a) => !a.avance).map(ligneP).join("")}</table>
+<table class="prims">${ACTIONS_INFO.filter((a) => !a.avance && !a.equipe).map(ligneP).join("")}</table>
 <h3>✍️ Le modèle à suivre</h3>
 <pre class="modele"><span class="tok-kw">def</span> tour():
     <span class="tok-kw">if</span> <i>question</i>:          <span class="tok-com"># si…</span>
@@ -101,6 +101,14 @@ export const AIDE_HTML = `
   <li>🌿 Une touffe d'algues mangée jusqu'au bout disparaît : une nouvelle pousse ailleurs. Les sacs plastique dérivent et réapparaissent ailleurs.</li>
   <li>☀️ Le jour, sur la plage, le soleil fatigue : l'énergie baisse plus vite.</li>
 </ul>
+<details class="aide-avancee aide-equipe"><summary>👥 Jouer en équipes</summary>
+<p>Pendant une manche en équipes, <b>seul le score de l'équipe compte</b> (moyenne des nids de ses tortues). Les tortues ont un halo 🔵 ou 🔴 ; les 🤖 ne sont dans aucune équipe. Deux équipières <b>collées</b> sont protégées des requins, et on ne peut pas pousser une équipière.</p>
+<h3>❓ Questions d'équipe</h3>
+<table class="prims">${CAPTEURS.filter((c) => c.equipe).map(ligneP).join("")}</table>
+<h3>❗ Ordres d'équipe</h3>
+<table class="prims">${ACTIONS_INFO.filter((a) => a.equipe).map(ligneP).join("")}</table>
+<p>Exemple : <code>if equipiere_fatiguee() and energie() >= 8:</code> puis <code>donner()</code></p>
+</details>
 <details class="aide-avancee"><summary>🚀 Niveau avancé (voir le <a href="tuto-avance.html">tutoriel avancé</a>)</summary>
 <h3>❓ Questions avancées</h3>
 <table class="prims">${CAPTEURS.filter((c) => c.avance).map(ligneP).join("")}</table>

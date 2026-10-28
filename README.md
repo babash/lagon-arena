@@ -64,6 +64,8 @@ Il ne remplace pas le premier tutoriel : il ajoute des primitives **cachées par
 | 4 | Pousser : `pousser()` (−2 ⚡), `tortue_a_cote()`, `requin_derriere_tortue()`, suivis d'un exercice |
 | M2 | Mission « La pirate » : pousser une rivale sur un requin, en testant le bon capteur en premier |
 | 5 | Anticiper la nuit avec `heure()` et `distance_plage()` |
+| 6 | Jouer en équipe : `donner()`, `equipiere_fatiguee()`, `requin_derriere_adversaire()`…, suivis d'un exercice |
+| M3 | Mission « La nourrice » : donner de l'énergie à une équipière épuisée sur la plage pour que l'équipe ponde |
 | 🏆 | Le défi : lire le code de la tortue **Pirate** 🤖 et activer le mode avancé |
 
 **Mode avancé** : sous l'éditeur de l'écran élève, l'interrupteur « 🚀 Primitives avancées » ajoute les nouvelles primitives à l'autocomplétion, à la boîte à outils et à l'aide. Dans le bac à sable, la tortue Pirate 🤖 rejoint alors les tortues d'entraînement. Le jeu accepte toujours toutes les primitives : l'interrupteur ne change que ce qui est proposé.
@@ -80,7 +82,7 @@ Il ne remplace pas le premier tutoriel : il ajoute des primitives **cachées par
 - **Bouton 📋 Copier** sur tous les blocs de code : l'éditeur, les solutions, le coup de pouce, la « pensée » de la tortue, l'aide-mémoire.
 - **Deux-points ajoutés automatiquement** quand on oublie les `:` après `if`, `elif` ou `else` (l'éditeur le signale), et **indentation automatique**.
 - **💡 Coup de pouce** (écran élève) :
-  - il donne **l'idée suivante** d'après ce qui manque dans le code, en 5 paliers : pondre la nuit sur la plage, se méfier des requins, vérifier l'énergie, éviter le plastique, partir avant la nuit ;
+  - il donne **l'idée suivante** d'après ce qui manque dans le code, en 5 paliers : pondre la nuit sur la plage, se méfier des requins, vérifier l'énergie, éviter le plastique, partir avant la nuit (pendant une manche en équipes, un palier « Aide ton équipe ! » s'ajoute après le premier) ;
   - chaque palier montre un programme complet, les lignes à ajouter en vert ;
   - l'élève les recopie lui-même.
 - **Rappels** : sous l'éditeur, une règle importante change toutes les 15 secondes.
@@ -114,6 +116,27 @@ Il ne remplace pas le premier tutoriel : il ajoute des primitives **cachées par
 | `est_la_nuit()` | `fuir()`, `se_cacher()` |
 | `energie()` (0 à 10), `heure()` (0 à 23) | `aller_vers_algue()`, `aller_vers_plage()` |
 
+### Les manches en équipes
+
+L'enseignant peut lancer une manche **🔵 Bleue contre 🔴 Rouge** (panneau « Préparer la manche », voir plus bas).
+
+- **Seul le score de l'équipe compte** : on compare la **moyenne de nids par élève** de chaque équipe (une équipe peut avoir un élève de plus). Les tortues d'entraînement 🤖 ne sont dans **aucune équipe** : ce sont des concurrentes neutres.
+- Les élèves voient **avant la manche** leur équipe, leurs équipières et leurs adversaires (carte en haut de l'écran élève), pour se mettre d'accord sur une stratégie.
+- Ce qui rend l'entraide utile :
+  - 🎁 `donner()` passe 3 ⚡ à une équipière collée (une équipière épuisée sur la plage peut alors pondre) ;
+  - 🛡️ deux équipières **collées** sont protégées des requins ;
+  - on ne peut pas pousser une équipière.
+- Pendant le brawl, les tortues ont un halo de la couleur de leur équipe, et le score des deux équipes s'affiche en direct.
+
+| Capteurs d'équipe | Actions d'équipe |
+|---|---|
+| `mon_equipe()` : 1 (Bleue) ou 2 (Rouge) | `donner()` : +3 ⚡ à une équipière collée |
+| `mes_nids()`, `nids_voisine()`, `nids_equipe()`, `nids_adversaires()` | `aller_vers_equipiere()` : rejoindre l'équipière la plus proche |
+| `equipiere_a_cote()`, `adversaire_a_cote()`, `equipiere_fatiguee()` (moins de 6 ⚡) | |
+| `requin_derriere_adversaire()` : une adversaire collée peut être poussée sur un requin | |
+
+Ces primitives apparaissent automatiquement dans l'autocomplétion et la boîte à outils des élèves dès qu'une manche en équipes est annoncée.
+
 **La tortue de départ** sait manger mais **ne pond jamais** : sans rien changer, l'élève marque 0 nid. Il a donc intérêt à comprendre et à améliorer son code.
 
 ### Les nouveautés de manche (rematch)
@@ -132,6 +155,8 @@ Il ne remplace pas le premier tutoriel : il ajoute des primitives **cachées par
 - **+3 de bonus** si la tortue pond plus de nids qu'à la manche précédente. Un élève faible qui progresse marque donc aussi.
 - Les tortues d'entraînement 🤖 servent **uniquement à compléter le lagon jusqu'à 8 tortues** (réglable), y compris pendant le duel. Elles ne marquent pas de points.
 - Le **duel des champions** (les 3 premiers, complétés par des 🤖) est hors classement.
+- **En équipes** : chaque élève de l'équipe gagnante marque **20 points**, ceux de l'équipe perdante **10**, et **15** chacun en cas d'égalité.
+- L'enseignant peut aussi rendre une manche **à points doubles** (×2) ou **hors classement** (entraînement).
 
 ---
 
@@ -145,8 +170,26 @@ Il ne remplace pas le premier tutoriel : il ajoute des primitives **cachées par
 | 23–25 min | Écran « Brawl en cours, regarde le tableau » | **Lancer le brawl** : le match est animé, avec le classement en direct et le fil des événements |
 | 25–28 min | Onglet **Résultats** : rang, rapport, conseils, rejeu de *leur* tortue avec ses pensées, « Et si… ? » | Podium de la manche et classement de la séance |
 | 28–40 min | **Rematch** (manche 2, invasion de plastique), 6 min | Idem |
-| 40–52 min | **Finale** (manche 3) | Idem |
+| 40–52 min | **Finale** (manche 3), par exemple **en équipes** | Idem |
 | 52–55 min | (Duel des champions) puis bilan | Podium final, meilleure progression, **export CSV** |
+
+### Préparer la manche suivante (à la main)
+
+Avant chaque manche (dans la salle d'attente, puis sous les résultats de la manche précédente), le panneau **⚙️ Préparer la manche** permet de tout régler :
+
+- **Raccourcis** : 🔁 Rematch (manche suivante classique), 👥 En équipes, ⛈️ Duel des champions, 🏋️ Entraînement (hors classement) ;
+- **titre** de la manche (affiché aux élèves et sur l'écran projeté) ;
+- **nouveauté** (lagon calme, plastique, requins affamés, nuits courtes, finale, tempête) ;
+- **durée de programmation** ;
+- **points** : normaux, doubles, ou hors classement ;
+- **nombre de tortues minimum** (complété par des 🤖, 0 pour aucune) ;
+- **qui joue** : toute la classe, ou seulement les élèves cochés ;
+- **mode** : chacun pour soi, ou deux équipes :
+  - 🎲 **Au hasard** ou ⚖️ **Équilibrées** (d'après le classement de la séance, en alternant les meilleurs) ;
+  - **à la main** : un clic sur un nom le fait changer d'équipe ;
+  - un élève qui arrive en retard rejoint automatiquement l'équipe la plus petite.
+
+Les réglages sont **publiés tout de suite** : les élèves voient la prochaine manche (et leur équipe) pendant qu'ils préparent leur tortue.
 
 Conseils :
 
@@ -168,7 +211,7 @@ Conseils :
 1. Créez un compte sur <https://supabase.com>, puis **New project**.
    - Choisissez une **région européenne** (par exemple *West EU (Paris)* ou *Central EU (Frankfurt)*), ce qui est préférable pour le RGPD.
    - Le mot de passe de la base ne servira pas ici.
-2. Ouvrez **SQL Editor → New query**. Copiez-collez **tout** le fichier `supabase.sql`, puis cliquez sur **Run**. Le script peut être relancé sans risque, par exemple après une mise à jour.
+2. Ouvrez **SQL Editor → New query**. Copiez-collez **tout** le fichier `supabase.sql`, puis cliquez sur **Run**. Le script peut être relancé sans risque. **Relancez-le après chaque mise à jour du site** (la version « équipes » ajoute par exemple la colonne `config` des salles et la fonction `definir_config`).
 > ✅ **Déjà fait pour votre projet** : `js/config.js` contient l'URL et la clé de votre projet Supabase. Il reste seulement à exécuter `supabase.sql` (point 2).
 > ⚠️ **À refaire après chaque mise à jour du site** : le script peut être relancé sans risque. La dernière version ajoute le déblocage de pseudo 🔓.
 > Pour vérifier : la page d'accueil du site doit afficher « 🟢 Connecté à la base de données de la classe ».

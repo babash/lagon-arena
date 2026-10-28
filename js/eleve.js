@@ -2,13 +2,13 @@
 //  Lagon Arena — écran élève : programmer, tester, envoyer, comprendre
 // =====================================================================
 import { db, MODE, synchroniserHorloge, secondesRestantes } from "./db.js";
-import { simulate, BOTS, BOT_PIRATE, CODE_DEPART, TWISTS, BONUS_PROGRESSION } from "./engine.js";
+import { simulate, BOTS, BOT_PIRATE, CODE_DEPART, TWISTS, BONUS_PROGRESSION, EQUIPES } from "./engine.js";
 import { check } from "./interp.js";
 import { CodeEditor, boiteOutils } from "./editor.js";
 import { coupDePouceHTML } from "./pouce.js";
-import { RAPPELS, estAvance, setAvance } from "./primitives.js";
+import { RAPPELS, estAvance, setAvance, setEquipe, estEquipe } from "./primitives.js";
 import { MatchViewer, rapportHTML, tableauMatch } from "./viewer.js";
-import { lancerSimulation, codeDe, estBot, infosManche, classementCumule } from "./brawl.js";
+import { lancerSimulation, codeDe, estBot, infosManche, classementCumule, POINTS_EQUIPE } from "./brawl.js";
 import { $, $$, el, esc, toast, store, mmss, AIDE_HTML, twistCarte, activerCopie } from "./common.js";
 
 const q = new URLSearchParams(location.search);
@@ -61,7 +61,7 @@ activerCopie();
 const pouce = $("#pouce");
 $("#pouce-btn").addEventListener("click", () => {
   if (!pouce.classList.contains("cache")) { pouce.classList.add("cache"); return; }
-  pouce.innerHTML = coupDePouceHTML(ed.value) + `<button class="btn small ghost" id="pouce-fermer">Fermer</button>`;
+  pouce.innerHTML = coupDePouceHTML(ed.value, { equipe: estEquipe() }) + `<button class="btn small ghost" id="pouce-fermer">Fermer</button>`;
   pouce.classList.remove("cache");
   $("#pouce-fermer").addEventListener("click", () => pouce.classList.add("cache"));
 });
@@ -106,6 +106,7 @@ function tester() {
   const bots = estAvance() ? [...BOTS, BOT_PIRATE] : BOTS;   // en mode avancé, la Pirate pousse les autres tortues !
   const joueurs = [{ id: "moi", nom: LIBRE ? "Ta tortue" : PSEUDO, couleur, code: ed.value },
     ...bots.map((b, i) => ({ id: "Bot-" + b.nom, nom: b.nom + " 🤖", couleur: BOT_COUL[i % BOT_COUL.length], code: b.code }))];
+  if (estEquipe()) joueurs.forEach((j, i) => { j.equipe = i % 2 === 0 ? 1 : 2; });   // manche en équipes : on s'entraîne aussi en équipes
   const sim = simulate({ joueurs, graine: graineSB, twist: twistActuel() });
   if (viewerSB) viewerSB.destroy();
   viewerSB = new MatchViewer($("#sb-vue"), { sim, focus: "moi", code: ed.value, vitesse: 5 });
@@ -142,7 +143,7 @@ function majEnvoi() {
   }
   if (!estFinaliste()) {
     b.disabled = true;
-    box.innerHTML = `<div class="msg info">⛈️ Duel des champions : seuls ${salle.duel.map(esc).join(", ")} envoient une tortue. Regarde le match au tableau… et continue à t'entraîner !</div>`;
+    box.innerHTML = `<div class="msg info">⭐ ${esc(titreManche())} : seuls ${salle.duel.map(esc).join(", ")} envoient une tortue. Regarde le match au tableau… et continue à t'entraîner !</div>`;
     return;
   }
   b.disabled = false;
@@ -183,7 +184,7 @@ function majInfo() {
   const info = $("#info"); info.innerHTML = "";
   info.append(el("span", { class: "pill" }, "🔑 " + SALLE),
     el("span", { class: "pill" }, el("span", { class: "dot", style: `background:${couleur}` }), PSEUDO));
-  if (salle && salle.manche > 0) info.append(el("span", { class: "pill" }, salle.duel ? "⛈️ Duel" : `Manche ${salle.manche}`));
+  if (salle && salle.manche > 0) info.append(el("span", { class: "pill" }, titreManche()));
   if (MODE === "demo") info.append(el("span", { class: "pill mode-demo" }, "Mode démo"));
 }
 function bandeau(html, type = "info") {
@@ -224,17 +225,19 @@ async function changementPhase(premier) {
   const T = TWISTS[salle.nouveaute] || TWISTS.calme;
   $("#twist").innerHTML = "";
   if (salle.manche > 0 && salle.phase !== "fin") {
-    $("#twist").append(el("div", { class: "petit muted" }, salle.duel ? "Duel des champions :" : `Nouveauté de la manche ${salle.manche} :`), twistCarte(salle.nouveaute));
+    $("#twist").append(el("div", { class: "petit muted" }, `Nouveauté (${titreManche()}) :`), twistCarte(salle.nouveaute));
   }
+  $("#twist").append(el("div", { id: "manche-info" }));
+  majCarteManche();
   overlay(null);
   switch (salle.phase) {
     case "attente":
       bandeau("⏳ <b>La partie va bientôt commencer.</b> En attendant, prépare ta tortue et teste-la dans le bac à sable !"); break;
     case "prog":
       if (premier && salle.manche > 1 && !dernierEnvoi && !salle.duel) toast("🆕 La partie a déjà commencé : programme ta tortue et envoie-la, elle jouera au prochain brawl !");
-      if (salle.duel && !estFinaliste()) bandeau(`⛈️ <b>Duel des champions</b> : ${salle.duel.map(esc).join(", ")} préparent leur tortue. Toi, tu peux continuer à t'entraîner !`);
-      else bandeau(`⌨️ <b>${salle.duel ? "Duel des champions" : "Manche " + salle.manche}</b> : ${T.icone} ${esc(T.nom)}. Améliore ta tortue, teste-la, puis <b>envoie-la</b> avant la fin du chrono !`, "action");
-      if (!premier) { onglet("prog"); toast(salle.duel ? "⛈️ Le duel des champions commence !" : `🔔 Manche ${salle.manche} : à vos claviers !`); }
+      if (salle.duel && !estFinaliste()) bandeau(`⭐ <b>${esc(titreManche())}</b> : ${salle.duel.map(esc).join(", ")} préparent leur tortue. Toi, tu peux continuer à t'entraîner !`);
+      else bandeau(`⌨️ <b>${esc(titreManche())}</b> : ${T.icone} ${esc(T.nom)}. Améliore ta tortue, teste-la, puis <b>envoie-la</b> avant la fin du chrono !`, "action");
+      if (!premier) { onglet("prog"); toast(`🔔 ${titreManche()} : à vos claviers !`); }
       break;
     case "brawl":
       bandeau("🎬 <b>Brawl en cours</b> : regarde le tableau !");
@@ -261,7 +264,43 @@ async function rafraichir(premier = false) {
     $("#info").classList.remove("hors-ligne");
   } catch (e) { $("#info").classList.add("hors-ligne"); return; }
   const cle = salle.manche + "/" + salle.phase + "/" + (salle.duel || []).join(",");
-  if (cle !== etatCle) { etatCle = cle; await changementPhase(premier); }
+  if (cle !== etatCle) { etatCle = cle; cfgCle = JSON.stringify(salle.config || null); await changementPhase(premier); }
+  else if (JSON.stringify(salle.config || null) !== cfgCle) { cfgCle = JSON.stringify(salle.config || null); majCarteManche(true); }
+}
+
+// ---------------------------------------------------------------------
+//  Réglages de la manche (préparés par l'enseignant) : mode, points… et MON ÉQUIPE
+// ---------------------------------------------------------------------
+let cfgCle = "";
+const configActuelle = () => (salle && salle.config && salle.config.manche === salle.manche ? salle.config : null);
+const configProchaine = () => (salle && salle.config && salle.config.manche === salle.manche + 1 && ["attente", "resultats"].includes(salle.phase) ? salle.config : null);
+function titreManche(c = configActuelle()) { return (c && c.titre) || (salle && salle.duel ? "Manche spéciale" : "Manche " + (c ? c.manche : salle.manche)); }
+function majCarteManche(annoncer = false) {
+  const box = $("#manche-info"); if (!box) return;
+  const c = ["prog", "brawl"].includes(salle.phase) ? configActuelle() : configProchaine();
+  setEquipe(!!(c && c.mode === "equipes"));
+  if (!c) { box.innerHTML = ""; return; }
+  const prochaine = c.manche !== salle.manche;
+  const T = TWISTS[c.nouveaute] || null;
+  const morceaux = [];
+  if (prochaine && T) morceaux.push(`${T.icone} ${esc(T.nom)}`);
+  if (c.coef === 2) morceaux.push("⭐ points doubles");
+  if (c.coef === 0) morceaux.push("hors classement");
+  if (c.participants) morceaux.push(c.participants.includes(PSEUDO) ? "✅ tu joues" : "👀 tu regardes");
+  let html = `<div class="carte-manche">${prochaine ? `<b>📣 Prochaine manche : ${esc(titreManche(c))}</b>` : ""}${morceaux.length ? `<div>${morceaux.join(" · ")}</div>` : ""}`;
+  if (c.mode === "equipes") {
+    const eq = c.equipes || {}, mienne = eq[PSEUDO];
+    const noms = (e) => Object.keys(eq).filter((p) => eq[p] === e && p !== PSEUDO).map(esc).join(", ") || "—";
+    html += mienne
+      ? `<div class="mon-equipe eq${mienne}">👥 Tu es dans l'équipe <b>${EQUIPES[mienne].icone} ${EQUIPES[mienne].nom}</b> avec : <b>${noms(mienne)}</b>.<br>
+         Adversaires ${EQUIPES[3 - mienne].icone} : ${noms(3 - mienne)}.<br>
+         <span class="petit">Seul le <b>score de l'équipe</b> compte (moyenne des nids). Mettez-vous d'accord sur une stratégie ! Nouvelles primitives : <code>donner()</code>, <code>equipiere_fatiguee()</code>…</span></div>`
+      : c.participants && !c.participants.includes(PSEUDO)
+        ? `<div class="mon-equipe">👥 Manche en équipes : ${EQUIPES[1].icone} ${noms(1)} contre ${EQUIPES[2].icone} ${noms(2)}. Tu ne joues pas cette manche : observe leurs stratégies !</div>`
+        : `<div class="mon-equipe">👥 Manche en équipes : ton enseignant va t'ajouter à une équipe.</div>`;
+    if (annoncer && mienne) toast(`👥 Tu es dans l'équipe ${EQUIPES[mienne].icone} ${EQUIPES[mienne].nom} !`);
+  }
+  box.innerHTML = html + "</div>";
 }
 
 // ---------------------------------------------------------------------
@@ -294,16 +333,24 @@ async function chargerResultats(montrer) {
 
 function afficherResultats(info, scores, tortues, joueurs) {
   const m = info.manche, T = TWISTS[info.twist] || TWISTS.calme;
-  const sim = lancerSimulation(salle, m, info.pseudos, joueurs, tortues, info.twist);
+  const sim = lancerSimulation(salle, m, info.pseudos, joueurs, tortues, info.twist, null, info.equipes);
   const joue = info.pseudos.includes(PSEUDO);
   const moi = scores.find((s) => s.manche === m && s.pseudo === PSEUDO);
   const nbH = info.pseudos.filter((p) => !estBot(p)).length;
   const avant = scores.filter((s) => s.pseudo === PSEUDO && s.manche < m && !s.duel).sort((a, b) => b.manche - a.manche)[0];
   const monCode = codeDe(PSEUDO, m, tortues);
-  const titre = info.duel ? "⛈️ Duel des champions" : `📊 Manche ${m}`;
+  const titre = `📊 Manche ${m}${info.equipes ? " 👥" : ""}${info.duel ? " (hors classement)" : ""}`;
+  const E = sim.equipes;
 
   let bloc;
-  if (joue && moi) {
+  if (joue && moi && E) {
+    const e = moi.equipe, res = E.gagnant === 0 ? "egalite" : E.gagnant === e ? "gagne" : "perd";
+    bloc = `<div class="mon-equipe eq${e}"><b>${res === "gagne" ? "🏆 Victoire" : res === "perd" ? "😕 Défaite" : "🤝 Égalité"}</b> de ton équipe ${EQUIPES[e].icone} ${EQUIPES[e].nom} !</div>
+      <div class="duel-eq" style="margin:10px 0">${[1, 2].map((k) => `<div class="e${k}">${EQUIPES[k].icone} ${EQUIPES[k].nom}<b>${E[k].nids} 🥚</b><small>moyenne ${E[k].moyenne.toFixed(2)}</small></div>`).join('<div class="vs">VS</div>')}</div>
+      <div class="bigscore"><div class="bloc"><b>${moi.nids}</b>nid${moi.nids > 1 ? "s" : ""} pour ton équipe</div>${info.duel ? "" : `<div class="bloc"><b>+${moi.points}</b>points</div>`}</div>
+      <p class="petit muted">En équipes, chaque élève de l'équipe gagnante marque ${POINTS_EQUIPE.gagne} points (perdante : ${POINTS_EQUIPE.perd}, égalité : ${POINTS_EQUIPE.egalite}).</p>
+      <h3>🔍 Ce qu'a fait ta tortue</h3>${rapportHTML(sim, PSEUDO)}`;
+  } else if (joue && moi) {
     const prog = avant && !info.duel ? `<p class="progres">${moi.nids > avant.nids ? "📈" : moi.nids < avant.nids ? "📉" : "➖"} Manche ${avant.manche} : ${avant.nids} nid${avant.nids > 1 ? "s" : ""} → manche ${m} : <b>${moi.nids} nid${moi.nids > 1 ? "s" : ""}</b>${moi.bonus ? ` · <b>bonus progrès +${moi.bonus}</b> 🎉` : ""}</p>` : "";
     bloc = `<div class="bigscore">
         <div class="bloc"><b>${moi.rang}<sup>${moi.rang > 1 ? "e" : "er"}</sup></b>sur ${nbH} élève${nbH > 1 ? "s" : ""}</div>
@@ -334,7 +381,7 @@ function afficherResultats(info, scores, tortues, joueurs) {
   if (joue) $("#etsi").addEventListener("click", () => {
     const c = verifier();
     if (!c.ok) { toast("Corrige d'abord l'erreur de ton code.", "err"); return; }
-    const sim2 = lancerSimulation(salle, m, info.pseudos, joueurs, tortues, info.twist, { pseudo: PSEUDO, code: ed.value });
+    const sim2 = lancerSimulation(salle, m, info.pseudos, joueurs, tortues, info.twist, { pseudo: PSEUDO, code: ed.value }, info.equipes);
     const a = sim.resultats.find((r) => r.id === PSEUDO), b = sim2.resultats.find((r) => r.id === PSEUDO);
     const fleche = b.nids > a.nids ? "📈" : b.nids < a.nids ? "📉" : "➖";
     $("#etsi-res").innerHTML = `<div class="compare" style="margin-top:12px">

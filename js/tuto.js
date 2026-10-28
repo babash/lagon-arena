@@ -13,7 +13,7 @@ import { $, esc } from "./common.js";
 import { bascule, vf, capt, act, exemple, phrase, exercice, quiz, etapeMission, demarrer, fait } from "./tutokit.js";
 
 // le tutoriel débutant ne montre que les primitives de base
-const CAPTEURS = TOUS_CAPTEURS.filter((c) => !c.avance), ACTIONS_INFO = TOUTES_ACTIONS.filter((a) => !a.avance);
+const CAPTEURS = TOUS_CAPTEURS.filter((c) => !c.avance && !c.equipe), ACTIONS_INFO = TOUTES_ACTIONS.filter((a) => !a.avance && !a.equipe);
 
 const GRAINE_MISSION = 7;
 
@@ -342,6 +342,7 @@ ETAPES.push({
         <li>🔁 <b>Rematch</b> : corrige et recommence.</li>
       </ol>
       <div class="msg warn">🐢 Au début, ta tortue mange… mais <b>ne pond jamais</b>. À toi de l'améliorer !</div>
+      <div class="msg info">👥 Parfois, la manche se joue <b>en équipes</b> : c'est le <b>total de l'équipe</b> qui compte. Tu sauras avant la manche avec qui tu joues : mettez-vous d'accord !</div>
     </div><div class="card">
       <h3>🧮 Les points</h3>
       <table class="scores pts"><tr>${pts}<td>…</td></tr></table>

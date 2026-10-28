@@ -3,7 +3,7 @@
 //  Le lagon qui bouge, les distances, or / not, les algues libres,
 //  pousser une tortue (sur un requin…), anticiper la nuit.
 // =====================================================================
-import { simulate, BOTS, BOT_PIRATE, MISSIONS_AVANCEES, P } from "./engine.js";
+import { simulate, BOTS, BOT_PIRATE, MISSIONS_AVANCEES, P, EQUIPES } from "./engine.js";
 import { CodeView } from "./editor.js";
 import { MatchViewer } from "./viewer.js";
 import { CAPTEURS, ACTIONS_INFO, setAvance, estAvance } from "./primitives.js";
@@ -172,7 +172,52 @@ ETAPES.push({
   },
 });
 
-// ---------- 8. Le défi ----------
+// ---------- 8. Jouer en équipe ----------
+const EQ_C = CAPTEURS.filter((c) => c.equipe), EQ_A = ACTIONS_INFO.filter((a) => a.equipe);
+ETAPES.push({
+  court: "6", titre: "Jouer en équipe", cle: "equipe",
+  rendre(box) {
+    box.innerHTML = `<div class="etape"><div class="texte">
+      <h2>👥 Jouer en équipe</h2>
+      <ul class="points">
+        <li>Ton enseignant peut lancer une manche <b>en équipes</b> : ${EQUIPES[1].icone} ${EQUIPES[1].nom} contre ${EQUIPES[2].icone} ${EQUIPES[2].nom}. Tu sais <b>avant la manche</b> avec qui tu joues.</li>
+        <li><b>Seul le score de l'équipe compte</b> (la moyenne des nids de ses tortues) : aider une équipière rapporte autant que pondre soi-même !</li>
+        <li>🛡️ Deux équipières <b>collées</b> sont protégées des requins. On ne peut pas pousser une équipière.</li>
+        <li>🎁 ${act("donner")} passe ${P.don} ⚡ à une équipière collée à toi.</li>
+      </ul>
+      ${table(EQ_C)}${table(EQ_A)}
+    </div><div>
+      <div class="card"><h3>🔬 Essaie :</h3><div id="ex"></div></div>
+      <div class="card" id="exo"></div>
+    </div></div>`;
+    exemple($("#ex", box), "if equipiere_fatiguee() and energie() >= 8:\n    donner()\nelif requin_derriere_adversaire():\n    pousser()\nelif requin_proche() and not equipiere_a_cote():\n    aller_vers_equipiere()\nelse:\n    aller_vers_algue()",
+      ["equipiere_fatiguee", "requin_derriere_adversaire", "requin_proche", "equipiere_a_cote", { nom: "energie", min: 0, max: 10 }],
+      { equipiere_fatiguee: true, requin_derriere_adversaire: false, requin_proche: false, equipiere_a_cote: true, energie: 9 });
+    exercice($("#exo", box), {
+      cle: "equipe", avance: true,
+      consigne: "Écris : « Si une équipière collée à toi est <b>fatiguée</b> et que tu as <b>au moins 8</b> d'énergie : donner. <b>Sinon si</b> une adversaire collée à toi peut être poussée sur un requin : pousser. <b>Sinon</b> : aller vers les algues libres. »",
+      cas: [
+        { texte: "🤝😓 équipière fatiguée, ⚡ 9", sit: { equipiere_fatiguee: true, equipiere_a_cote: true, tortue_a_cote: true, energie: 9 }, attendu: "donner" },
+        { texte: "🤝😓 équipière fatiguée, ⚡ 5", sit: { equipiere_fatiguee: true, equipiere_a_cote: true, tortue_a_cote: true, energie: 5 }, attendu: "aller_vers_algue_libre" },
+        { texte: "⚔️🦈 adversaire devant un requin", sit: { requin_derriere_adversaire: true, requin_derriere_tortue: true, adversaire_a_cote: true, tortue_a_cote: true, energie: 9 }, attendu: "pousser" },
+        { texte: "😌 personne autour", sit: { energie: 9 }, attendu: "aller_vers_algue_libre" },
+      ],
+      solution: "def tour():\n    if equipiere_fatiguee() and energie() >= 8:\n        donner()\n    elif requin_derriere_adversaire():\n        pousser()\n    else:\n        aller_vers_algue_libre()\n",
+      indice: "Trois cas : <code>if … and energie() &gt;= 8:</code>, puis <code>elif requin_derriere_adversaire():</code>, puis <code>else:</code>.",
+      outils: { capteurs: ["equipiere_fatiguee", "requin_derriere_adversaire", "equipiere_a_cote", "energie"], actions: ["donner", "pousser", "aller_vers_algue_libre"], mots: ["if", "elif", "else", "and"] },
+    });
+  },
+});
+
+// ---------- 9. Mission : la nourrice ----------
+const A3 = MISSIONS_AVANCEES[2];
+ETAPES.push(etapeMission({
+  court: "M3", cle: "a3", titre: A3.titre, notion: A3.notion, avance: true, equipe: A3.equipe,
+  probleme: A3.probleme, objectif: A3.objectif, code: A3.code, indice: A3.indice, solution: A3.solution, appris: A3.appris,
+  scenario: A3.scenario, autres: A3.autres, graine: 7, reussi: A3.reussi, bilan: A3.bilan,
+}));
+
+// ---------- 10. Le défi ----------
 ETAPES.push({
   court: "🏆", titre: "Le défi",
   rendre(box) {

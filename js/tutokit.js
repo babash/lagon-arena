@@ -77,6 +77,8 @@ export const act = (nom) => { const a = ACTIONS_INFO.find((x) => x.nom === nom);
 export const SITUATION_BASE = {
   requin_proche: false, algue_ici: false, plastique_ici: false, sur_plage: false, est_la_nuit: false, energie: 8, heure: 12,
   distance_algue: 4, distance_plage: 6, distance_requin: 9, tortue_a_cote: false, requin_derriere_tortue: false,
+  mon_equipe: 1, mes_nids: 0, nids_voisine: 0, equipiere_a_cote: false, adversaire_a_cote: false, equipiere_fatiguee: false,
+  requin_derriere_adversaire: false, nids_equipe: 0, nids_adversaires: 0,
 };
 export function unTour(compiled, sit) {
   const base = { ...SITUATION_BASE, ...sit };
@@ -229,7 +231,7 @@ export function etapeMission(M) {
           $("#res", box).innerHTML = `<div class="msg err">🐞 <b>Ligne ${c.error.line}</b> : ${esc(c.error.message)}</div>`;
           return;
         }
-        const sim = simulate({ joueurs: [{ id: "t", nom: "Ta tortue", couleur: "#ff7b5c", code: ed.value }, ...(M.autres || [])], graine: M.graine ?? 7, scenario: M.scenario, twist: M.twist || "calme" });
+        const sim = simulate({ joueurs: [{ id: "t", nom: "Ta tortue", couleur: "#ff7b5c", code: ed.value, equipe: M.equipe || 0 }, ...(M.autres || [])], graine: M.graine ?? 7, scenario: M.scenario, twist: M.twist || "calme" });
         if (viewer) viewer.destroy();
         viewer = new MatchViewer($("#vue", box), { sim, focus: "t", code: ed.value, vitesse: 5 });
         const ok = M.reussi(sim);

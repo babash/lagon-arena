@@ -61,6 +61,7 @@ class Supabase {
   scores(code) { return this.get("scores", `salle=eq.${encodeURIComponent(code)}&select=*&order=manche,rang`); }
   retirerJoueur(code, secret, pseudo) { return this.rpc("retirer_joueur", { p_code: code, p_secret: secret, p_pseudo: pseudo }); }
   libererPseudo(code, secret, pseudo) { return this.rpc("liberer_pseudo", { p_code: code, p_secret: secret, p_pseudo: pseudo }); }
+  definirConfig(code, secret, config) { return this.rpc("definir_config", { p_code: code, p_secret: secret, p_config: config }); }
 }
 
 // ---------------------------------------------------------------------
@@ -139,6 +140,12 @@ class Demo {
     this.save(s);
   }
   async scores(code) { await this.pause(); return this.load().scores.filter((x) => x.salle === code).sort((a, b) => a.manche - b.manche || a.rang - b.rang); }
+  async definirConfig(code, secret, config) {
+    await this.pause();
+    const s = this.load(); this.verifProf(s, code, secret);
+    s.salles[code].config = config;
+    this.save(s);
+  }
   async libererPseudo(code, secret, pseudo) {
     await this.pause();
     const s = this.load(); this.verifProf(s, code, secret);

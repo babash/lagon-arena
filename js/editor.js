@@ -10,7 +10,7 @@
 //  + vue « pensée de la tortue » (lignes exécutées, conditions vraies/fausses)
 // =====================================================================
 import { SENSORS, ACTIONS } from "./interp.js";
-import { INFO, CAPTEURS, ACTIONS_INFO, MOTS, estAvance } from "./primitives.js";
+import { INFO, CAPTEURS, ACTIONS_INFO, MOTS, estAvance, visible } from "./primitives.js";
 import { esc, copier } from "./common.js";
 
 const KW = new Set(["if", "elif", "else", "and", "or", "not", "def", "pass", "return"]);
@@ -178,7 +178,7 @@ export class CodeEditor {
     }
     this.montrerInfo(INFO[mot] && this.voit(mot) ? infoHTML(mot) : null);
   }
-  voit(nom) { const i = INFO[nom]; return !i || !i.avance || this.avance === true || (this.avance === null && estAvance()); }
+  voit(nom) { const i = INFO[nom]; return !i || visible(i, this.avance); }
 
   // ---------- autocomplétion ----------
   contexte(avant) {
@@ -349,7 +349,7 @@ export function boiteOutils(container, editor, { capteurs = null, actions = null
     const C = CAPTEURS.filter((c) => (!capteurs || capteurs.includes(c.nom)) && editor.voit(c.nom));
     const A = ACTIONS_INFO.filter((a) => (!actions || actions.includes(a.nom)) && editor.voit(a.nom));
     const M = MOTS.filter((m) => mots.includes(m.nom) || (m.nom === "or" && !capteurs && editor.voit("distance_algue")));
-    const chip = (nom, html, cls) => `<button type="button" class="chip ${cls}${INFO[nom].avance ? " c-avance" : ""}" data-p="${nom}" title="${esc(INFO[nom].type === "mot" ? INFO[nom].fr + " : " + INFO[nom].role : INFO[nom].role)}">${html}</button>`;
+    const chip = (nom, html, cls) => `<button type="button" class="chip ${cls}${INFO[nom].avance ? " c-avance" : INFO[nom].equipe ? " c-equipe" : ""}" data-p="${nom}" title="${esc(INFO[nom].type === "mot" ? INFO[nom].fr + " : " + INFO[nom].role : INFO[nom].role)}">${html}</button>`;
     container.innerHTML = `<div class="outils">
       ${titre ? `<div class="outils-titre">🧰 Clique pour insérer dans ton code :</div>` : ""}
       ${M.length ? `<div class="outils-groupe"><span class="lab">Mots</span>${M.map((m) => chip(m.nom, `<code>${m.nom}</code> <small>${esc(m.fr)}</small>`, "c-mot")).join("")}</div>` : ""}
@@ -398,7 +398,7 @@ export function capteursHTML(rec, tick, code = "") {
   if (!rec) return "";
   if (rec.bloquee) return `<h4>Tour ${tick}</h4><p><b>💫 Bloquée</b> : la tortue vient d'être attrapée ou épuisée, elle attend.</p>`;
   if (!rec.capteurs) return `<h4>Tour ${tick}</h4><p class="effet mal">${esc(rec.erreur || "")}</p>`;
-  const rows = CAPTEURS.filter((c) => !c.avance || estAvance() || code.includes(c.nom)).map((c) => {
+  const rows = CAPTEURS.filter((c) => visible(c) || code.includes(c.nom + "(")).map((c) => {
     const v = rec.capteurs[c.nom];
     const txt = typeof v === "boolean" ? (v ? "True" : "False") : v;
     return `<tr title="${esc(c.role)}"><td>${c.icone} <code>${c.nom}()</code></td><td class="${typeof v === "boolean" ? "v-" + v : ""}">${txt}</td></tr>`;

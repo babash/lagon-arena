@@ -3,9 +3,9 @@
 // =====================================================================
 import { db, MODE, synchroniserHorloge, secondesRestantes } from "./db.js";
 import { CONFIG } from "./config.js";
-import { TWISTS, TWIST_ORDER, TWIST_DUEL, BOTS, POINTS_RANG, BONUS_PROGRESSION } from "./engine.js";
+import { TWISTS, TWIST_ORDER, TWIST_DUEL, BOTS, POINTS_RANG, BONUS_PROGRESSION, EQUIPES } from "./engine.js";
 import { MatchViewer, tableauMatch } from "./viewer.js";
-import { botsPourCompleter, lancerSimulation, calculerScores, classementCumule, meilleureProgression, estBot, infosManche, BOT_PREFIXE } from "./brawl.js";
+import { botsPourCompleter, lancerSimulation, calculerScores, classementCumule, meilleureProgression, estBot, infosManche, equipesCompletes, POINTS_EQUIPE } from "./brawl.js";
 import { $, $$, el, esc, toast, store, mmss, jeton, twistCarte } from "./common.js";
 
 const main = $("#main");
@@ -115,7 +115,7 @@ function majInfo() {
   if (!salle) return;
   const T = TWISTS[salle.nouveaute] || TWISTS.calme;
   $("#info").innerHTML = `<span class="pill">🔑 ${CODE}</span>` +
-    (salle.manche > 0 ? `<span class="pill">${salle.duel ? "⛈️ Duel" : "Manche " + salle.manche} · ${T.icone}</span>` : "") +
+    (salle.manche > 0 ? `<span class="pill">${esc(titreManche())} · ${T.icone}</span>` : "") +
     (MODE === "demo" ? `<span class="pill mode-demo">Mode démo</span>` : "");
 }
 
@@ -129,6 +129,7 @@ async function sonder() {
   const connus = sonder.connus;
   sonder.connus = new Set(joueurs.map((j) => j.pseudo));
   if (connus && salle.manche > 0) for (const j of joueurs) if (!connus.has(j.pseudo)) toast(`🆕 ${j.pseudo} rejoint la partie : sa tortue jouera au prochain brawl.`);
+  repartirRetardataires();
   const envoyes = new Set(depots.map((d) => d.pseudo));
   $("#nb").textContent = joueurs.length;
   const liste = $("#liste");
@@ -212,14 +213,12 @@ function scAttente(st) {
     <div class="code-salle geant">${CODE}</div>
     <div id="qr" class="qr cache"></div>
     <p class="consigne"><b id="nb-grand">${joueurs.length}</b> élève(s) connecté(s)</p>
-    <div class="row centre" id="lancer"></div>
     <p class="petit muted">Conseil : laissez d'abord 10 à 15 minutes aux élèves pour le tutoriel (bouton « Commencer le tutoriel » sur l'accueil).</p>
-  </div>`;
+  </div>
+  <div id="prep"></div>`;
   dessinerQR($("#qr"), new URL("index.html?salle=" + CODE, location.href).href);
-  const sel = selectTwist(TWIST_ORDER[0]);
-  const b = el("button", { class: "btn big corail" }, "▶ Lancer la manche 1");
-  b.addEventListener("click", () => lancerManche(1, sel.value, reglages.duree1, null));
-  $("#lancer").append(el("label", { class: "champ petit" }, "Nouveauté", sel), b);
+  chargerPrep(1, []);
+  panneauPrep($("#prep"), []);
 }
 function dessinerQR(box, texte) {
   if (typeof window.qrcode !== "function") return;
@@ -229,19 +228,161 @@ function dessinerQR(box, texte) {
   } catch { /* pas de QR code */ }
 }
 
-async function lancerManche(manche, twist, duree, duel) {
+async function lancerManche() {
+  const p = prep;
+  if (p.qui === "choix" && !p.participants.length) return toast("Choisissez au moins un élève qui joue.", "err");
+  if (p.mode === "equipes") completerEquipes();
   try {
-    await piloter({ manche, phase: "prog", duree, nouveaute: twist, duel });
+    await publierPrep(true);
+    await piloter({ manche: p.manche, phase: "prog", duree: p.duree, nouveaute: p.nouveaute, duel: p.qui === "choix" ? p.participants.slice() : null });
     await envoyerFaux();
   } catch (e) { toast(e.message, "err"); }
+}
+
+// =====================================================================
+//  Préparer la manche suivante (réglée à la main par l'enseignant)
+//  Les réglages sont publiés tout de suite : les élèves voient la nouveauté,
+//  les points… et leur équipe, pour préparer une stratégie AVANT la manche.
+// =====================================================================
+let prep = null, publierTimer = null, scoresPrep = [];
+const clePrep = () => "lagon:prep:" + CODE;
+const configActuelle = () => (salle && salle.config && salle.config.manche === salle.manche ? salle.config : null);
+function titreManche() {
+  const c = configActuelle();
+  return (c && c.titre) || (salle.duel ? "Manche spéciale" : "Manche " + salle.manche);
+}
+function prepDefaut(manche, scores) {
+  const nb = new Set(scores.filter((x) => !x.duel).map((x) => x.manche)).size;
+  return { manche, nouveaute: TWIST_ORDER[Math.min(TWIST_ORDER.length - 1, nb)], duree: manche === 1 ? reglages.duree1 : reglages.duree,
+    coef: 1, bots: reglages.min, qui: "tous", participants: [], mode: "solo", equipes: {}, titre: "" };
+}
+function chargerPrep(manche, scores) {
+  scoresPrep = scores;
+  const p = store.get(clePrep());
+  prep = p && p.manche === manche ? p : prepDefaut(manche, scores);
+}
+const configDe = (p) => ({ manche: p.manche, mode: p.mode, equipes: p.mode === "equipes" ? p.equipes : null, coef: p.coef, bots: p.bots,
+  titre: p.titre, nouveaute: p.nouveaute, participants: p.qui === "choix" ? p.participants : null });
+function publierPrep(immediat = false) {
+  store.set(clePrep(), prep);
+  clearTimeout(publierTimer);
+  const go = () => db.definirConfig(CODE, SECRET, configDe(prep)).then(() => { salle.config = configDe(prep); }).catch((e) => toast(e.message, "err"));
+  if (immediat) return go();
+  publierTimer = setTimeout(go, 400);
+}
+const joueursPrep = () => (prep.qui === "choix" ? prep.participants.filter((p) => joueurs.some((j) => j.pseudo === p)) : joueurs.map((j) => j.pseudo));
+function completerEquipes() {
+  const l = joueursPrep(), eq = {};
+  for (const p of l) if (prep.equipes[p]) eq[p] = prep.equipes[p];
+  for (const p of l) if (!eq[p]) { const n1 = Object.values(eq).filter((e) => e === 1).length, n2 = Object.values(eq).filter((e) => e === 2).length; eq[p] = n1 <= n2 ? 1 : 2; }
+  const change = JSON.stringify(eq) !== JSON.stringify(prep.equipes);
+  prep.equipes = eq;
+  return change;
+}
+function equipesHasard() {
+  const l = joueursPrep().slice();
+  for (let i = l.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [l[i], l[j]] = [l[j], l[i]]; }
+  prep.equipes = Object.fromEntries(l.map((p, i) => [p, (i % 2) + 1]));
+}
+function equipesEquilibrees() {
+  // les élèves rangés selon le classement, répartis en « serpent » : 1, 2, 2, 1, 1, 2, 2, 1…
+  const cls = classementCumule(scoresPrep), rang = (p) => { const t = cls.find((x) => x.pseudo === p); return t ? t.rang : 999; };
+  const l = joueursPrep().slice().sort((a, b) => rang(a) - rang(b) || a.localeCompare(b));
+  prep.equipes = Object.fromEntries(l.map((p, i) => [p, [1, 2, 2, 1][i % 4]]));
+}
+// un élève qui arrive pendant une manche en équipes rejoint l'équipe la plus petite (et le voit tout de suite)
+function repartirRetardataires() {
+  if (!salle) return;
+  if (prep && prep.mode === "equipes" && (salle.phase === "attente" || salle.phase === "resultats") && prep.manche === salle.manche + 1) {
+    if (completerEquipes()) { publierPrep(); const b = $("#prep"); if (b && b.dataset.ouvert) panneauPrep(b, scoresPrep); }
+  }
+  const c = configActuelle();
+  if (c && c.mode === "equipes" && salle.phase === "prog") {
+    const l = salle.duel || joueurs.map((j) => j.pseudo);
+    const eq = { ...(c.equipes || {}) };
+    let change = false;
+    for (const p of l) if (!eq[p]) { const n1 = Object.values(eq).filter((e) => e === 1).length, n2 = Object.values(eq).filter((e) => e === 2).length; eq[p] = n1 <= n2 ? 1 : 2; change = true; }
+    if (change) { c.equipes = eq; db.definirConfig(CODE, SECRET, c).catch(() => {}); const r = $("#rosters"); if (r) r.innerHTML = rostersHTML(eq, l); }
+  }
+}
+function rostersHTML(equipes, liste) {
+  const col = (e) => `<div class="eq eq${e}"><h4>${EQUIPES[e].icone} Équipe ${EQUIPES[e].nom} (${liste.filter((p) => equipes[p] === e).length})</h4>
+    <div class="eq-noms">${liste.filter((p) => equipes[p] === e).map((p) => `<span class="eq-nom">${esc(p)}</span>`).join("") || '<span class="muted petit">personne</span>'}</div></div>`;
+  return `<div class="eq-cols">${col(1)}${col(2)}</div>`;
+}
+
+const PRESETS = {
+  rematch: { label: "🔁 Rematch", titre: "", f: () => ({ mode: "solo", coef: 1, qui: "tous", titre: "", nouveaute: prepDefaut(prep.manche, scoresPrep).nouveaute, duree: prep.manche === 1 ? reglages.duree1 : reglages.duree }) },
+  equipes: { label: "👥 En équipes", f: () => ({ mode: "equipes", coef: 1, qui: "tous", titre: "Manche en équipes" }) },
+  duel: { label: "⛈️ Duel des champions", f: () => ({ mode: "solo", coef: 0, qui: "choix", participants: classementCumule(scoresPrep).slice(0, 3).map((t) => t.pseudo), nouveaute: TWIST_DUEL, duree: reglages.dureeDuel, titre: "Duel des champions" }) },
+  entrainement: { label: "🏋️ Entraînement", f: () => ({ coef: 0, titre: "Manche d'entraînement" }) },
+};
+
+function panneauPrep(box, scores) {
+  scoresPrep = scores;
+  box.dataset.ouvert = "1";
+  if (prep.mode === "equipes") completerEquipes();
+  const tous = joueurs.map((j) => j.pseudo);
+  const liste = joueursPrep();
+  box.innerHTML = `<div class="prep card">
+    <h3>⚙️ Préparer la manche ${prep.manche}</h3>
+    <div class="row presets"><span class="petit muted">Raccourcis :</span>${Object.entries(PRESETS).map(([k, v]) => `<button class="btn small ghost" data-preset="${k}">${v.label}</button>`).join("")}</div>
+    <div class="prep-grille">
+      <label class="champ petit">🏷️ Titre (facultatif)<input type="text" data-k="titre" maxlength="40" value="${esc(prep.titre)}" placeholder="Manche ${prep.manche}"></label>
+      <label class="champ petit">🌊 Nouveauté<select data-k="nouveaute">${Object.entries(TWISTS).map(([k, T]) => `<option value="${k}" ${k === prep.nouveaute ? "selected" : ""}>${T.icone} ${T.nom}</option>`).join("")}</select></label>
+      <label class="champ petit">⏱️ Programmation (min)<input type="number" data-k="dureeMin" min="0.5" max="30" step="0.5" value="${prep.duree / 60}"></label>
+      <label class="champ petit">🧮 Points<select data-k="coef"><option value="1" ${prep.coef === 1 ? "selected" : ""}>normaux</option><option value="2" ${prep.coef === 2 ? "selected" : ""}>doubles (×2)</option><option value="0" ${prep.coef === 0 ? "selected" : ""}>hors classement</option></select></label>
+      <label class="champ petit">🤖 Compléter jusqu'à (tortues)<input type="number" data-k="bots" min="0" max="20" value="${prep.bots}"></label>
+    </div>
+    <div class="prep-ligne"><b>🐢 Qui joue ?</b>
+      <label><input type="radio" name="qui" value="tous" ${prep.qui === "tous" ? "checked" : ""}> toute la classe</label>
+      <label><input type="radio" name="qui" value="choix" ${prep.qui === "choix" ? "checked" : ""}> seulement :</label>
+      ${prep.qui === "choix" ? `<span class="choix-joueurs">${tous.map((p) => `<button class="chip ${prep.participants.includes(p) ? "on" : ""}" data-joueur="${esc(p)}">${esc(p)}</button>`).join("") || '<span class="muted petit">aucun élève connecté</span>'}</span>` : ""}
+    </div>
+    <div class="prep-ligne"><b>👥 Mode</b>
+      <label><input type="radio" name="mode" value="solo" ${prep.mode === "solo" ? "checked" : ""}> chacun pour soi</label>
+      <label><input type="radio" name="mode" value="equipes" ${prep.mode === "equipes" ? "checked" : ""}> deux équipes (seul le score de l'équipe compte)</label>
+    </div>
+    ${prep.mode === "equipes" ? `<div class="prep-equipes">
+      <div class="row"><button class="btn small" data-eq="hasard">🎲 Au hasard</button><button class="btn small" data-eq="equilibre">⚖️ Équilibrées (classement)</button>
+      <span class="petit muted">Clique sur un nom pour le changer d'équipe.</span></div>
+      <div class="eq-cols">${[1, 2].map((e) => `<div class="eq eq${e}"><h4>${EQUIPES[e].icone} Équipe ${EQUIPES[e].nom} (${liste.filter((p) => prep.equipes[p] === e).length})</h4>
+        <div class="eq-noms">${liste.filter((p) => prep.equipes[p] === e).map((p) => `<button class="eq-nom" data-bascule="${esc(p)}">${esc(p)}</button>`).join("") || '<span class="muted petit">personne</span>'}</div></div>`).join("")}</div>
+      <p class="petit">Points : équipe gagnante <b>${POINTS_EQUIPE.gagne}</b> pts chacun, perdante <b>${POINTS_EQUIPE.perd}</b>, égalité <b>${POINTS_EQUIPE.egalite}</b> (× le coefficient). On compare la moyenne de nids par élève (utile si une équipe a un élève de plus). Les 🤖 ne sont dans aucune équipe : ce sont des concurrentes neutres.</p>
+    </div>` : ""}
+    <p class="petit ok-publie">📣 Publié : les élèves voient déjà ces réglages${prep.mode === "equipes" ? " et <b>leur équipe</b> (ils peuvent préparer une stratégie)" : ""}.</p>
+    <div class="row"><button class="btn big corail" id="go">▶ Lancer la manche ${prep.manche}${prep.mode === "equipes" ? " 👥" : ""}${prep.coef === 2 ? " (×2)" : prep.coef === 0 ? " (hors classement)" : ""}</button></div>
+  </div>`;
+  const maj = (redessiner = true) => { publierPrep(); if (redessiner) panneauPrep(box, scores); };
+  box.querySelectorAll("[data-preset]").forEach((b) => b.addEventListener("click", () => { Object.assign(prep, PRESETS[b.dataset.preset].f()); if (prep.mode === "equipes" && !Object.keys(prep.equipes).length) equipesHasard(); maj(); }));
+  box.querySelectorAll("[data-k]").forEach((i) => i.addEventListener("change", () => {
+    const k = i.dataset.k;
+    if (k === "dureeMin") prep.duree = Math.round(Math.max(0.5, parseFloat(i.value) || 1) * 60);
+    else if (k === "coef" || k === "bots") prep[k] = parseInt(i.value, 10) || 0;
+    else prep[k] = i.value;
+    maj(k === "coef");
+  }));
+  box.querySelectorAll("input[name=qui]").forEach((r) => r.addEventListener("change", () => { prep.qui = r.value; if (prep.qui === "choix" && !prep.participants.length) prep.participants = tous.slice(); maj(); }));
+  box.querySelectorAll("input[name=mode]").forEach((r) => r.addEventListener("change", () => { prep.mode = r.value; if (prep.mode === "equipes" && !Object.keys(prep.equipes).length) equipesHasard(); maj(); }));
+  box.querySelectorAll("[data-joueur]").forEach((b) => b.addEventListener("click", () => {
+    const p = b.dataset.joueur; prep.participants = prep.participants.includes(p) ? prep.participants.filter((x) => x !== p) : [...prep.participants, p]; maj();
+  }));
+  box.querySelectorAll("[data-eq]").forEach((b) => b.addEventListener("click", () => { if (b.dataset.eq === "hasard") equipesHasard(); else equipesEquilibrees(); maj(); }));
+  box.querySelectorAll("[data-bascule]").forEach((b) => b.addEventListener("click", () => { const p = b.dataset.bascule; prep.equipes[p] = prep.equipes[p] === 1 ? 2 : 1; maj(); }));
+  $("#go", box).addEventListener("click", lancerManche);
+  publierPrep();
 }
 
 // ---------- programmation ----------
 function scProg(st) {
   const T = TWISTS[salle.nouveaute] || TWISTS.calme;
+  const c = configActuelle() || {};
+  const liste = participantsHumains();
   st.innerHTML = `<div class="stage-centre">
-    <h2 class="titre-scene">${salle.duel ? "⛈️ Duel des champions" : `⌨️ Manche ${salle.manche} : programmez vos tortues !`}</h2>
-    ${salle.duel ? `<p class="consigne">Finalistes : <b>${salle.duel.map(esc).join(" · ")}</b> ${salle.duel.length < reglages.min ? ` (+ ${reglages.min - salle.duel.length} tortues d'entraînement 🤖)` : ""}</p>` : ""}
+    <h2 class="titre-scene">⌨️ ${esc(titreManche())} : programmez vos tortues !</h2>
+    ${c.coef === 2 ? `<p class="consigne"><span class="pill or-pill">⭐ Points doubles</span></p>` : c.coef === 0 ? `<p class="consigne"><span class="pill sombre">Hors classement</span></p>` : ""}
+    ${salle.duel ? `<p class="consigne">Jouent : <b>${salle.duel.map(esc).join(" · ")}</b></p>` : ""}
+    ${c.mode === "equipes" ? `<div id="rosters">${rostersHTML(c.equipes || {}, liste)}</div><p class="consigne">👥 Seul le <b>score de l'équipe</b> compte : mettez-vous d'accord !</p>` : ""}
     <div id="tw"></div>
     <div class="grand-chrono chrono" id="gc">--:--</div>
     <p class="consigne"><b id="nb-env">0</b> / <span id="nb-tot">0</span> tortues envoyées</p>
@@ -274,7 +415,7 @@ function scProg(st) {
   majEnvois();
 }
 function participantsHumains() {
-  return salle.duel ? salle.duel.slice() : joueurs.map((j) => j.pseudo);
+  return salle.duel ? salle.duel.filter((p) => joueurs.some((j) => j.pseudo === p)) : joueurs.map((j) => j.pseudo);
 }
 function majEnvois() {
   const e = $("#nb-env"); if (!e) return;
@@ -311,23 +452,26 @@ const FEED = {
   plastique: (n) => [`🛍️ <b>${n}</b> a avalé un sac plastique…`, "capture"],
   epuisee: (n) => [`😵 <b>${n}</b> est épuisée !`, "capture"],
   pousse: (n, e, noms) => [`💥 <b>${n}</b> pousse ${esc(noms[e.cible] ? noms[e.cible].nom : e.cible)}${e.requin ? " sur un requin !" : ""}`, "capture"],
+  don: (n, e, noms) => [`🎁 <b>${n}</b> donne ${e.n} ⚡ à ${esc(noms[e.cible] ? noms[e.cible].nom : e.cible)}`, "nid"],
 };
 async function scBrawl(st) {
   st.innerHTML = `<div class="stage-centre"><div class="emoji">🌊</div><h2>Les tortues plongent…</h2></div>`;
   let tortues, scores;
   try { [tortues, scores, joueurs] = await Promise.all([db.tortues(CODE), db.scores(CODE), db.joueurs(CODE)]); }
   catch (e) { toast(e.message, "err"); return; }
-  const m = salle.manche, duel = !!salle.duel;
-  // participants : élèves (ou finalistes) + tortues d'entraînement si besoin
+  const m = salle.manche, c = configActuelle() || {};
+  // participants : élèves (ou ceux choisis par l'enseignant) + tortues d'entraînement 🤖
+  // seulement pour compléter le lagon jusqu'au minimum (8 par défaut)
   let pseudos = participantsHumains();
-  // les tortues d'entraînement 🤖 servent seulement à compléter le lagon jusqu'au minimum (8 par défaut)
-  pseudos = [...pseudos, ...botsPourCompleter(pseudos.length, reglages.min)];
+  pseudos = [...pseudos, ...botsPourCompleter(pseudos.length, c.bots ?? reglages.min)];
   if (!pseudos.length) { toast("Aucune tortue dans le lagon !", "err"); return; }
-  const sim = lancerSimulation(salle, m, pseudos, joueurs, tortues, salle.nouveaute);
+  const equipes = c.mode === "equipes" ? equipesCompletes(pseudos, c.equipes || {}) : null;
+  const sim = lancerSimulation(salle, m, pseudos, joueurs, tortues, salle.nouveaute, null, equipes);
   const T = TWISTS[salle.nouveaute] || TWISTS.calme;
   st.innerHTML = `<div class="brawl-grid">
-    <div><h2 class="titre-scene gauche">🎬 ${duel ? "Duel des champions" : "Manche " + m} · ${T.icone} ${esc(T.nom)}</h2><div id="vue"></div></div>
+    <div><h2 class="titre-scene gauche">🎬 ${esc(titreManche())} · ${T.icone} ${esc(T.nom)}</h2><div id="vue"></div></div>
     <div class="cote-brawl">
+      ${equipes ? `<div class="card score-equipes" id="score-eq"></div>` : ""}
       <div class="card"><h3>🏆 En direct</h3><ol class="live-rank" id="live"></ol></div>
       <div class="card"><h3>📣 Le fil du match</h3><ul class="feed" id="feed"></ul></div>
       <button class="btn big or" id="fini" style="width:100%;justify-content:center;margin-top:12px">⏭ Voir les résultats</button>
@@ -338,7 +482,14 @@ async function scBrawl(st) {
   const majDirect = (t) => {
     const cpt = {}; for (const n of sim.nids) if (n.tick <= t && !(n.perdu != null && n.perdu <= t)) cpt[n.id] = (cpt[n.id] || 0) + 1;
     const cl = sim.tortues.map((x) => ({ ...x, n: cpt[x.id] || 0 })).sort((a, b) => b.n - a.n || estBot(a.id) - estBot(b.id) || String(a.nom).localeCompare(String(b.nom))).slice(0, 10);
-    $("#live").innerHTML = cl.map((x) => `<li class="${estBot(x.id) ? "bot" : ""}"><span class="swatch" style="background:${x.couleur}"></span>${esc(x.nom)}<span class="n">${x.n} 🥚</span></li>`).join("");
+    $("#live").innerHTML = cl.map((x) => `<li class="${estBot(x.id) ? "bot" : ""}">${x.equipe ? EQUIPES[x.equipe].icone : ""}<span class="swatch" style="background:${x.couleur}"></span>${esc(x.nom)}<span class="n">${x.n} 🥚</span></li>`).join("");
+    if (equipes) {
+      const tot = { 1: 0, 2: 0 }, n = { 1: 0, 2: 0 };
+      for (const x of sim.tortues) { tot[x.equipe] += cpt[x.id] || 0; n[x.equipe]++; }
+      const moy = (e) => (n[e] ? tot[e] / n[e] : 0);
+      $("#score-eq").innerHTML = `<div class="duel-eq"><div class="e1">${EQUIPES[1].icone} ${EQUIPES[1].nom}<b>${tot[1]} 🥚</b><small>moy. ${moy(1).toFixed(1)}</small></div>
+        <div class="vs">VS</div><div class="e2">${EQUIPES[2].icone} ${EQUIPES[2].nom}<b>${tot[2]} 🥚</b><small>moy. ${moy(2).toFixed(1)}</small></div></div>`;
+    }
     if (t < dernier) $("#feed").innerHTML = "";
     const ev = sim.events.filter((e) => e.tick > dernier && e.tick <= t && (e.type === "nid" || !estBot(e.id)));
     for (const e of ev) {
@@ -354,7 +505,7 @@ async function scBrawl(st) {
   const terminer = async () => {
     if (fini) return; fini = true;
     $("#fini").disabled = true;
-    const res = calculerScores(sim, m, scores, duel);
+    const res = calculerScores(sim, m, scores, { coef: c.coef ?? (salle.duel ? 0 : 1) });
     try {
       await db.enregistrerScores(CODE, SECRET, m, res);
       await piloter({ phase: "resultats" });
@@ -379,49 +530,42 @@ async function scResultats(st) {
   const info = infosManche(scores, salle.manche);
   if (!info) { st.innerHTML = `<p>Pas de scores pour cette manche.</p>`; return; }
   const T = TWISTS[info.twist] || TWISTS.calme;
-  const sm = scores.filter((s) => s.manche === info.manche && !estBot(s.pseudo)).sort((a, b) => a.rang - b.rang);
-  const sim = lancerSimulation(salle, info.manche, info.pseudos, joueurs, tortues, info.twist);
+  const sm = scores.filter((s) => s.manche === info.manche && !estBot(s.pseudo)).sort((a, b) => a.rang - b.rang || b.nids - a.nids);
+  const sim = lancerSimulation(salle, info.manche, info.pseudos, joueurs, tortues, info.twist, null, info.equipes);
   const cap = Object.fromEntries(sim.resultats.map((r) => [r.id, r.captures]));
   const progres = sm.filter((s) => s.bonus > 0);
   const cls = classementCumule(scores);
-  const prochaine = salle.manche + 1;
-  const twistSuivant = TWIST_ORDER[Math.min(TWIST_ORDER.length - 1, scores.filter((s) => !s.duel).map((s) => s.manche).filter((v, i, a) => a.indexOf(v) === i).length)];
-  st.innerHTML = `<h2 class="titre-scene">🏆 Résultats ${info.duel ? "du duel des champions" : "de la manche " + info.manche} · ${T.icone}</h2>
-    ${podium(sm.slice(0, 3).map((s) => ({ nom: s.pseudo, det: `${s.nids} 🥚${info.duel ? "" : ` · ${s.points + s.bonus} pts`}` })))}
+  const E = sim.equipes;
+  const bandeauEquipes = E ? `<div class="resultat-equipes">
+      ${E.gagnant ? `<div class="gagnant">🏆 Victoire de l'équipe ${EQUIPES[E.gagnant].icone} <b>${EQUIPES[E.gagnant].nom}</b> !</div>` : `<div class="gagnant">🤝 Égalité parfaite !</div>`}
+      <div class="duel-eq">${[1, 2].map((e) => `<div class="e${e}">${EQUIPES[e].icone} ${EQUIPES[e].nom}<b>${E[e].nids} 🥚</b><small>${E[e].n} élève${E[e].n > 1 ? "s" : ""} · moyenne ${E[e].moyenne.toFixed(2)}</small>
+        <div class="petit">${E[e].membres.map((p) => esc(sim.tortues.find((t) => t.id === p).nom)).join(", ")}</div></div>`).join('<div class="vs">VS</div>')}</div></div>` : "";
+  st.innerHTML = `<h2 class="titre-scene">🏆 Résultats : ${esc(titreManche())} · ${T.icone}</h2>
+    ${E ? bandeauEquipes : podium(sm.slice(0, 3).map((s) => ({ nom: s.pseudo, det: `${s.nids} 🥚${info.duel ? "" : ` · ${s.points + s.bonus} pts`}` })))}
     ${progres.length ? `<div class="msg ok centre-txt">📈 <b>Bonus progrès (+${BONUS_PROGRESSION})</b> : ${progres.map((s) => esc(s.pseudo)).join(", ")}</div>` : ""}
     <div class="grid2" style="margin-top:14px">
       <div><h3>Ce match</h3><table class="scores"><tr><th class="num">#</th><th>Élève</th><th class="num">🥚</th><th class="num">🦈</th><th class="num">Points</th></tr>
-        ${sm.map((s) => `<tr><td class="num">${s.rang}</td><td><span class="swatch" style="background:${(joueurs.find((j) => j.pseudo === s.pseudo) || {}).couleur || "#ccc"}"></span>${esc(s.pseudo)}</td><td class="num">${s.nids}</td><td class="num">${cap[s.pseudo] ?? "–"}</td><td class="num">${info.duel ? "–" : s.points + (s.bonus ? ` <small class="bonus">+${s.bonus}</small>` : "")}</td></tr>`).join("")}
-        ${sim.resultats.filter((r) => estBot(r.id)).map((r) => `<tr class="bot"><td class="num">🤖</td><td>${esc(r.nom)}</td><td class="num">${r.nids}</td><td class="num">${r.captures}</td><td class="num">–</td></tr>`).join("")}
+        ${sm.map((s) => `<tr><td class="num">${E ? EQUIPES[s.equipe] ? EQUIPES[s.equipe].icone : "" : s.rang}</td><td><span class="swatch" style="background:${(joueurs.find((j) => j.pseudo === s.pseudo) || {}).couleur || "#ccc"}"></span>${esc(s.pseudo)}</td><td class="num">${s.nids}</td><td class="num">${cap[s.pseudo] ?? "–"}</td><td class="num">${info.duel ? "–" : s.points + (s.bonus ? ` <small class="bonus">+${s.bonus}</small>` : "")}</td></tr>`).join("")}
+        ${sim.resultats.filter((r) => estBot(r.id)).map((r) => `<tr class="bot"><td class="num">${r.equipe ? EQUIPES[r.equipe].icone : "🤖"}</td><td>${esc(r.nom)}</td><td class="num">${r.nids}</td><td class="num">${r.captures}</td><td class="num">–</td></tr>`).join("")}
       </table></div>
       <div><h3>Classement de la séance</h3>${tableauCumule(cls, 12)}</div>
     </div>
-    <div class="msg info" style="margin-top:14px">🔍 <b>Laissez 2-3 minutes aux élèves</b> : sur leur écran, ils revoient le match en suivant leur tortue, ligne par ligne, avec des conseils. Puis lancez le rematch !</div>
+    <div class="msg info" style="margin-top:14px">🔍 <b>Laissez 2-3 minutes aux élèves</b> : sur leur écran, ils revoient le match en suivant leur tortue, ligne par ligne, avec des conseils. Pendant ce temps, préparez la manche suivante ci-dessous.</div>
     <div class="row centre actions-fin" id="actions"></div>
-    <div id="replay" style="margin-top:14px"></div>`;
+    <div id="replay" style="margin-top:14px"></div>
+    <div id="prep"></div>`;
   const act = $("#actions");
-  const sel = selectTwist(twistSuivant);
-  const bSuiv = el("button", { class: "btn big corail" }, `▶ ${info.duel ? "Nouvelle manche" : "Rematch : manche " + prochaine}`);
-  bSuiv.addEventListener("click", () => lancerManche(prochaine, sel.value, reglages.duree, null));
   const bRevoir = el("button", { class: "btn ghost" }, "🎬 Revoir le match");
   bRevoir.addEventListener("click", () => {
     if (viewer) viewer.destroy();
     viewer = new MatchViewer($("#replay"), { sim, pensee: false, vitesse: 5, marqueurs: [] });
     $("#replay").scrollIntoView({ behavior: "smooth" });
   });
-  const top3 = cls.slice(0, 3).map((t) => t.pseudo);
-  const bDuel = el("button", { class: "btn or" }, "⛈️ Duel des champions");
-  bDuel.title = "Les 3 premiers du classement s'affrontent dans la tempête (hors classement)";
-  bDuel.addEventListener("click", () => {
-    if (top3.length < 2) return toast("Il faut au moins 2 élèves classés.", "err");
-    if (!confirm(`Duel des champions entre ${top3.join(", ")}, nouveauté « Tempête » (des tortues d'entraînement 🤖 complètent le lagon).\nLes autres élèves regardent et continuent à s'entraîner. On y va ?`)) return;
-    lancerManche(prochaine, TWIST_DUEL, reglages.dureeDuel, top3);
-  });
   const bFin = el("button", { class: "btn sombre" }, "🏁 Terminer la séance");
   bFin.addEventListener("click", () => { if (confirm("Terminer la séance et afficher le podium final ?")) piloter({ phase: "fin" }).catch((e) => toast(e.message, "err")); });
-  act.append(bRevoir, el("label", { class: "champ petit" }, "Nouveauté suivante", sel), bSuiv);
-  if (!info.duel && cls.length >= 2) act.append(bDuel);
-  act.append(bFin);
+  act.append(bRevoir, bFin);
+  chargerPrep(salle.manche + 1, scores);
+  panneauPrep($("#prep"), scores);
 }
 
 function podium(top) {
@@ -447,7 +591,7 @@ async function scFin(st) {
   st.innerHTML = `<h2 class="titre-scene">🏁 Fin de la séance : bravo à toutes les tortues !</h2>
     ${podium(cls.slice(0, 3).map((t) => ({ nom: t.pseudo, det: `${t.total} pts · ${t.nids} 🥚` })))}
     <div class="row centre trophees">
-      ${champion ? `<div class="trophee"><span class="ic">⛈️</span><b>Champion·ne du duel</b>${esc(champion.pseudo)} (${champion.nids} 🥚)</div>` : ""}
+      ${champion ? `<div class="trophee"><span class="ic">⭐</span><b>Meilleur·e de la manche spéciale</b>${esc(champion.pseudo)} (${champion.nids} 🥚)</div>` : ""}
       ${mp ? `<div class="trophee"><span class="ic">📈</span><b>Meilleure progression</b>${esc(mp.pseudo)} (de ${mp.de} à ${mp.a} nids)</div>` : ""}
     </div>
     <h3>Classement final</h3>${tableauCumule(cls)}
