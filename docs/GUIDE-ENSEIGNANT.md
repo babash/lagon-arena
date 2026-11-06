@@ -89,14 +89,16 @@ Le bouton **🔗 Lien d'accès élèves** de la salle redonne le lien et le mess
 
 ## 6. Le Panthéon
 
-Le [Panthéon](https://babash.github.io/lagon-arena/pantheon.html) classe les **100 meilleures tortues de tous les temps**, toutes classes confondues. Depuis son bac à sable, un élève clique sur **🏛️ Proposer au Panthéon** :
+Le [Panthéon](https://babash.github.io/lagon-arena/pantheon.html) classe les **100 meilleures tortues de tous les temps**, toutes classes confondues. Chaque tortue y est affichée avec **le pseudo, la classe et la date** (« Moya · classe K7PQ · 6 nov. 2026 »), plus l'établissement s'il est renseigné : deux élèves de classes différentes peuvent donc avoir le même pseudo. Depuis son bac à sable, un élève clique sur **🏛️ Proposer au Panthéon** :
 
 - sa tortue joue **20 parties** dans le lagon calme contre les 5 tortues d'entraînement, sur **les mêmes 20 lagons pour tout le monde** : son score est sa **moyenne de nids** ;
-- il choisit un pseudo et, s'il le veut, son **établissement** (on peut ensuite afficher le classement d'un seul établissement). Si l'enseignant a renseigné l'établissement de la salle, il est déjà proposé ;
-- il reçoit un **code Panthéon** pour améliorer sa tortue plus tard : la nouvelle version remplace l'ancienne si elle fait mieux ;
+- **depuis la salle**, sa tortue est inscrite avec **son pseudo de la salle** et **sa classe** (le code de la salle, prouvé par son jeton de session), et avec l'établissement que l'enseignant a renseigné en créant la salle. Il n'a rien à taper ;
+- **depuis le bac à sable seul**, elle est affichée « hors classe » : il choisit un pseudo et, s'il le veut, un établissement ;
+- on peut afficher le classement d'un seul établissement ;
+- il reçoit un **code Panthéon** pour améliorer sa tortue plus tard : la nouvelle version remplace l'ancienne si elle fait mieux (et reste rattachée à sa classe, même améliorée depuis chez lui) ;
 - son **programme est gardé mais jamais lisible** ; on ne peut pas entrer deux fois avec le même programme, ni avec une tortue d'entraînement ou une stratégie des tutoriels recopiée telle quelle.
 
-Les tortues d'entraînement apparaissent dans le classement comme **repères** (la Championne fait 5,5 nids en moyenne sur ce banc d'essai). Chaque score est **recalculé** par l'administrateur du site (⏳ puis ✔), qui peut aussi retirer une tortue au pseudo ou au lycée inapproprié.
+Les tortues d'entraînement apparaissent dans le classement comme **repères** (la Championne fait 5,5 nids en moyenne sur ce banc d'essai). Chaque score est **recalculé** par l'administrateur du site (⏳ puis ✔), qui peut aussi retirer une tortue au pseudo ou à l'établissement inapproprié.
 
 C'est un bon objectif pour les élèves rapides, ou pour prolonger le travail à la maison : « Entrez au Panthéon, et battez la Championne ! »
 

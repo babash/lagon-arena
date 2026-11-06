@@ -54,7 +54,7 @@ La tortue fournie au départ sait manger… mais **ne pond jamais** : sans rien 
 | **Un lagon sur mesure** | La nouveauté de manche (calme, plastique, tempête…), puis, si vous voulez, le détail : nombre de requins, leur vitesse, le plastique, les heures de nuit, le corail, les algues. |
 | **Pour les élèves les plus à l'aise** | Un [tutoriel avancé](https://babash.github.io/lagon-arena/tuto-avance.html) en trois niveaux : 🥈 intermédiaire, 🥇 expert (choisir ses algues), 👥 équipe. |
 | **Pour s'entraîner seul** | Le [bac à sable](https://babash.github.io/lagon-arena/eleve.html?libre=1), contre 5 tortues d'entraînement, avec une estimation sur 50 parties. |
-| **Le Panthéon** | Les [100 meilleures tortues de tous les temps](https://babash.github.io/lagon-arena/pantheon.html), toutes jugées sur les mêmes 20 lagons ; classement par établissement. Le programme des tortues reste secret. |
+| **Le Panthéon** | Les [100 meilleures tortues de tous les temps](https://babash.github.io/lagon-arena/pantheon.html), toutes jugées sur les mêmes 20 lagons, affichées avec le pseudo, la classe et la date ; classement par établissement. Le programme des tortues reste secret. |
 
 ## Pourquoi ça marche
 

@@ -2,8 +2,10 @@
 //  Lagon Arena — élève : proposer sa tortue au PANTHÉON (les meilleures de tous les temps)
 //   1. la tortue passe le banc d'essai (20 lagons, toujours les mêmes) dans ce navigateur ;
 //   2. l'élève voit sa moyenne et la place qu'elle aurait ;
-//   3. il l'inscrit avec un pseudo (et son lycée, s'il veut) ; son CODE PANTHÉON lui permet
-//      de l'améliorer plus tard, depuis n'importe quel ordinateur.
+//   3. il l'inscrit. Depuis une salle : avec le pseudo de la salle et sa CLASSE (le code de la salle,
+//      prouvé par son jeton de session) ; l'établissement est celui que l'enseignant a donné.
+//      Depuis le bac à sable : « hors classe », avec un pseudo et un établissement s'il veut.
+//      Son CODE PANTHÉON lui permet de l'améliorer plus tard, depuis n'importe quel ordinateur.
 //  Son programme est gardé dans la base, mais personne d'autre ne peut le lire.
 // =====================================================================
 import { db } from "../db.js";
@@ -11,10 +13,10 @@ import { $, el, esc, toast, store, nouveauCodePerso, normaliserCode, codeValide,
 import { BANC, evaluerBanc, codeConnu } from "../pantheon.js";
 import { PALIERS, PALIER_EQUIPE } from "../pouce.js";
 import { ed, verifier } from "./editeur.js";
-import { PSEUDO, S } from "./etat.js";
+import { PSEUDO, SALLE, LIBRE, S } from "./etat.js";
 import { overlay } from "./ui.js";
 
-const CLE = "lagon:pantheon";   // { code (code Panthéon), pseudo, lycee } — 1 jour, comme tout ce qui est à l'élève
+const CLE = "lagon:pantheon";   // { code (code Panthéon), pseudo, lycee, salle } — 1 jour, comme tout ce qui est à l'élève
 const jetonPantheon = (c) => `pantheon-${c}-lagon`;
 const nombre = (x) => Number(x).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 // les programmes du coup de pouce (sans les « + » qui marquent les lignes nouvelles)
@@ -55,27 +57,33 @@ function placeVisee(moyenne, top) {
 async function formulaire(code, r, top) {
   const memo = store.get(CLE, {}) || {};
   const place = placeVisee(r.moyenne, top);
+  const classe = !LIBRE && S.jeton ? SALLE : null;   // en classe : le pseudo et l'établissement viennent de la salle
+  const etab = classe ? (S.salle && S.salle.etablissement) || "" : memo.lycee || "";
   overlay(`<div class="emoji">🏛️</div><h2>${nombre(r.moyenne)} nids en moyenne</h2>
     <p class="petit">Sur les ${BANC.parties} lagons : de ${r.min} à ${r.max} nids, ${r.zeros} partie${r.zeros > 1 ? "s" : ""} sans nid.</p>
     <p>${place.dedans ? `👉 Ta tortue entrerait au Panthéon à la <b>${place.rang}${place.rang === 1 ? "re" : "e"} place</b>${place.rang === 1 ? " : la meilleure de tous les temps !" : "."}`
       : `Il faut plus de <b>${nombre(place.seuil)}</b> nids en moyenne pour entrer dans le top 100. Continue à l'améliorer !`}</p>
     <form id="pt-form" class="form-pantheon">
-      <label class="champ"><span>Pseudo au Panthéon <span class="petit muted">(pas ton vrai nom)</span></span>
+      ${classe ? `<div class="pt-classe">🐢 <b>${esc(PSEUDO)}</b> · 🏫 classe <b>${esc(classe)}</b>${etab ? ` · ${esc(etab)}` : ""} · ${new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+          <div class="petit muted">C'est ce qui sera affiché au Panthéon : ton pseudo de la salle, ta classe et la date${etab ? ", avec l'établissement donné par ton enseignant" : ""}.</div></div>
+        <input type="hidden" id="pt-pseudo" value="${esc(PSEUDO)}"><input type="hidden" id="pt-lycee" value="">`
+      : `<label class="champ"><span>Pseudo au Panthéon <span class="petit muted">(pas ton vrai nom)</span></span>
         <input type="text" id="pt-pseudo" maxlength="14" required value="${esc(memo.pseudo || PSEUDO || "")}" autocomplete="off"></label>
       <label class="champ"><span>Ton établissement <span class="petit muted">(facultatif)</span></span>
-        <input type="text" id="pt-lycee" maxlength="60" list="pt-lycees" value="${esc(memo.lycee || (S.salle && S.salle.etablissement) || "")}" placeholder="ex. Lycée de Chirongui" autocomplete="off"></label>
+        <input type="text" id="pt-lycee" maxlength="60" list="pt-lycees" value="${esc(etab)}" placeholder="ex. Lycée de Chirongui" autocomplete="off"></label>
       <datalist id="pt-lycees"></datalist>
+      <p class="petit muted">Proposée depuis le bac à sable, ta tortue sera affichée « hors classe ». Pour l'afficher avec ta classe, propose-la depuis la salle de ton enseignant.</p>`}
       <details ${memo.code ? "open" : ""}><summary>🔑 Ta tortue est déjà au Panthéon ?</summary>
         <label class="champ"><span>Ton code Panthéon <span class="petit muted">(la nouvelle tortue remplace l'ancienne si elle fait mieux)</span></span>
           <input type="text" id="pt-code" maxlength="12" class="input-code" value="${esc(codeLisible(memo.code || ""))}" placeholder="ex. K7PQ-2XMA" autocomplete="off" spellcheck="false"></label>
       </details>
-      <p class="petit muted">Ton programme est gardé, mais <b>personne ne pourra le lire</b>. Ton pseudo, ton établissement et ta moyenne seront visibles par tous.</p>
+      <p class="petit muted">Ton programme est gardé, mais <b>personne ne pourra le lire</b>. Ton pseudo, ${classe ? "ta classe" : "ton établissement"}, la date et ta moyenne seront visibles par tous.</p>
       <div class="row" style="justify-content:center"><button class="btn big" type="submit">🏛️ Entrer au Panthéon</button>
         <button class="btn ghost" type="button" id="pt-annuler">Plus tard</button></div>
       <div id="pt-erreur" class="msg err cache"></div>
     </form>`);
   $("#pt-annuler").addEventListener("click", () => overlay(null));
-  db.pantheonLycees().then((l) => { const d = $("#pt-lycees"); if (d) for (const x of l) d.append(el("option", { value: x.lycee })); }).catch(() => {});
+  if (!classe) db.pantheonLycees().then((l) => { const d = $("#pt-lycees"); if (d) for (const x of l) d.append(el("option", { value: x.lycee })); }).catch(() => {});
   $("#pt-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const err = (m) => { const b = $("#pt-erreur"); b.innerHTML = m; b.classList.remove("cache"); };
@@ -84,8 +92,8 @@ async function formulaire(code, r, top) {
     const codeP = saisi || nouveauCodePerso();
     const pseudo = $("#pt-pseudo").value.trim(), lycee = $("#pt-lycee").value.trim();
     try {
-      const res = await db.proposerPantheon({ pseudo, lycee, code, moyenne: r.moyenne, banc: BANC.version, jeton: jetonPantheon(codeP) });
-      store.set(CLE, { code: codeP, pseudo, lycee });
+      const res = await db.proposerPantheon({ pseudo, lycee, code, moyenne: r.moyenne, banc: BANC.version, jeton: jetonPantheon(codeP), salle: classe, jetonSalle: classe ? S.jeton : null });
+      store.set(CLE, { code: codeP, pseudo, lycee: classe ? memo.lycee || "" : lycee, salle: classe || (memo.salle && memo.pseudo === pseudo ? memo.salle : null) });
       bravo(res, codeP);
     } catch (ex) { err(esc(ex.message)); }
   });

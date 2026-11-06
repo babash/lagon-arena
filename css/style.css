@@ -779,3 +779,7 @@ a.compteur:hover { background: rgba(255,255,255,.22); }
 .etab-card .champ { margin-bottom: 4px; }
 .etab-card p { margin: 4px 0 0; }
 .reglages .r-etab { grid-column: 1 / -1; }
+
+/* Panthéon : la classe et la date sous le pseudo (« classe K7PQ · 6 nov. 2026 ») ; en classe, le résumé du formulaire */
+.scores .origine { font-size: .8rem; color: var(--gris); font-weight: 600; }
+.pt-classe { background: var(--fond); border-radius: 10px; padding: 8px 12px; margin: 6px 0 10px; text-align: left; }

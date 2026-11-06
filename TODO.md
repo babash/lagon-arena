@@ -283,9 +283,9 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
   2. écarte celles qui n'ont pondu aucun nid, et les copies des tutoriels ou des tortues d'entraînement ;
   3. leur fait passer le banc d'essai (20 parties, en arrière-plan : chantier 9) ;
   4. les inscrit au Panthéon.
-- [ ] **Ce qu'affiche le Panthéon : le pseudo, la classe et la date.** La classe, c'est le **code de la salle** (ou du devoir). Le trio pseudo + classe + date est unique : deux élèves de classes différentes peuvent avoir le même pseudo.
+- [x] **Ce qu'affiche le Panthéon : le pseudo, la classe et la date.** La classe, c'est le **code de la salle** (ou du devoir). Le trio pseudo + classe + date est unique : deux élèves de classes différentes peuvent avoir le même pseudo. Fait pour les tortues proposées depuis une salle (la classe est prouvée par le jeton de session) ; les entrées automatiques suivront la même règle.
 - [x] **L'établissement est facultatif** : l'enseignant peut le renseigner **en créant la salle ou le devoir** (un champ de plus, vide par défaut, prérempli avec le dernier utilisé), puis le changer dans les réglages de la salle. Il s'affiche sous le code de la salle et il est proposé à l'élève qui inscrit sa tortue au Panthéon. Il est gardé avec la salle.
-  - [ ] Reste à faire avec le Panthéon automatique : l'afficher à côté de la classe, et filtrer par établissement.
+  - [x] Affiché à côté de la classe au Panthéon, et filtre par établissement. Pour une tortue venue d'une salle, c'est l'établissement de la salle qui compte (l'élève ne le tape pas).
 - [ ] **Réglages enseignant** (gardés 60 jours) :
   - « 🏛️ Envoyer les meilleures tortues au Panthéon » : oui par défaut ;
   - 1 ou 3 tortues par manche.
@@ -295,7 +295,7 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
   - même programme déjà au Panthéon : on ne l'ajoute pas ;
   - même élève (même salle, même pseudo) avec une meilleure tortue : on la remplace ;
   - même élève avec une tortue moins bonne : on garde l'ancienne.
-- [ ] **Pseudos en double entre classes (décidé)** : on n'exige plus qu'un pseudo soit unique dans tout le Panthéon. Chaque ligne affiche « Moya · classe K7PQ · 4 nov. 2026 » (et l'établissement s'il a été renseigné), ce qui suffit à distinguer deux Moya.
+- [x] **Pseudos en double entre classes (décidé)** : on n'exige plus qu'un pseudo soit unique dans tout le Panthéon. Chaque ligne affiche « Moya · classe K7PQ · 4 nov. 2026 » (et l'établissement s'il a été renseigné), ce qui suffit à distinguer deux Moya.
   - Les propositions faites à la main depuis le bac à sable (sans salle) affichent « hors classe » à la place du code.
   - Les entrées déjà au Panthéon gardent leur lycée, affiché comme établissement.
 - [ ] Les entrées automatiques restent ⏳ jusqu'à la vérification de l'administrateur, comme les autres.
@@ -304,8 +304,9 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 
 - [x] `salles.etablissement` (texte facultatif), rempli par `creer_salle(établissement)` ; `definir_etablissement(code, secret, établissement)` pour le changer.
 - [ ] `pantheon_classe(code, secret, entrées)` : l'inscription par l'enseignant (avec le secret de la salle).
-- [ ] Les entrées gardent leur origine : salle (la classe), manche, pseudo, date, établissement.
-- [ ] L'index unique `pantheon_pseudo` est remplacé par un index sur (pseudo, salle, date) ; `pantheon_lycees` devient la liste des établissements.
+- [x] Les entrées gardent leur origine : salle (la classe, `pantheon.salle`), pseudo, date, établissement.
+- [ ] … et la manche (pour les entrées automatiques).
+- [x] L'index unique `pantheon_pseudo` est supprimé (pseudo + classe + date suffisent à distinguer deux tortues) ; `pantheon_lycees` sert de liste des établissements.
 - [ ] `mon_entree_pantheon(salle, pseudo, jeton)` : l'élève retrouve son code Panthéon avec son jeton de session.
 
 **C'est fini quand**, après chaque manche, la meilleure tortue apparaît au Panthéon sans que personne n'ait rien fait, et que l'élève concerné le voit avec son code.
@@ -435,5 +436,5 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 |---|---|
 | Déjà sur `main` | Ménage, compteurs, Panthéon, lagon personnalisé : **à relancer** si ce n'est pas encore fait |
 | 3 | `codes_manche` (enseignant) ; option : table `etats` des brouillons |
-| 4 | `salles.etablissement` (facultatif), `pantheon_classe`, origine des entrées (classe, date, établissement), `mon_entree_pantheon`, fin de l'unicité des pseudos |
+| 4 | ✅ `salles.etablissement`, `pantheon.salle` (la classe), fin de l'unicité des pseudos ; reste : `pantheon_classe`, la manche d'origine, `mon_entree_pantheon` |
 | 10 | consigne et date du devoir (dans les réglages de la manche, sans nouvelle table) |

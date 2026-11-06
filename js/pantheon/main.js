@@ -24,8 +24,13 @@ async function charger() {
   $("#resume").textContent = top.length ? `${top.length} tortue${top.length > 1 ? "s" : ""}${lycee ? " dans cet établissement" : ""}` : "";
 }
 
+// « classe K7PQ · 6 nov. 2026 » (ou « hors classe ») : avec le pseudo, c'est ce qui distingue deux tortues
+const jour = (d) => (d ? new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "");
+const origine = (t) => `${t.salle ? `classe ${t.salle}` : "hors classe"}${t.cree_le ? " · " + jour(t.cree_le) : ""}`;
+
 function afficher() {
-  const moi = (store.get("lagon:pantheon", {}) || {}).pseudo;
+  const memo = store.get("lagon:pantheon", {}) || {};
+  const estMoi = (l) => memo.pseudo && l.pseudo === memo.pseudo && (l.salle || null) === (memo.salle || null);
   // les tortues d'entraînement s'intercalent à leur place, sans rang
   const lignes = top.map((t) => ({ ...t, type: "eleve" }));
   for (const r of refs) {
@@ -40,9 +45,9 @@ function afficher() {
         el("td", { class: "num" }, nombre(l.moyenne)), el("td", {}, "")));
       continue;
     }
-    tb.append(el("tr", { class: l.pseudo === moi ? "moi" : l.rang <= 3 ? "top3" : "" },
+    tb.append(el("tr", { class: estMoi(l) ? "moi" : l.rang <= 3 ? "top3" : "" },
       el("td", { class: "num" }, String(medaille(Number(l.rang)))),
-      el("td", {}, el("b", {}, l.pseudo)),
+      el("td", {}, el("b", {}, l.pseudo), el("div", { class: "origine" }, origine(l))),
       el("td", {}, l.lycee ? el("a", { href: "#", "data-lycee": l.lycee, title: "Voir cet établissement" }, l.lycee) : el("span", { class: "muted" }, "—")),
       el("td", { class: "num" }, nombre(l.moyenne)),
       el("td", { title: l.verifie ? "Score recalculé et vérifié" : "En attente de vérification" }, l.verifie ? "✔" : "⏳")));
@@ -75,9 +80,9 @@ async function maTortue(code, annoncer = false) {
   try {
     const t = await db.maTortuePantheon(jetonPantheon(code));
     if (!t) { box.innerHTML = ""; if (annoncer) toast("Aucune tortue avec ce code Panthéon.", "err"); return; }
-    box.innerHTML = `<div class="msg ok">🐢 Ta tortue <b>${esc(t.pseudo)}</b>${t.lycee ? ` (${esc(t.lycee)})` : ""} est <b>${t.rang}${t.rang === 1 ? "re" : "e"}</b> du Panthéon avec <b>${nombre(t.moyenne)}</b> nids en moyenne ${t.verifie ? "✔" : "⏳"}.
+    box.innerHTML = `<div class="msg ok">🐢 Ta tortue <b>${esc(t.pseudo)}</b> (${esc(origine(t))}${t.lycee ? ` · ${esc(t.lycee)}` : ""}) est <b>${t.rang}${t.rang === 1 ? "re" : "e"}</b> du Panthéon avec <b>${nombre(t.moyenne)}</b> nids en moyenne ${t.verifie ? "✔" : "⏳"}.
       Pour l'améliorer : modifie-la dans le <a href="eleve.html?libre=1">bac à sable</a>, puis « 🏛️ Proposer au Panthéon » avec ton code.</div>`;
-    store.set("lagon:pantheon", { ...(store.get("lagon:pantheon", {}) || {}), code, pseudo: t.pseudo, lycee: t.lycee || "" });
+    store.set("lagon:pantheon", { ...(store.get("lagon:pantheon", {}) || {}), code, pseudo: t.pseudo, lycee: t.lycee || "", salle: t.salle || null });
     afficher();
   } catch (e) { if (annoncer) toast(e.message, "err"); }
 }

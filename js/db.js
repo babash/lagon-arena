@@ -101,8 +101,14 @@ class Supabase {
     const n = parseInt((r.headers.get("content-range") || "").split("/")[1], 10);
     return Number.isFinite(n) ? n : 0;
   }
-  proposerPantheon({ pseudo, lycee, code, moyenne, banc, jeton }) {
-    return this.rpc("proposer_pantheon", { p_pseudo: pseudo, p_lycee: lycee || null, p_code: code, p_moyenne: moyenne, p_banc: banc, p_jeton: jeton });
+  // depuis une salle : salle + jetonSalle rattachent la tortue à la classe (si la base n'est pas à jour, on l'inscrit sans)
+  async proposerPantheon({ pseudo, lycee, code, moyenne, banc, jeton, salle = null, jetonSalle = null }) {
+    const p = { p_pseudo: pseudo, p_lycee: lycee || null, p_code: code, p_moyenne: moyenne, p_banc: banc, p_jeton: jeton };
+    if (salle) {
+      try { return await this.rpc("proposer_pantheon", { ...p, p_salle: salle, p_jeton_salle: jetonSalle }); }
+      catch (err) { if (!/pas prête/.test(err.message)) throw err; }
+    }
+    return this.rpc("proposer_pantheon", p);
   }
   pantheonTop(limite = 100, lycee = null) { return this.rpc("pantheon_top", { p_limite: limite, p_lycee: lycee || null }); }
   pantheonLycees() { return this.rpc("pantheon_lycees"); }
@@ -245,28 +251,31 @@ class Demo {
   classementPantheon(s) {
     return (s.pantheon || []).slice().sort((a, b) => b.moyenne - a.moyenne || a.cree_le.localeCompare(b.cree_le)).map((p, i) => ({ ...p, rang: i + 1 }));
   }
-  async proposerPantheon({ pseudo, lycee, code, moyenne, banc, jeton }) {
+  async proposerPantheon({ pseudo, lycee, code, moyenne, banc, jeton, salle = null, jetonSalle = null }) {
     await this.pause();
     const s = this.load(); s.pantheon = s.pantheon || [];
-    pseudo = pseudo.trim(); lycee = (lycee || "").trim().replace(/\s+/g, " ") || null;
+    pseudo = pseudo.trim(); lycee = nomEtablissement(lycee); salle = (salle || "").trim().toUpperCase() || null;
     if (banc !== 1) throw new Error("Ta page est trop ancienne : recharge-la (Ctrl+F5).");
     if (pseudo.length < 2 || pseudo.length > 14 || !/^[A-Za-z0-9À-ÿ _-]+$/.test(pseudo)) throw new Error("Pseudo invalide : 2 à 14 lettres ou chiffres.");
-    if (lycee && (lycee.length > 60 || !/^[A-Za-z0-9À-ÿ '’.,()&/-]+$/.test(lycee))) throw new Error("Nom de lycée invalide : 60 caractères au plus, lettres et chiffres.");
+    if (salle) {   // rattachée à la classe : le jeton de session prouve que ce pseudo est bien celui de l'élève dans cette salle
+      if (!s.jetons[salle] || s.jetons[salle][pseudo] !== jetonSalle) throw new Error(`Pour entrer au Panthéon avec ta classe, garde le pseudo de la salle ${salle}.`);
+      lycee = (s.salles[salle] && s.salles[salle].etablissement) || null;
+    }
     const empreinte = code.replace(/#[^\n]*/g, "").replace(/\s+/g, "");
     if (s.pantheon.some((p) => p.empreinte === empreinte && p.jeton !== jeton)) throw new Error("Cette tortue est déjà au Panthéon (même programme) : invente ta propre stratégie !");
-    if (s.pantheon.some((p) => p.pseudo.toLowerCase() === pseudo.toLowerCase() && p.jeton !== jeton)) throw new Error("Ce pseudo est déjà au Panthéon. Choisis-en un autre, ou tape ton code Panthéon si c'est le tien.");
     const m = Math.round(moyenne * 100) / 100, now = new Date().toISOString();
     let p = s.pantheon.find((x) => x.jeton === jeton), statut;
-    if (!p) { p = { id: Date.now(), pseudo, lycee, moyenne: m, banc, code, empreinte, jeton, verifie: false, cree_le: now }; s.pantheon.push(p); statut = "nouveau"; }
-    else if (m > p.moyenne) { Object.assign(p, { pseudo, lycee, moyenne: m, code, empreinte, verifie: false }); statut = "ameliore"; }
-    else { Object.assign(p, { pseudo, lycee }); statut = "moins_bien"; }
+    if (!salle && p && p.salle && p.pseudo.toLowerCase() === pseudo.toLowerCase()) { salle = p.salle; lycee = p.lycee; }   // améliorée hors de la salle
+    if (!p) { p = { id: Date.now(), pseudo, lycee, salle, moyenne: m, banc, code, empreinte, jeton, verifie: false, cree_le: now }; s.pantheon.push(p); statut = "nouveau"; }
+    else if (m > p.moyenne) { Object.assign(p, { pseudo, lycee, salle, moyenne: m, code, empreinte, verifie: false }); statut = "ameliore"; }
+    else { Object.assign(p, { pseudo, lycee, salle }); statut = "moins_bien"; }
     this.save(s);
     return { statut, moyenne: p.moyenne, rang: this.classementPantheon(s).find((x) => x.id === p.id).rang };
   }
   async pantheonTop(limite = 100, lycee = null) {
     await this.pause();
     return this.classementPantheon(this.load()).filter((p) => !lycee || (p.lycee || "").toLowerCase() === lycee.trim().toLowerCase())
-      .slice(0, limite).map(({ rang, pseudo, lycee: l, moyenne, verifie, cree_le }) => ({ rang, pseudo, lycee: l, moyenne, verifie, cree_le }));
+      .slice(0, limite).map(({ rang, pseudo, lycee: l, salle, moyenne, verifie, cree_le }) => ({ rang, pseudo, lycee: l, salle: salle || null, moyenne, verifie, cree_le }));
   }
   async pantheonLycees() {
     const n = {};
@@ -275,7 +284,7 @@ class Demo {
   }
   async maTortuePantheon(jeton) {
     const p = this.classementPantheon(this.load()).find((x) => x.jeton === jeton);
-    return p ? { pseudo: p.pseudo, lycee: p.lycee, moyenne: p.moyenne, verifie: p.verifie, rang: p.rang } : null;
+    return p ? { pseudo: p.pseudo, lycee: p.lycee, salle: p.salle || null, cree_le: p.cree_le, moyenne: p.moyenne, verifie: p.verifie, rang: p.rang } : null;
   }
   async pantheonAdmin(secret) { if (!secret) throw new Error("Mot de passe administrateur incorrect."); return this.classementPantheon(this.load()); }
   async pantheonValider(secret, id, moyenne) {

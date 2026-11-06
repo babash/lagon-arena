@@ -102,7 +102,7 @@ insert into public.compteurs (nom, valeur) select 'salles', count(*) from public
 create table if not exists public.pantheon (
   id        bigint generated always as identity primary key,
   pseudo    text not null,
-  lycee     text,
+  lycee     text,                                 -- l'établissement (facultatif ; celui de la salle si elle vient d'une classe)
   moyenne   numeric(5,2) not null,
   banc      int not null default 1,               -- version du banc d'essai
   code      text not null,                        -- jamais lisible par le public
@@ -112,8 +112,11 @@ create table if not exists public.pantheon (
   cree_le   timestamptz not null default now(),
   maj       timestamptz not null default now()
 );
+-- la classe d'où vient la tortue : le code de la salle (null = proposée hors classe, depuis le bac à sable).
+-- Le Panthéon affiche « pseudo · classe · date » : un même pseudo peut exister dans deux classes.
+alter table public.pantheon add column if not exists salle text;
 create unique index if not exists pantheon_empreinte on public.pantheon (empreinte);
-create unique index if not exists pantheon_pseudo on public.pantheon (lower(pseudo));
+drop index if exists public.pantheon_pseudo;   -- (ancienne règle : un pseudo unique dans tout le Panthéon)
 create unique index if not exists pantheon_jeton on public.pantheon (jeton);
 create index if not exists pantheon_classement on public.pantheon (moyenne desc, cree_le);
 
@@ -403,11 +406,16 @@ end $$;
 -- ---------- le Panthéon ----------
 -- l'élève propose sa tortue, avec la moyenne calculée par son navigateur sur le banc d'essai.
 -- p_jeton : son « code Panthéon » (s'il a déjà une tortue au Panthéon, elle est remplacée si la nouvelle fait mieux).
-create or replace function public.proposer_pantheon(p_pseudo text, p_lycee text, p_code text, p_moyenne numeric, p_banc int, p_jeton text)
+-- proposer sa tortue. Depuis une salle, l'élève donne aussi son jeton de session (p_salle, p_jeton_salle) :
+-- sa tortue est alors rattachée à sa classe, avec le pseudo de la salle et l'établissement donné par l'enseignant.
+drop function if exists public.proposer_pantheon(text, text, text, numeric, int, text);   -- (ancienne version, sans la classe)
+create or replace function public.proposer_pantheon(p_pseudo text, p_lycee text, p_code text, p_moyenne numeric, p_banc int, p_jeton text,
+  p_salle text default null, p_jeton_salle text default null)
 returns json language plpgsql security definer set search_path = public as $$
 declare
   v_pseudo text := btrim(p_pseudo);
-  v_lycee text := nullif(regexp_replace(btrim(coalesce(p_lycee, '')), '\s+', ' ', 'g'), '');
+  v_lycee text := nom_etablissement(p_lycee);
+  v_salle text := nullif(upper(btrim(coalesce(p_salle, ''))), '');
   v_empreinte text;
   v pantheon%rowtype;
   v_id bigint; v_statut text;
@@ -416,8 +424,11 @@ begin
   if length(v_pseudo) < 2 or length(v_pseudo) > 14 or v_pseudo !~ '^[A-Za-z0-9À-ÿ _-]+$' then
     raise exception 'Pseudo invalide : 2 à 14 lettres ou chiffres.';
   end if;
-  if v_lycee is not null and (length(v_lycee) > 60 or v_lycee !~ '^[A-Za-z0-9À-ÿ ''’.,()&/-]+$') then
-    raise exception 'Nom de lycée invalide : 60 caractères au plus, lettres et chiffres.';
+  if v_salle is not null then
+    if not exists (select 1 from joueurs_secret where salle = v_salle and pseudo = v_pseudo and jeton = coalesce(p_jeton_salle, '')) then
+      raise exception 'Pour entrer au Panthéon avec ta classe, garde le pseudo de la salle %.', v_salle;
+    end if;
+    select etablissement into v_lycee from salles where code = v_salle;   -- l'établissement, c'est celui que l'enseignant a donné
   end if;
   if length(coalesce(p_code, '')) < 10 or length(p_code) > 4000 then raise exception 'Programme vide ou trop long.'; end if;
   if p_moyenne is null or p_moyenne < 0 or p_moyenne > 30 then raise exception 'Moyenne impossible.'; end if;
@@ -427,24 +438,25 @@ begin
   end if;
   v_empreinte := md5(regexp_replace(regexp_replace(p_code, '#[^\n]*', '', 'g'), '\s+', '', 'g'));
   select * into v from pantheon where jeton = p_jeton;
+  -- améliorée plus tard hors de la salle (même code Panthéon, même pseudo) : elle reste rattachée à sa classe
+  if v_salle is null and v.id is not null and v.salle is not null and lower(v.pseudo) = lower(v_pseudo) then
+    v_salle := v.salle; v_lycee := v.lycee;
+  end if;
   if exists (select 1 from pantheon where empreinte = v_empreinte and jeton <> p_jeton) then
     raise exception 'Cette tortue est déjà au Panthéon (même programme) : invente ta propre stratégie !';
   end if;
-  if exists (select 1 from pantheon where lower(pseudo) = lower(v_pseudo) and jeton <> p_jeton) then
-    raise exception 'Ce pseudo est déjà au Panthéon. Choisis-en un autre, ou tape ton code Panthéon si c''est le tien.';
-  end if;
   if v.id is null then
-    insert into pantheon (pseudo, lycee, moyenne, banc, code, empreinte, jeton)
-      values (v_pseudo, v_lycee, round(p_moyenne, 2), p_banc, p_code, v_empreinte, p_jeton) returning id into v_id;
+    insert into pantheon (pseudo, lycee, salle, moyenne, banc, code, empreinte, jeton)
+      values (v_pseudo, v_lycee, v_salle, round(p_moyenne, 2), p_banc, p_code, v_empreinte, p_jeton) returning id into v_id;
     v_statut := 'nouveau';
   elsif v.maj > now() - interval '10 seconds' then
     raise exception 'Doucement : attends quelques secondes avant de reproposer ta tortue.';
   elsif round(p_moyenne, 2) > v.moyenne then
-    update pantheon set pseudo = v_pseudo, lycee = v_lycee, moyenne = round(p_moyenne, 2), banc = p_banc, code = p_code,
+    update pantheon set pseudo = v_pseudo, lycee = v_lycee, salle = v_salle, moyenne = round(p_moyenne, 2), banc = p_banc, code = p_code,
       empreinte = v_empreinte, verifie = false, maj = now() where id = v.id;
     v_id := v.id; v_statut := 'ameliore';
   else
-    update pantheon set pseudo = v_pseudo, lycee = v_lycee, maj = now() where id = v.id;
+    update pantheon set pseudo = v_pseudo, lycee = v_lycee, salle = v_salle, maj = now() where id = v.id;
     v_id := v.id; v_statut := 'moins_bien';
   end if;
   -- on ne garde que les 1000 meilleures
@@ -455,18 +467,20 @@ begin
               and (p.moyenne > m.moyenne or (p.moyenne = m.moyenne and p.cree_le < m.cree_le))));
 end $$;
 
--- le classement (sans le code) : tout le Panthéon, ou un seul lycée
+-- le classement public (sans le code) : tout le Panthéon, ou un seul établissement ;
+-- chaque ligne : pseudo, classe (code de la salle), date d'entrée, établissement, moyenne
+drop function if exists public.pantheon_top(int, text);   -- (le résultat a changé : on recrée la fonction)
 create or replace function public.pantheon_top(p_limite int default 100, p_lycee text default null)
-returns table (rang bigint, pseudo text, lycee text, moyenne numeric, verifie boolean, cree_le timestamptz)
+returns table (rang bigint, pseudo text, lycee text, salle text, moyenne numeric, verifie boolean, cree_le timestamptz)
 language sql security definer set search_path = public as $$
   select * from (
-    select row_number() over (order by p.moyenne desc, p.cree_le) as rang, p.pseudo, p.lycee, p.moyenne, p.verifie, p.cree_le
+    select row_number() over (order by p.moyenne desc, p.cree_le) as rang, p.pseudo, p.lycee, p.salle, p.moyenne, p.verifie, p.cree_le
     from pantheon p) x
   where p_lycee is null or lower(x.lycee) = lower(btrim(p_lycee))
   order by x.rang limit least(greatest(coalesce(p_limite, 100), 1), 1000)
 $$;
 
--- les lycées déjà inscrits (pour proposer leur nom)
+-- les établissements déjà inscrits (pour proposer leur nom et filtrer le classement)
 create or replace function public.pantheon_lycees()
 returns table (lycee text, tortues bigint)
 language sql security definer set search_path = public as $$
@@ -474,10 +488,11 @@ language sql security definer set search_path = public as $$
 $$;
 
 -- ma tortue au Panthéon (avec mon code Panthéon)
+drop function if exists public.ma_tortue_pantheon(text);
 create or replace function public.ma_tortue_pantheon(p_jeton text)
-returns table (pseudo text, lycee text, moyenne numeric, verifie boolean, rang bigint)
+returns table (pseudo text, lycee text, salle text, cree_le timestamptz, moyenne numeric, verifie boolean, rang bigint)
 language sql security definer set search_path = public as $$
-  select m.pseudo, m.lycee, m.moyenne, m.verifie,
+  select m.pseudo, m.lycee, m.salle, m.cree_le, m.moyenne, m.verifie,
          (select 1 + count(*) from pantheon p where p.moyenne > m.moyenne or (p.moyenne = m.moyenne and p.cree_le < m.cree_le))
   from pantheon m where m.jeton = p_jeton
 $$;
@@ -491,12 +506,13 @@ begin
   end if;
 end $$;
 
+drop function if exists public.pantheon_admin(text);
 create or replace function public.pantheon_admin(p_secret text)
-returns table (id bigint, pseudo text, lycee text, moyenne numeric, banc int, code text, verifie boolean, cree_le timestamptz)
+returns table (id bigint, pseudo text, lycee text, salle text, moyenne numeric, banc int, code text, verifie boolean, cree_le timestamptz)
 language plpgsql security definer set search_path = public as $$
 begin
   perform verifier_admin(p_secret);
-  return query select p.id, p.pseudo, p.lycee, p.moyenne, p.banc, p.code, p.verifie, p.cree_le
+  return query select p.id, p.pseudo, p.lycee, p.salle, p.moyenne, p.banc, p.code, p.verifie, p.cree_le
     from pantheon p order by p.moyenne desc, p.cree_le limit 1000;
 end $$;
 
@@ -525,7 +541,7 @@ grant execute on function public.heure_serveur(), public.creer_salle(text), publ
   public.changer_jeton(text, text, text, text), public.ma_tortue(text, text, text), public.codes_session(text, text),
   public.enregistrer_scores(text, text, int, jsonb),
   public.statistiques(),
-  public.proposer_pantheon(text, text, text, numeric, int, text), public.pantheon_top(int, text),
+  public.proposer_pantheon(text, text, text, numeric, int, text, text, text), public.pantheon_top(int, text),
   public.pantheon_lycees(), public.ma_tortue_pantheon(text),
   public.pantheon_admin(text), public.pantheon_valider(text, bigint, numeric), public.pantheon_retirer(text, bigint)
 to anon, authenticated;

@@ -143,7 +143,7 @@ Un mini-Python écrit pour l'occasion, en trois temps : découpage en mots (*tok
 | `tortues` | code envoyé par manche | **seulement après le brawl** de la manche (politique RLS) |
 | `scores` | nids, rang, points, bonus, nouveauté (+ version), duel, équipe, lagon personnalisé | publique |
 | `compteurs` | compteurs de l'accueil (parties, participants, salles), gardés à part pour que le ménage ne les fasse pas baisser | personne (fonction `statistiques`) |
-| `pantheon` | pseudo, établissement (colonne `lycee`), moyenne, version du banc, **programme**, empreinte du programme, jeton (code Panthéon), vérifié | personne (fonctions ci-dessous) |
+| `pantheon` | pseudo, classe (`salle` : le code de la salle, vide = hors classe), date d'entrée, établissement (colonne `lycee`), moyenne, version du banc, **programme**, empreinte du programme, jeton (code Panthéon), vérifié | personne (fonctions ci-dessous) |
 | `admin_secret` | le mot de passe de l'administrateur du Panthéon | personne |
 
 | Fonction | Qui | Rôle |
@@ -161,8 +161,8 @@ Un mini-Python écrit pour l'occasion, en trois temps : découpage en mots (*tok
 | `etat_depots(salle, manche)` | tous | qui a envoyé (sans le code) |
 | `heure_serveur()` | tous | pour synchroniser les chronos |
 | `statistiques()` | tous | les chiffres de l'accueil (et lance le ménage, au plus une fois par heure) |
-| `proposer_pantheon(pseudo, lycée, code, moyenne, banc, jeton)` | élève | entrer au Panthéon, ou améliorer sa tortue (gardée si elle fait mieux) |
-| `pantheon_top(limite, lycée)`, `pantheon_lycees()`, `ma_tortue_pantheon(jeton)` | tous | le classement **sans les programmes** |
+| `proposer_pantheon(pseudo, établissement, code, moyenne, banc, jeton, salle, jeton de session)` | élève | entrer au Panthéon, ou améliorer sa tortue (gardée si elle fait mieux). Avec la salle et le jeton de session, la tortue est rattachée à la classe, avec l'établissement de la salle ; plus d'unicité des pseudos (pseudo + classe + date suffisent à distinguer deux tortues) |
+| `pantheon_top(limite, établissement)`, `pantheon_lycees()`, `ma_tortue_pantheon(jeton)` | tous | le classement **sans les programmes** : pseudo, classe, date, établissement, moyenne |
 | `pantheon_admin`, `pantheon_valider`, `pantheon_retirer` | administrateur | lire les programmes, corriger un score recalculé, retirer une tortue |
 
 **Le code de session** d'un élève (8 caractères, sans lettres ambiguës) *est* son jeton : `jeton = "perso-" + CODE + "-lagon"`. Le retaper sur un autre ordinateur suffit donc à reprendre son pseudo, sans compte.
