@@ -97,7 +97,7 @@ Les chantiers 1, 2 et 3 se répondent : le diagnostic (1) s'affiche dans « Prog
   - [ ] stockage d'un jour.
 - [ ] Un script unique `node outils/tests/tout.mjs` : il démarre un petit serveur, lance les parcours en mode démo et, si une base locale est disponible, ceux qui ont besoin de la base.
 - [ ] Les captures de référence aux 5 tailles d'écran, pour comparer avant et après.
-- [ ] Les **6 tortues types** du constat dans `outils/verifier.mjs` : ce sont les tests du chantier 1.
+- [x] Les **6 tortues types** du constat dans `outils/verifier.mjs` : ce sont les tests du chantier 1 (section « 3 quater »).
 - [ ] (Plus tard) Lancement automatique sur GitHub à chaque envoi.
 
 **C'est fini quand** une seule commande vérifie tout, et qu'elle passe sur `main`.
@@ -112,7 +112,7 @@ Les chantiers 1, 2 et 3 se répondent : le diagnostic (1) s'affiche dans « Prog
 
 C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce et à l'enseignant.
 
-- [ ] **Le bilan de santé de la tortue** : on fait jouer **un tour** du programme dans quelques situations clés, et on compare ce qu'elle fait à ce qu'on attend. Il s'appuie sur ce qui sert déjà aux exercices des tutoriels.
+- [x] **Les tests de la tortue** (`js/moteur/diagnostic.js`, affichés par `js/bilan.js`) : on fait jouer **un tour** du programme dans 10 situations clés, et on compare ce qu'elle fait à ce qu'on attend. Les exercices des tutoriels utilisent les mêmes situations.
 
   | Situation | On attend | Ta tortue fait |
   |---|---|---|
@@ -121,39 +121,45 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
   | 🌙 Nuit, sur des algues, 8 ⚡ | `aller_vers_plage()` (ou `manger()` si l'énergie est basse) | |
   | ☀️ Jour, sur des algues, 5 ⚡ | `manger()` | |
   | ☀️ Jour, rien autour | `aller_vers_algue()` | |
-  | 🦈 Requin à 2 cases, loin de la plage | `fuir()` ou `se_cacher()` | |
+  | ☀️ Jour, sur la plage | repartir : `aller_vers_algue()` | |
+  | 🦈 Requin à 2 cases, en pleine eau | `fuir()` | |
+  | 🦈 Requin à 2 cases, sur des algues | `fuir()` ou `se_cacher()` | |
   | 🛍️ Plastique sur des algues | pas `manger()` | |
+  | 🔋 Nuit, sur la plage, 3 ⚡ | aller manger | |
 
-  - [ ] Chaque ligne ❌ dit **quelle ligne du code a agi, et pourquoi**. Par exemple : « La nuit sur la plage, c'est la ligne 3 `manger()` qui s'exécute, parce que `algue_ici()` est vrai… et le premier vrai gagne. Mets la règle de ponte **au-dessus**. »
-  - [ ] Les attentes s'adaptent au niveau : les deux situations de requin et de plastique sont des conseils (⚠️), pas des erreurs (❌). Pondre est l'objectif n° 1.
-- [ ] **La structure** : repérer, dans le programme analysé (pas dans le texte), ce qui empêche des lignes d'être atteintes :
-  - [ ] **plusieurs blocs `if` / `else` à la suite** : « Ta tortue fait **une seule action par tour**. Le bloc des lignes 2 à 5 fait toujours une action, donc les lignes 6 à 9 ne servent **jamais**. » ;
-  - [ ] **des `if` séparés** (sans `elif`) : même message, avec la règle « le premier vrai gagne » ;
-  - [ ] une **ligne jamais atteinte** à cause d'une condition plus haut, avec une situation en exemple ;
-  - [ ] une **condition toujours vraie ou jamais vraie** (`energie() > 10`, `sur_plage() and not sur_plage()`) ;
-  - [ ] un **`pondre()` toujours refusé** (il manque la plage, la nuit ou l'énergie), un **`manger()` sans `algue_ici()`** ;
-  - [ ] deux conditions identiques, un `else` qui ne s'exécute jamais.
-  - [ ] Méthode : essayer toutes les situations de débutant (5 questions vrai/faux, l'énergie de 0 à 10, l'heure de 0 à 23 : au plus 8 500 situations), en respectant les liens évidents (`est_la_nuit()` dépend de l'heure et de la nouveauté). Pour les questions avancées, utiliser des **situations réelles** relevées dans des parties simulées. Moins de 50 ms par analyse.
-- [ ] **Les 4 actions clés** : `pondre()`, `aller_vers_plage()`, `manger()`, `aller_vers_algue()` (ou `aller_vers_algue_libre()`), présentes **et atteignables**. Une action en commentaire ou jamais atteinte compte comme absente. Une petite liste toujours visible sous l'éditeur : « Ta tortue sait : ✅ manger · ✅ aller vers les algues · ❌ pondre · ❌ aller vers la plage ».
-- [ ] **Un verdict simple, en une ligne**, en tête de l'éditeur :
-  - 🟢 « Ta tortue peut pondre » ;
-  - 🟠 « Ta tortue peut pondre, mais… » (requins, plastique, énergie) ;
-  - 🔴 « Ta tortue ne pondra **jamais** : [la cause] ».
+  - [x] Chaque ligne ❌ dit **quelle ligne du code a agi, et pourquoi**. Par exemple : « La nuit sur la plage, c'est la ligne 3 `manger()` qui s'exécute, parce que `algue_ici()` est vrai… et le premier vrai gagne. Mets la règle de ponte **au-dessus**. »
+  - [x] Les situations de requin, de plastique et d'énergie sont des conseils (⚠️), pas des erreurs (❌). Pondre est l'objectif n° 1.
+  - [x] Les « ligne 7 » des explications sont des liens : un clic place le curseur sur la ligne ; les lignes en cause sont surlignées dans l'éditeur.
+- [x] **La structure** : repérer, dans le programme analysé (pas dans le texte), ce qui empêche des lignes d'être atteintes :
+  - [x] **plusieurs blocs `if` / `else` à la suite** : « Ta tortue fait **une seule action par tour**. Le bloc des lignes 2 à 5 fait toujours une action, donc les lignes 6 à 9 ne servent **jamais**. » ;
+  - [x] **des `if` séparés** (sans `elif`) : même message, avec la règle « le premier vrai gagne » ;
+  - [x] une **ligne jamais atteinte** à cause d'une condition plus haut (« quand `sur_plage() and est_la_nuit()` est vrai, `est_la_nuit()` ligne 2 est déjà vrai ») ;
+  - [x] une **condition toujours vraie ou jamais vraie** (`energie() > 10`, `sur_plage() and not sur_plage()`) ;
+  - [x] un **`pondre()` toujours refusé** (il manque la plage, la nuit ou l'énergie) ;
+  - [ ] un **`manger()` sans `algue_ici()`** (aujourd'hui, seulement par le test « le jour, en pleine eau ») ;
+  - [x] deux conditions identiques, une action (même dans un `else`) qui ne s'exécute jamais.
+  - [x] Méthode : essayer toutes les situations de débutant (5 questions vrai/faux, l'énergie de 0 à 10, l'heure de 0 à 23 : au plus 8 500 situations), en respectant les liens évidents (`est_la_nuit()` dépend de l'heure et de la nouveauté). Moins de 50 ms par analyse (≈ 15 ms mesurés).
+  - [ ] Pour les questions avancées (distances, équipes…), utiliser des **situations réelles** relevées dans des parties simulées. Aujourd'hui, une ligne qui dépend d'une question avancée n'est jamais déclarée « jamais atteinte » (pas de fausse alerte, mais pas d'alerte non plus).
+- [x] **Les 4 actions clés** : `pondre()`, `aller_vers_plage()`, `manger()`, `aller_vers_algue()` (ou `aller_vers_algue_libre()`), présentes **et atteignables**. Une action en commentaire ou jamais atteinte compte comme absente. Une petite liste toujours visible sous l'éditeur : « Ta tortue sait : ✅ manger · ✅ aller vers les algues · ❌ pondre · ❌ aller vers la plage ».
+- [x] **Un verdict simple, en une ligne**, en tête de l'éditeur :
+  - 🟢 « Ta tortue sait pondre ! » (avec le nombre de conseils ⚠️ pour aller plus loin) ;
+  - 🟠 « Ta tortue peut pondre, mais pas souvent » : un test ❌ (elle mange la nuit au lieu de rentrer, reste sur la plage le jour…) ;
+  - 🔴 « Ta tortue ne pondra **jamais** » : [la cause, avec les lignes].
 
   Il remplace le « ✅ Code valide » actuel, qui ne vérifie que la syntaxe.
-- [ ] **Jamais bloquant** : la tortue peut toujours être testée et envoyée.
+- [x] **Jamais bloquant** : la tortue peut toujours être testée et envoyée.
 
 ### 1.2. Des retours qui disent la vraie cause
 
-- [ ] **Le rapport après le match** s'appuie sur le diagnostic et sur ce que la tortue a **réellement fait** pendant la partie :
-  - [ ] ne plus jamais conseiller d'ajouter `pondre()` quand il est écrit. Dire plutôt : « `pondre()` est écrit ligne 7, mais il n'a **jamais été atteint**. La nuit, c'est la ligne 3 qui agissait. » ;
-  - [ ] compter les occasions manquées : « 12 fois, elle était sur la plage la nuit sans pondre : 9 fois à cause de la ligne 3, 3 fois parce qu'il lui manquait de l'énergie » ;
-  - [ ] un seul conseil principal, le plus important d'abord : on fait pondre la tortue avant de parler des requins.
-- [ ] **Le coup de pouce** suit le diagnostic, et non la présence des mots :
-  - [ ] structure cassée : il commence par « Tu as deux blocs : fusionne-les en une seule chaîne `if` / `elif` / `else` », et montre le code réorganisé ;
-  - [ ] mauvais ordre : « Remonte la règle de ponte au-dessus de `manger()` », avec l'ordre conseillé (danger, pondre, rentrer la nuit, manger, chercher à manger) ;
-  - [ ] ensuite seulement, les paliers actuels (requins, énergie, plastique, anticiper la nuit).
-- [ ] **Une aide pour réparer la structure** : un bouton « 🔧 Fusionner en une seule chaîne », qui transforme les `if` / `else` successifs en `if` / `elif` / `else`. Il montre un avant / après et ne s'applique que si l'élève valide. L'enseignant peut le désactiver dans les réglages.
+- [x] **Le rapport après le match** s'appuie sur le diagnostic et sur ce que la tortue a **réellement fait** pendant la partie :
+  - [x] ne plus jamais conseiller d'ajouter `pondre()` quand il est écrit. Dire plutôt : « `pondre()` est écrit ligne 7, mais il n'a **jamais été atteint**. La nuit, c'est la ligne 3 qui agissait. » ;
+  - [x] compter les occasions manquées : « 12 fois, elle était sur la plage la nuit sans pondre : 9 fois à cause de la ligne 3, 3 fois parce qu'il lui manquait de l'énergie » ;
+  - [x] un seul conseil principal, le plus important d'abord : on fait pondre la tortue avant de parler des requins.
+- [x] **Le coup de pouce** suit le diagnostic, et non la présence des mots :
+  - [x] structure cassée : il commence par « Tu as deux blocs : fusionne-les en une seule chaîne `if` / `elif` / `else` », avec un petit exemple de la bonne forme ;
+  - [x] mauvais ordre : « Remonte la règle de ponte au-dessus de `manger()` », avec l'ordre conseillé (danger, pondre, rentrer la nuit, manger, chercher à manger) ;
+  - [x] ensuite seulement, les paliers actuels (requins, énergie, plastique, anticiper la nuit).
+- **Décidé : pas de bouton de réparation automatique** (« 🔧 Fusionner en une seule chaîne »). C'est l'élève qui corrige son code : les tests lui disent quelle ligne agit, et pourquoi.
 
 ### 1.3. Une structure guidée dès le départ
 
@@ -177,18 +183,20 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 
 ### 1.4. Un tutoriel qui finit avec une tortue qui pond
 
-- [ ] **Une étape « Une seule chaîne »** : deux blocs `if` / `else` à la suite. Avec les interrupteurs, l'élève voit que le second bloc ne s'exécute **jamais**. Puis un exercice : fusionner en `if` / `elif` / `else`.
-- [ ] **Une étape « L'ordre des priorités »** : remettre 5 règles dans l'ordre en les faisant glisser, vérifié dans des situations (nuit sur la plage, jour sur des algues…).
-- [ ] **Deux nouvelles missions de réparation**, conçues à partir des tortues types A et B :
-  - « Deux blocs à la suite » : elle ne pond jamais ;
-  - « Elle mange au lieu de pondre ».
-- [ ] **Une étape finale « Construis ta tortue »** : l'élève assemble la tortue complète avec le bilan de santé en direct, jusqu'à 🟢. Puis **« 🐢 Emporter ma tortue »** : elle l'attend dans l'éditeur de la salle (ou du bac à sable).
+- [x] **Une étape « Une seule chaîne »** : deux blocs `if` / `else` à la suite. Avec les interrupteurs, l'élève voit que le second bloc ne s'exécute **jamais**. Puis un exercice : fusionner en `if` / `elif` / `else`.
+- [x] **Une étape « L'ordre des priorités »** : remettre 4 règles dans l'ordre avec des flèches ⬆️ ⬇️ (plus simple que glisser, et utilisable au clavier et sur téléphone), vérifié dans 6 situations, le code se met à jour.
+- [x] **Les réparations des tortues types A et B** :
+  - « Deux blocs à la suite » : c'est l'exercice de l'étape « Une seule chaîne » (le code de départ est la tortue A) ;
+  - « Elle mange au lieu de pondre » : une nouvelle mission dans le lagon (`MISSIONS_PONTE`, vérifiée par `outils/verifier.mjs`).
+- [x] Les missions « la tortue qui ne mange jamais », « la pondeuse impatiente » et « le sac plastique » sortent du tutoriel débutant (elles restent dans le moteur) : le tutoriel garde ses 15 étapes et environ 15 minutes.
+- [x] Quand un exercice ou une mission échoue, l'explication des tests de la tortue s'affiche (« 🔍 … c'est la ligne 3 qui agit, parce que… »).
+- [x] **Une étape finale « Construis ta tortue »** : l'élève assemble la tortue complète avec le bilan de santé en direct, jusqu'à 🟢. Puis **« 🐢 Emporter ma tortue »** : elle l'attend dans l'éditeur de la salle (ou du bac à sable).
 - [ ] La progression du tutoriel est visible par l'enseignant (chantier 3).
 
 ### 1.5. Tests et critères
 
-- [ ] Les 6 tortues types dans `outils/verifier.mjs`, avec le diagnostic attendu pour chacune.
-- [ ] **Aucune fausse alerte** sur les tortues d'entraînement, les solutions des tutoriels, les stratégies d'expert et d'équipe, et les programmes du coup de pouce.
+- [x] Les 6 tortues types dans `outils/verifier.mjs`, avec le diagnostic attendu pour chacune.
+- [x] **Aucune fausse alerte** sur les tortues d'entraînement, les solutions des tutoriels, les stratégies d'expert et d'équipe, et les programmes du coup de pouce.
 
 **C'est fini quand** :
 - pour chaque tortue type A à E, l'éditeur affiche 🔴 ou 🟠 avec **la vraie cause et la bonne ligne** ;
@@ -274,10 +282,11 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
   1. prend la ou les meilleures tortues d'élèves de la manche (réglage : la 1re, ou les 3 premières) ;
   2. écarte celles qui n'ont pondu aucun nid, et les copies des tutoriels ou des tortues d'entraînement ;
   3. leur fait passer le banc d'essai (20 parties, en arrière-plan : chantier 9) ;
-  4. les inscrit au Panthéon avec le pseudo de l'élève et le **lycée de la classe**.
+  4. les inscrit au Panthéon.
+- [ ] **Ce qu'affiche le Panthéon : le pseudo, la classe et la date.** La classe, c'est le **code de la salle** (ou du devoir). Le trio pseudo + classe + date est unique : deux élèves de classes différentes peuvent avoir le même pseudo.
+- [ ] **L'établissement est facultatif** : l'enseignant peut le renseigner **en créant la salle ou le devoir** (un champ de plus, vide par défaut). S'il le fait, il s'affiche à côté de la classe et sert de filtre au Panthéon. Il est gardé avec la salle, pas dans un réglage à part.
 - [ ] **Réglages enseignant** (gardés 60 jours) :
   - « 🏛️ Envoyer les meilleures tortues au Panthéon » : oui par défaut ;
-  - le nom du lycée (une fois pour toutes) ;
   - 1 ou 3 tortues par manche.
 - [ ] **L'élève le voit** dans ses résultats : « 🏛️ Ta tortue entre au Panthéon à la 12e place ! », avec **son code Panthéon** pour l'améliorer plus tard. Il le retrouve avec son code de session, sans rien noter.
 - [ ] **Au tableau**, dans les résultats : « 🏛️ Maki_Rapide entre au Panthéon (12e) ».
@@ -285,17 +294,18 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
   - même programme déjà au Panthéon : on ne l'ajoute pas ;
   - même élève (même salle, même pseudo) avec une meilleure tortue : on la remplace ;
   - même élève avec une tortue moins bonne : on garde l'ancienne.
-- [ ] **Pseudos en double entre classes** : aujourd'hui, un pseudo est unique dans tout le Panthéon. À trancher :
-  - soit l'unicité porte sur **pseudo + lycée** ;
-  - soit le pseudo prend une marque (« Moya ² »).
+- [ ] **Pseudos en double entre classes (décidé)** : on n'exige plus qu'un pseudo soit unique dans tout le Panthéon. Chaque ligne affiche « Moya · classe K7PQ · 4 nov. 2026 » (et l'établissement s'il a été renseigné), ce qui suffit à distinguer deux Moya.
+  - Les propositions faites à la main depuis le bac à sable (sans salle) affichent « hors classe » à la place du code.
+  - Les entrées déjà au Panthéon gardent leur lycée, affiché comme établissement.
 - [ ] Les entrées automatiques restent ⏳ jusqu'à la vérification de l'administrateur, comme les autres.
 
 ### Côté base
 
+- [ ] `salles.etablissement` (texte facultatif), rempli par `creer_salle` et la création du devoir.
 - [ ] `pantheon_classe(code, secret, entrées)` : l'inscription par l'enseignant (avec le secret de la salle).
-- [ ] Les entrées gardent leur origine (salle, manche, pseudo).
+- [ ] Les entrées gardent leur origine : salle (la classe), manche, pseudo, date, établissement.
+- [ ] L'index unique `pantheon_pseudo` est remplacé par un index sur (pseudo, salle, date) ; `pantheon_lycees` devient la liste des établissements.
 - [ ] `mon_entree_pantheon(salle, pseudo, jeton)` : l'élève retrouve son code Panthéon avec son jeton de session.
-- [ ] La règle d'unicité des pseudos, selon le choix fait plus haut.
 
 **C'est fini quand**, après chaque manche, la meilleure tortue apparaît au Panthéon sans que personne n'ait rien fait, et que l'élève concerné le voit avec son code.
 
@@ -399,7 +409,7 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 - [ ] **« Mon parcours »** : tutoriel → intermédiaire → expert → équipe → Panthéon (battre la Prudente, la Maline, puis la Championne).
 - [ ] **Une démo qui se joue toute seule** pour l'enseignant qui découvre.
 - [ ] **Un seul code par élève**, à étudier : aujourd'hui, il y a un code de session par salle et un code Panthéon.
-- [ ] **Le Panthéon, côté public** : podium, classement des lycées, « comment entrer », les 20 lagons du banc d'essai.
+- [ ] **Le Panthéon, côté public** : podium, classement des établissements (quand ils sont renseignés), « comment entrer », les 20 lagons du banc d'essai.
 - [ ] Un **pseudo au hasard** (🎲) sur l'accueil.
 
 ---
@@ -424,5 +434,5 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 |---|---|
 | Déjà sur `main` | Ménage, compteurs, Panthéon, lagon personnalisé : **à relancer** si ce n'est pas encore fait |
 | 3 | `codes_manche` (enseignant) ; option : table `etats` des brouillons |
-| 4 | `pantheon_classe`, origine des entrées, `mon_entree_pantheon`, unicité des pseudos |
+| 4 | `salles.etablissement` (facultatif), `pantheon_classe`, origine des entrées (classe, date, établissement), `mon_entree_pantheon`, fin de l'unicité des pseudos |
 | 10 | consigne et date du devoir (dans les réglages de la manche, sans nouvelle table) |

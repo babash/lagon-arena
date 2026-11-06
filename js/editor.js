@@ -120,7 +120,7 @@ export class CodeEditor {
     this.choix = []; this.sel = 0;
     this.ta.value = value;
     this.ta.addEventListener("input", (e) => {
-      this.errLine = null; this.render(); this.onChange(this.ta.value);
+      this.errLine = null; this.marques = null; this.render(); this.onChange(this.ta.value);
       if (e.inputType === "insertText" && e.data && /[\wÀ-ÿ]/.test(e.data)) this.proposer();
       else if (e.inputType === "deleteContentBackward" && this.ouvert()) this.proposer();
       else this.fermer();
@@ -140,14 +140,29 @@ export class CodeEditor {
   get value() { return this.ta.value; }
   set value(v) { this.ta.value = v; this.errLine = null; this.render(); }
   setErreur(n) { this.errLine = n; this.render(); }
+  // surligner des lignes (celles que les tests de la tortue mettent en cause)
+  marquer(lignes = []) { this.marques = lignes.length ? new Set(lignes) : null; this.render(); }
+  // placer le curseur au début de la ligne n (après l'indentation)
+  allerA(n) {
+    const L = this.ta.value.split("\n");
+    let pos = 0;
+    for (let i = 0; i < n - 1 && i < L.length; i++) pos += L[i].length + 1;
+    pos += ((L[n - 1] || "").match(/^ */) || [""])[0].length;
+    this.ta.focus({ preventScroll: true });
+    this.ta.selectionStart = this.ta.selectionEnd = pos;
+    this.render(); this.infoCurseur();
+    this.root.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
   focus() { this.ta.focus(); }
   render() {
     const v = this.ta.value;
     this.ligneCurseur = v.slice(0, this.ta.selectionStart).split("\n").length - 1;
     this.chaine = document.activeElement === this.ta ? chaineIf(v.split("\n"), this.ligneCurseur) : null;
     const lignes = colorer(v, { chaine: this.chaine });
-    this.pre.innerHTML = lignes.map((l, i) => (i + 1 === this.errLine ? `<span class="ln-err">${l || " "}</span>` : l)).join("\n") + "\n";
+    const mq = this.marques;
+    this.pre.innerHTML = lignes.map((l, i) => (i + 1 === this.errLine ? `<span class="ln-err">${l || " "}</span>` : mq && mq.has(i + 1) ? `<span class="ln-diag">${l || " "}</span>` : l)).join("\n") + "\n";
     this.gutter.innerHTML = lignes.map((_, i) => (i + 1 === this.errLine ? `<span class="errl">${i + 1}</span>`
+      : mq && mq.has(i + 1) ? `<span class="diagl">${i + 1}</span>`
       : this.chaine && this.chaine.lignes.includes(i) ? `<span class="chl">${i + 1}</span>` : i + 1)).join("\n");
     const maxLen = Math.max(...this.ta.value.split("\n").map((l) => l.length), 20);
     this.ta.style.minWidth = this.pre.style.minWidth = `calc(${maxLen + 3}ch + 28px)`;
@@ -383,7 +398,7 @@ export class CodeView {
     this.box.innerHTML = this.lignes.map((l, i) => `<span class="l" data-n="${i + 1}"><span class="n">${i + 1}</span>${l || " "}</span>`).join("");
   }
   montrer(rec) {
-    for (const s of this.box.querySelectorAll(".l")) { s.classList.remove("vrai", "faux", "act"); const t = s.querySelector(".tag"); if (t) t.remove(); }
+    for (const s of this.box.querySelectorAll(".l")) { s.classList.remove("vrai", "faux", "act", "ignoree"); s.querySelectorAll(".tag").forEach((t) => t.remove()); }
     if (!rec || rec.bloquee) return;
     const tag = (n, cls, txt) => {
       const s = this.box.querySelector(`.l[data-n="${n}"]`); if (!s) return;
@@ -391,6 +406,7 @@ export class CodeView {
     };
     for (const [n, v] of rec.conds || []) tag(n, v ? "vrai" : "faux", v ? "True" : "False");
     if (rec.ligne) tag(rec.ligne, "act", "action !");
+    for (const [n] of rec.extra || []) tag(n, "ignoree", "ignorée : 1 action par tour");
     const cible = rec.ligne || (rec.conds && rec.conds.length ? rec.conds[rec.conds.length - 1][0] : null);
     const el = cible && this.box.querySelector(`.l[data-n="${cible}"]`);
     if (el && this.box.scrollHeight > this.box.clientHeight) {

@@ -37,10 +37,11 @@ Le jeu ne demande **que des conditions** : pas de boucle, pas de liste, pas de v
 
 | Construction | Pourquoi on en a besoin dans le lagon | Où l'élève la découvre |
 |---|---|---|
-| `if` | manger seulement s'il y a des algues | tutoriel, mission 1 |
-| ordre des `elif` | fuir **avant** de manger quand un requin arrive | mission 2 |
-| `and` | pondre = sur la plage **et** la nuit **et** assez d'énergie | mission 3 |
-| `not` | manger, mais **pas** un sac plastique | mission 4, manche « Invasion de plastique » |
+| `if` | manger seulement s'il y a des algues | tutoriel |
+| une seule chaîne `if` / `elif` / `else` | une seule action par tour : un 2<sup>e</sup> bloc `if` ne sert jamais | tutoriel, étape « Une seule chaîne » |
+| ordre des `elif` | pondre **avant** de rentrer, rentrer **avant** de manger, fuir **avant** tout | étape « L'ordre des priorités », missions M1 et M2 |
+| `and` | pondre = sur la plage **et** la nuit **et** assez d'énergie | tutoriel |
+| `not` | manger, mais **pas** un sac plastique | tests de la tortue, coup de pouce, manche « Invasion de plastique » |
 | comparaisons | `energie() >= 6`, `heure() >= 17` | énergie, nuits courtes |
 | `or`, parenthèses | `requin_proche() or (est_la_nuit() and energie() < 6)` | tutoriel avancé |
 | conditions imbriquées | stratégies d'équipe, choix des algues | niveaux expert et équipe |
@@ -62,7 +63,7 @@ Le parcours suit la progression *Utiliser → Modifier → Créer* (Lee et al., 
 1. **Prédire et observer** : dans le tutoriel, un interrupteur True/False montre l'effet d'une condition ; un quiz demande « Devine ce que fait la tortue ».
 2. **Examiner** : la « pensée de la tortue » montre quelles conditions sont vraies à chaque tour.
 3. **Modifier** : les missions « Répare la tortue » donnent un code presque juste, avec une seule erreur à trouver.
-4. **Créer** : sa propre tortue, en compétition.
+4. **Créer** : sa propre tortue, d'abord à la fin du tutoriel (« Construis ta tortue », jusqu'au 🟢), puis en compétition.
 
 Les exemples travaillés précèdent les problèmes, l'aide s'efface progressivement (indice, puis solution après deux essais), comme le recommande la théorie de la charge cognitive.
 

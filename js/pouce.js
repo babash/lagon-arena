@@ -1,10 +1,12 @@
 // =====================================================================
 //  Lagon Arena — « Coup de pouce » : l'amélioration suivante à faire,
-//  d'après ce qui MANQUE dans le code de l'élève (une idée à la fois).
+//  d'après les TESTS de la tortue (une idée à la fois) : d'abord la faire pondre,
+//  puis les requins, l'énergie, le plastique, et partir avant la nuit.
 //  Chaque palier montre un programme complet, lignes nouvelles en vert.
 // =====================================================================
 import { colorer } from "./editor.js";
 import { esc } from "./common.js";
+import { diagnostiquer, enTexteRiche } from "./moteur/diagnostic.js";
 
 const sansCommentaires = (code) => code.split("\n").map((l) => l.replace(/#.*$/, "")).join("\n");
 
@@ -12,6 +14,7 @@ const sansCommentaires = (code) => code.split("\n").map((l) => l.replace(/#.*$/,
 export const PALIERS = [
   {
     manque: (c) => !/pondre\s*\(/.test(c) || !/aller_vers_plage\s*\(/.test(c),
+    test: "ponte",
     titre: "Ta tortue ne pond pas",
     pourquoi: "Sans <code>pondre()</code>, pas de point ! La nuit, elle doit aller sur la plage, puis pondre.",
     ou: "Ajoute les lignes vertes <b>en haut</b> (juste sous <code>def tour():</code>), puis change ton <code>if algue_ici()</code> en <code>elif algue_ici()</code>.",
@@ -27,6 +30,7 @@ export const PALIERS = [
   },
   {
     manque: (c) => !/requin_proche\s*\(/.test(c),
+    test: ["requin", "requin_algues"],
     titre: "Attention aux requins !",
     pourquoi: "Un requin qui t'attrape te renvoie au départ et te fait perdre <b>1 nid</b>. Le danger se teste <b>en premier</b>.",
     ou: "Ajoute les 2 lignes vertes <b>tout en haut</b>, et ton ancien premier <code>if</code> devient un <code>elif</code>.",
@@ -44,6 +48,7 @@ export const PALIERS = [
   },
   {
     manque: (c) => !/energie\s*\(/.test(c),
+    test: "fatiguee",
     titre: "Pas assez d'énergie pour pondre",
     pourquoi: "Pondre demande <b>6 ⚡</b>. Si ta tortue n'a pas assez d'énergie, elle attend pour rien sur la plage.",
     ou: "Ajoute <code>and energie() >= 6</code> aux deux lignes vertes : sans énergie, elle ira d'abord manger.",
@@ -61,6 +66,7 @@ export const PALIERS = [
   },
   {
     manque: (c) => !/plastique_ici\s*\(/.test(c),
+    test: "plastique",
     titre: "Gare au plastique",
     pourquoi: "Un sac plastique ressemble à une algue : le manger fait perdre <b>3 ⚡</b>.",
     ou: "Change ta ligne qui mange : <code>and not plastique_ici()</code> veut dire « et <b>pas</b> de plastique ».",
@@ -116,11 +122,46 @@ export const PALIER_EQUIPE = {
         aller_vers_algue()`,
 };
 
+// Un palier « manque » quand son test échoue (code lisible) ou, à défaut, quand le mot n'est pas écrit.
+// Le premier palier (pondre) suit le verdict : 🔴 ou 🟠, on explique la vraie cause avant tout le reste.
 export function coupDePouce(code, { equipe = false } = {}) {
   const c = sansCommentaires(code);
+  const d = diagnostiquer(code);
   const liste = equipe ? [PALIERS[0], PALIER_EQUIPE, ...PALIERS.slice(1)] : PALIERS;
-  const i = liste.findIndex((p) => p.manque(c));
-  return i < 0 ? null : { ...liste[i], numero: i + 1, total: liste.length };
+  const ids = (p) => [].concat(p.test);
+  const rate = (p) => d.tests.some((t) => ids(p).includes(t.id) && !t.ok);
+  const manque = (p) => {
+    if (!d.ok) return p.manque(c);
+    if (p === PALIERS[0]) return d.verdict.couleur !== "vert";
+    if (p.test) return rate(p);
+    return p.manque(c);
+  };
+  const i = liste.findIndex(manque);
+  if (i < 0) return null;
+  const p = { ...liste[i], numero: i + 1, total: liste.length };
+  if (d.ok && i === 0) return { ...p, ...paliersPonte(d) };
+  if (d.ok && p.test && !p.manque(c)) {
+    // le mot est écrit, mais le test échoue : on dit pourquoi, avec les lignes de l'élève
+    const t = d.tests.find((x) => ids(p).includes(x.id) && !x.ok);
+    p.pourquoi = `${p.pourquoi}<br>${enTexteRiche(`${t.titre}, ${t.agit.replace(/^Ta tortue/, "ta tortue")} ${t.raison || ""}`)}`;
+    if (t.conseil) p.ou = enTexteRiche(t.conseil);
+  }
+  return p;
+}
+// palier 1 sur mesure : la cause donnée par les tests, puis la bonne forme (une seule chaîne, dans l'ordre)
+function paliersPonte(d) {
+  const absente = d.cles[0].etat === "absente" || d.cles[1].etat === "absente";
+  const structure = d.remarques.find((r) => r.type === "deux-blocs" || r.type === "if-separes");
+  return {
+    titre: d.verdict.couleur === "rouge" ? "Ta tortue ne pond pas" : "Ta tortue pond trop peu",
+    pourquoi: enTexteRiche(d.verdict.cause),
+    ou: absente
+      ? PALIERS[0].ou
+      : structure
+        ? "Voici la bonne forme : <b>une seule chaîne</b> <code>if</code> / <code>elif</code> / <code>else</code>, dans l'ordre <b>pondre → rentrer la nuit → manger → chercher à manger</b>. Compare avec ton code."
+        : "L'ordre des règles, c'est l'ordre des priorités : <b>pondre → rentrer la nuit → manger → chercher à manger</b>. Compare avec ton code.",
+    code: absente ? PALIERS[0].code : PALIERS[0].code.replace(/^\+/gm, ""),
+  };
 }
 
 export function coupDePouceHTML(code, opts = {}) {

@@ -4,11 +4,13 @@
 //  quiz, mission dans le lagon ; navigation entre les étapes.
 // =====================================================================
 import { simulate } from "./engine.js";
-import { compile, runTurn, check } from "./interp.js";
+import { compile, check } from "./interp.js";
 import { CodeEditor, CodeView, boiteOutils } from "./editor.js";
 import { MatchViewer } from "./viewer.js";
 import { CAPTEURS, ACTIONS_INFO } from "./primitives.js";
 import { $, el, esc, store, activerCopie } from "./common.js";
+import { unTour, expliquerSituation, diagnostiquer } from "./moteur/diagnostic.js";
+import { riche, brancherLiens } from "./bilan.js";
 
 // ---------------------------------------------------------------------
 //  Progression (étoiles) et navigation
@@ -73,19 +75,8 @@ export const vf = (b) => `<span class="b-${b}">${b ? "True" : "False"}</span>`;
 export const capt = (nom) => { const c = CAPTEURS.find((x) => x.nom === nom); return `${c.icone} <code>${nom}()</code>`; };
 export const act = (nom) => { const a = ACTIONS_INFO.find((x) => x.nom === nom); return `${a.icone} <code>${nom}()</code>`; };
 
-// exécute UN tour d'un programme dans une situation donnée
-export const SITUATION_BASE = {
-  requin_proche: false, algue_ici: false, plastique_ici: false, sur_plage: false, est_la_nuit: false, energie: 8, heure: 12, debut_nuit: 19, fin_nuit: 6, vision_requin: 4,
-  distance_algue: 4, distance_plage: 6, distance_requin: 9, tortue_a_cote: false, requin_derriere_tortue: false,
-  mon_equipe: 1, mes_nids: 0, nids_voisine: 0, equipiere_a_cote: false, adversaire_a_cote: false, equipiere_fatiguee: false,
-  requin_derriere_adversaire: false, nids_equipe: 0, nids_adversaires: 0,
-  rang_equipe: 1, equipe_en_tete: true, equipe_rivale: 2, rivale_a_cote: false,
-  requins_autour: 0, algues_autour: 2, requins_pres_algue: 0, distance_algue_sure: 4, algue_pres_plage: false, portions_algue: 5,
-};
-export function unTour(compiled, sit) {
-  const base = { ...SITUATION_BASE, ...sit };
-  return runTurn(compiled, Object.fromEntries(Object.entries(base).map(([k, v]) => [k, () => v])));
-}
+// exécute UN tour d'un programme dans une situation donnée (les mêmes situations que les tests de la tortue)
+export { SITUATION_BASE, unTour } from "./moteur/diagnostic.js";
 
 const PHRASE = {
   manger: "😋 la tortue <b>mange</b>.", fuir: "💨 la tortue <b>fuit</b>.", pondre: "🥚 la tortue <b>pond</b> !",
@@ -105,8 +96,9 @@ export function exemple(box, code, capteurs, sitDepart) {
   const cv = new CodeView(box.querySelector(".cv")); cv.setCode(code);
   const maj = () => {
     const r = unTour(comp, s);
-    cv.montrer({ conds: r.conds.map(([n, v]) => [n - 1, v]), ligne: r.actionLine && r.actionLine - 1 });
-    box.querySelector(".resultat").innerHTML = r.action ? `→ ${phrase(r.action)}` : "→ 😐 Rien ne se passe : la condition est fausse, Python saute le bloc.";
+    cv.montrer({ conds: r.conds.map(([n, v]) => [n - 1, v]), ligne: r.actionLine && r.actionLine - 1, extra: r.extra.map(([n, a]) => [n - 1, a]) });
+    box.querySelector(".resultat").innerHTML = (r.action ? `→ ${phrase(r.action)}` : "→ 😐 Rien ne se passe : la condition est fausse, Python saute le bloc.") +
+      r.extra.map(([n, a]) => `<br><span class="ignoree-txt">✋ Ligne ${n - 1} : <code>${a}()</code> est <b>ignorée</b>, car ta tortue a déjà fait une action ce tour-ci.</span>`).join("");
     box.querySelector(".resultat").className = "msg resultat " + (r.action ? "ok" : "warn");
   };
   const bs = {};
@@ -134,6 +126,7 @@ export function exercice(box, { cle, consigne, depart = "def tour():\n    ", cas
   boiteOutils(box.querySelector(".boite"), ed, outils);
   let essais = 0;
   const res = box.querySelector(".res");
+  brancherLiens(res, ed);   // les « ligne 3 » des explications mènent à la ligne
   box.querySelector(".rst").addEventListener("click", () => { ed.value = depart; store.del(cleCode); res.innerHTML = ""; ed.focus(); });
   box.querySelector(".sol").addEventListener("click", () => {
     res.innerHTML = `<div class="msg info">👀 Une solution possible (recopie-la pour bien la retenir) :</div><div class="sol-code"></div>`;
@@ -155,12 +148,20 @@ export function exercice(box, { cle, consigne, depart = "def tour():\n    ", cas
       const tout = lignes.every((l) => l.ok);
       res.innerHTML = `<table class="cas"><tr><th>Situation</th><th>Attendu</th><th>Ta tortue</th><th></th></tr>${lignes.map((l) => l.html).join("")}</table>` +
         (tout ? `<div class="msg ok bravo">🎉 <b>Bravo !</b> Ton code marche dans toutes les situations.</div>`
-              : `<div class="msg err">Presque ! Regarde les lignes ❌.</div>` + (essais >= 2 ? `<div class="msg warn">💡 ${indice}</div>` : ""));
+              : `<div class="msg err">Presque ! Regarde les lignes ❌.</div>` + explication(c.compiled, cas[lignes.findIndex((l) => !l.ok)]) + (essais >= 2 ? `<div class="msg warn">💡 ${indice}</div>` : ""));
       if (tout) { fait(cle); const b = el("button", { class: "btn big pulse" }, "Continuer →"); b.addEventListener("click", suivant); res.append(b); }
     }
     if (essais >= 2) box.querySelector(".sol").classList.remove("cache");
   });
   return ed;
+}
+
+// pourquoi la tortue ne fait pas ce qu'on attend dans ce cas : quelle ligne agit, et pourquoi (tests de la tortue)
+function explication(compiled, k) {
+  if (!k || !(k.attendu || k.pas)) return "";
+  const e = expliquerSituation(compiled, k.sit, k.attendu ? { attendu: [k.attendu] } : { interdit: [k.pas] });
+  const p = [e.agit, e.raison].filter(Boolean).map(riche).join(" ");
+  return p ? `<div class="msg explique">🔍 <b>${k.texte}</b> : ${p}${e.conseil ? `<br>👉 ${riche(e.conseil)}` : ""}</div>` : "";
 }
 
 // quiz à boutons
@@ -196,7 +197,8 @@ export function quiz(box, titre, questions, rendreQuestion = null, fin = null) {
 
 // mission : réparer / écrire une tortue et la tester dans un petit lagon
 //  M : { id, cle, titre, notion, probleme, objectif, code, indice, solution, appris, scenario, graine,
-//        autres:[{id, nom, couleur, code}], reussi(sim), bilan(sim), avance }
+//        autres:[{id, nom, couleur, code}], reussi(sim), bilan(sim), avance,
+//        test : le test de la tortue qui explique l'échec (« rentrer_algues »…) }
 export function etapeMission(M) {
   return {
     court: M.court, titre: M.titre, cle: M.cle,
@@ -218,6 +220,7 @@ export function etapeMission(M) {
       const cle = prefixeCode + "code-" + M.cle;
       const ed = new CodeEditor($("#ed", box), { value: store.get(cle) || M.code, onChange: (v) => store.set(cle, v), avance: M.avance ?? null });
       boiteOutils($("#boite", box), ed);
+      brancherLiens($("#res", box), ed);
       let viewer = null, essais = 0;
       $("#indice", box).addEventListener("click", () => { $("#res", box).innerHTML = `<div class="msg warn">💡 ${esc(M.indice)}</div>`; $("#sol", box).classList.remove("cache"); });
       $("#sol", box).addEventListener("click", () => {
@@ -247,6 +250,8 @@ export function etapeMission(M) {
             b.addEventListener("click", suivant); res.append(b);
           } else {
             res.innerHTML = `<div class="msg err">❌ <b>Pas encore.</b> ${esc(M.bilan(sim))}<br>Regarde « Dans la tête de ta tortue » : quelle ligne s'exécute au mauvais moment ?</div>`;
+            const t = M.test && diagnostiquer(ed.value).tests.find((x) => x.id === M.test && !x.ok);
+            if (t) res.innerHTML += `<div class="msg explique">🔍 <b>${t.titre}</b> : ${[t.agit, t.raison].filter(Boolean).map(riche).join(" ")}${t.conseil ? `<br>👉 ${riche(t.conseil)}` : ""}</div>`;
             if (essais >= 2) { res.innerHTML += `<div class="msg warn">💡 ${esc(M.indice)}</div>`; $("#sol", box).classList.remove("cache"); }
           }
         };

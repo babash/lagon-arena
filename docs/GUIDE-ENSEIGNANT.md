@@ -11,7 +11,7 @@ Tout ce qu'il faut pour mener une séance, donner un devoir ou laisser les élè
 | Page | Pour qui | Rôle |
 |---|---|---|
 | `index.html` | tous | Accueil en deux vues : **🐢 élève** (rejoindre une salle, tutoriel, bac à sable, Panthéon) et **👩‍🏫 enseignant** (le jeu en bref, créer une salle ou un devoir, mode démo, documentation), avec le nombre de parties jouées et de participants |
-| `tuto.html` | élèves débutants | **Tutoriel** en 14 étapes courtes : un exemple à manipuler, puis un petit exercice vérifié tout de suite |
+| `tuto.html` | élèves débutants | **Tutoriel** en 15 étapes courtes : un exemple à manipuler, puis un petit exercice vérifié tout de suite. L'élève en sort avec **une tortue qui pond** |
 | `tuto-avance.html` | élèves à l'aise | **Tutoriel avancé** en 3 niveaux : 🥈 intermédiaire, 🥇 expert, 👥 équipe |
 | `eleve.html` | élèves | Programmer, tester, envoyer sa tortue ; résultats, rapport, « Et si… ? », classement, aide |
 | `eleve.html?libre=1` | élèves | **Bac à sable** seul, sans salle (pour s'entraîner n'importe quand) |
@@ -114,7 +114,8 @@ C'est un bon objectif pour les élèves rapides, ou pour prolonger le travail à
 - **Barre d'info** : le rôle du mot sous le curseur.
 - **Indentation visible** : un trait vertical coloré par niveau. Sur un `if`, un `elif` ou un `else`, les mots-clés qui vont ensemble sont surlignés (« Ce `else` va avec le `if` de la ligne 5 »).
 - **Deux-points ajoutés automatiquement** quand on les oublie après `if`, `elif` ou `else` (l'éditeur le signale), et **indentation automatique**.
-- **💡 Coup de pouce** : l'idée suivante d'après ce qui manque dans le code, en 5 paliers (pondre la nuit sur la plage, se méfier des requins, vérifier l'énergie, éviter le plastique, partir avant la nuit ; en équipes, « Aide ton équipe ! »). Chaque palier montre un programme complet, les lignes à ajouter en vert : l'élève les recopie lui-même.
+- **🧪 Les tests de la tortue**, sous l'éditeur, à chaque modification : un verdict en une ligne (🟢 « Ta tortue sait pondre ! », 🟠 « peut pondre, mais pas souvent », 🔴 « ne pondra jamais »), les 4 actions clés (pondre, aller vers la plage, manger, aller vers les algues), puis le tableau de 10 situations (« 🌙 La nuit, sur la plage → on attend `pondre()` → ta tortue fait `manger()` ligne 3 ❌ »). Chaque ❌ dit **quelle ligne agit à la place, et pourquoi** (« une seule action par tour », « le premier vrai gagne », « `energie() >= 9` est faux »), et les lignes en cause sont surlignées dans le code. Les tests ne bloquent jamais : la tortue peut toujours être testée et envoyée.
+- **💡 Coup de pouce** : l'idée suivante d'après les tests de la tortue (d'abord la faire pondre, avec la vraie cause : deux blocs à la suite, mauvais ordre…), en 5 paliers (pondre la nuit sur la plage, se méfier des requins, vérifier l'énergie, éviter le plastique, partir avant la nuit ; en équipes, « Aide ton équipe ! »). Chaque palier montre un programme complet, les lignes à ajouter en vert : l'élève les recopie lui-même.
 - **Rappels** : sous l'éditeur, une règle importante change toutes les 15 secondes.
 - **❓ Aide**, en deux onglets : **📜 Règles** et **💡 Conseils**. Chacun commence par **l'essentiel en 5 lignes**, puis des sections à déplier pour les plus acharnés (toutes les règles ; construire sa tortue pas à pas, comprendre pourquoi ça ne marche pas, erreurs fréquentes, conseils par niveau et par nouveauté).
 - **◀ Réduire** replie l'éditeur : le lagon du bac à sable prend toute la largeur, les boutons Tester / Envoyer restent visibles.
@@ -146,19 +147,22 @@ Chaque étape montre **d'abord un exemple à manipuler**, avec très peu de text
 4. **Les ordres (actions)** : un quiz « quel ordre donner dans cette situation ? ».
 5. **Ton premier `if`** : un `if` décortiqué en couleurs, un interrupteur True/False pour voir l'effet, puis l'élève écrit son premier `if`, vérifié dans 2 situations.
 6. **`else`** : un exemple avec interrupteur, puis un exercice.
-7. **`elif`, le premier vrai gagne** : un exemple et un quiz « Devine ce que fait la tortue ».
-8. **`and`** : un testeur de ponte, puis un exercice.
-9. **Énergie et dangers** : une jauge à manipuler et 4 règles d'une ligne.
-10. à 13. **4 tortues à réparer** dans le lagon, chacune avec un indice ; « Voir la solution » apparaît après 2 essais.
+7. **`and`** : un testeur de ponte, puis un exercice.
+8. **`elif`, le premier vrai gagne** : un exemple et un quiz « Devine ce que fait la tortue ».
+9. **Une seule chaîne** : la tortue fait **une seule action par tour**. Une tortue à deux blocs `if` / `else` à la suite (le piège le plus fréquent en classe) : avec les interrupteurs, l'élève voit que la ligne `pondre()` est « ignorée ». Puis il la répare en une seule chaîne `if` / `elif` / `else`.
+10. **L'ordre des priorités** : 4 règles à ranger avec des flèches (danger, pondre, rentrer la nuit, manger), vérifiées dans 6 situations ; le code se met à jour.
+11. **Énergie et dangers** : une jauge à manipuler et quelques règles d'une ligne.
+12. et 13. **2 tortues à réparer** dans le lagon, chacune avec un indice ; « Voir la solution » apparaît après 2 essais.
 
     | Mission | Notion | Ce qui ne va pas |
     |---|---|---|
-    | 1 | `if` | La tortue va vers les algues mais ne mange jamais. |
-    | 2 | ordre des `elif` | Elle mange alors qu'un requin arrive. |
-    | 3 | `and` | Elle essaie de pondre en plein jour. |
-    | 4 | `not` | Elle avale un sac plastique. |
+    | M1 | ordre des règles | La nuit, elle mange au lieu d'aller pondre. |
+    | M2 | ordre des `elif` | Elle mange alors qu'un requin arrive. |
 
-14. **En classe** : le déroulé de la séance et le barème des points.
+14. **🐢 Construis ta tortue** : la tortue de départ de la partie, à compléter avec ses **tests en direct** jusqu'au 🟢 ; on peut la voir jouer contre les tortues d'entraînement. « 🐢 Emporter ma tortue » la place dans l'éditeur de la partie (ou du bac à sable).
+15. **En classe** : le déroulé de la séance et le barème des points.
+
+Quand un exercice ou une mission échoue, l'élève voit **pourquoi** : « 🔍 La nuit, sur la plage : ta tortue fait `manger()` (ligne 3), parce que `algue_ici()` est vrai. La ligne 5 `pondre()` n'est même pas regardée : le premier vrai gagne. »
 
 ### Le tutoriel avancé (`tuto-avance.html`)
 

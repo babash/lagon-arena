@@ -76,6 +76,41 @@ export const MISSIONS = [
   },
 ];
 
+// ---------- missions ajoutées au tutoriel débutant (faire pondre la tortue) ----------
+//  (à part de MISSIONS : leurs parties ne changent pas l'empreinte du moteur)
+export const MISSIONS_PONTE = [
+  {
+    id: "B", titre: "Elle mange au lieu de pondre", notion: "l'ordre des règles",
+    histoire: "Il fait nuit, la plage est à 3 cases… et cette tortue mange, mange, mange sans jamais y aller.",
+    objectif: "Pondre au moins 1 nid cette nuit (20 tours).",
+    code: `def tour():
+    if algue_ici():
+        manger()
+    elif sur_plage() and est_la_nuit():
+        pondre()
+    elif est_la_nuit():
+        aller_vers_plage()
+    else:
+        aller_vers_algue()
+`,
+    indice: "Le premier vrai gagne : sur les algues, algue_ici() est vrai, donc la tortue mange. La règle « la nuit, va vers la plage » doit passer AVANT celle qui mange (et après celle qui pond).",
+    solution: `def tour():
+    if sur_plage() and est_la_nuit():
+        pondre()
+    elif est_la_nuit():
+        aller_vers_plage()
+    elif algue_ici():
+        manger()
+    else:
+        aller_vers_algue()
+`,
+    test: "rentrer_algues",
+    scenario: { energie: 8, requins: [], plastiques: [], spawn: [4, 6], heureDepart: 20, ticks: 20, herbes: [[4, 6, 40], [4, 7, 40]] },
+    reussi: (sim) => sim.tortues[0].nids >= 1,
+    bilan: (sim) => `${sim.tortues[0].nids} nid(s) · ${sim.tortues[0].stats.repas} repas.`,
+  },
+];
+
 // ---------- missions du tutoriel avancé ----------
 const RIVALE_GOURMANDE = `def tour():
     if algue_ici():

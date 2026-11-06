@@ -109,7 +109,9 @@ function resultats(m) {
   return {
     twist: m.twist, graine: m.graine, ticks: m.ticks, heureDepart: m.heureDepart,
     frames: m.frames, events: m.events, traces: m.traces, nids: m.nids, version: m.version, lagon: m.lagon, carte: m.C.lignes,
-    tortues: turtles.map((t) => ({ id: t.id, nom: t.nom, couleur: t.couleur, equipe: t.equipe, sx: t.sx, sy: t.sy, stats: t.stats, nids: t.nids, compileError: t.compileError })),
+    // (le programme analysé reste accessible au rapport, sans alourdir les copies JSON de la partie)
+    tortues: turtles.map((t) => Object.defineProperty({ id: t.id, nom: t.nom, couleur: t.couleur, equipe: t.equipe, sx: t.sx, sy: t.sy, stats: t.stats, nids: t.nids, compileError: t.compileError },
+      "compiled", { value: t.compiled, enumerable: false })),
     resultats: res,
     equipes: resultatEquipes(turtles.map((t) => ({ id: t.id, nom: t.nom, equipe: t.equipe, nids: t.nids }))),
   };

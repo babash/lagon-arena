@@ -56,8 +56,11 @@ js/engine.js          ← point d'entrée du MOTEUR (réexporte js/moteur/*)
   moteur/actions.js       les actions (une par tour)
   moteur/requins.js       chasse, patrouille, captures
   moteur/simulation.js    la boucle des tours : simulate()
-  moteur/rapport.js       le rapport de match et les conseils
+  moteur/rapport.js       le rapport de match et les conseils (la vraie cause quand elle ne pond pas)
   moteur/missions.js      les missions des tutoriels (scénarios fixes)
+  moteur/diagnostic.js    les tests de la tortue : un tour dans 10 situations clés, toutes les situations
+                          de débutant (≈ 5 000), la structure (blocs à la suite, ordre, conditions jamais
+                          vraies), les 4 actions clés, le verdict 🟢 🟠 🔴 et les explications ligne par ligne
 js/interp.js          ← mini-interpréteur Python (conditions), messages d'erreur en français
 js/primitives.js      ← capteurs, actions, mots-clés, leur rôle en mots simples et leur catégorie (source unique)
 js/brawl.js           ← participants, équipes, lancement d'une manche, scores, classement (partagé prof / élèves)
@@ -66,7 +69,8 @@ js/stockage.js        ← stockage local avec durée de vie (1 jour pour l'élè
 js/render.js          ← dessin du lagon (canvas)
 js/viewer.js          ← visionneuse de match (lagon + frise + « pensée » de la tortue)
 js/editor.js          ← éditeur coloré, autocomplétion, boîte à outils, indentation visible
-js/pouce.js           ← le « coup de pouce » gradué
+js/pouce.js           ← le « coup de pouce » gradué (il suit les tests de la tortue)
+js/bilan.js           ← l'affichage des tests de la tortue (verdict, actions clés, tableau, liens « ligne 7 »)
 js/common.js          ← outils de page, liens à donner, code de session
 js/aide.js            ← l'aide de l'écran élève : 📜 Règles et 💡 Conseils
 js/accueil.js         ← la page d'accueil (vues élève / enseignant, compteurs, rejoindre une salle)
@@ -176,7 +180,7 @@ Un mini-Python écrit pour l'occasion, en trois temps : découpage en mots (*tok
 node outils/verifier.mjs
 ```
 
-Sans navigateur, il vérifie les missions des tutoriels, le déterminisme (y compris les anciennes manches et le mode léger), les capteurs experts sur des lagons construits à la main, 3 000 cartes aléatoires et 400 parties, les lagons personnalisés (réglages appliqués, valeurs extrêmes sans blocage, partie normale inchangée), le banc d'essai du Panthéon et le refus des copies, la catégorie de chaque primitive, et affiche l'équilibrage des tortues d'entraînement.
+Sans navigateur, il vérifie les missions des tutoriels, les tests de la tortue (les 6 tortues types vues en classe ont le bon verdict et la bonne explication, aucune fausse alerte sur les bonnes tortues, le rapport ne conseille jamais d'ajouter un `pondre()` déjà écrit), le déterminisme (y compris les anciennes manches et le mode léger), les capteurs experts sur des lagons construits à la main, 3 000 cartes aléatoires et 400 parties, les lagons personnalisés (réglages appliqués, valeurs extrêmes sans blocage, partie normale inchangée), le banc d'essai du Panthéon et le refus des copies, la catégorie de chaque primitive, et affiche l'équilibrage des tortues d'entraînement.
 
 Les parcours dans le navigateur (créer une salle, faire jouer des élèves, manches longues, équipes, devoir…) ont été testés avec Playwright pendant le développement, contre une copie locale de la base (PostgreSQL + PostgREST). Ces scripts ne sont pas encore dans le dépôt (voir la feuille de route du README).
 
@@ -187,7 +191,7 @@ Les parcours dans le navigateur (créer une salle, faire jouer des élèves, man
 1. Le calculer dans `js/moteur/capteurs.js` (et, s'il est coûteux, ne le calculer que s'il est utilisé).
 2. Déclarer son type dans `SENSORS` (`js/interp.js`).
 3. Le décrire dans `CAPTEURS` (`js/primitives.js`) : icône, rôle en mots simples, niveau (`avance`, `groupe`, `equipe`). L'autocomplétion, la boîte à outils et l'aide suivent automatiquement.
-4. Lui donner une valeur par défaut dans `SITUATION_BASE` (`js/tutokit.js`), pour les exercices des tutoriels.
+4. Lui donner une valeur par défaut dans `SITUATION_BASE` (`js/moteur/diagnostic.js`), pour les tests de la tortue et les exercices des tutoriels.
 5. Ajouter un contrôle dans `outils/verifier.mjs`, et la ligne correspondante dans [REGLES.md](REGLES.md#10-toutes-les-primitives).
 
 **Ajouter une nouveauté de manche** : une entrée dans `TWISTS` (`js/moteur/regles.js`) avec le nombre de requins, leur vitesse, leur vision, le plastique et les heures de nuit. Elle apparaît dans le panneau « Préparer la manche » et dans l'équilibrage du vérificateur.

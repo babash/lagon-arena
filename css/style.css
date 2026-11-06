@@ -132,6 +132,8 @@ input[type=text]:focus, select:focus { outline: none; border-color: var(--lagon)
 }
 .editor textarea::selection { background: rgba(95, 211, 223, .35); color: transparent; }
 .editor .ln-err { background: rgba(255, 123, 92, .28); display: inline-block; min-width: 100%; }
+.editor .ln-diag { background: rgba(255, 201, 60, .2); box-shadow: inset 3px 0 0 var(--or); display: inline-block; min-width: 100%; }
+.editor .gutter .diagl { color: var(--ocean-950); background: var(--or); border-radius: 4px; display: inline-block; padding: 0 3px; }
 .tok-kw { color: #ff8ec4; font-weight: 700; }
 .tok-sens { color: #7fe3f0; }
 .tok-act { color: #ffd166; font-weight: 700; }
@@ -140,6 +142,50 @@ input[type=text]:focus, select:focus { outline: none; border-color: var(--lagon)
 .tok-op { color: #c3a6ff; }
 .tok-bool { color: #f7a76c; font-weight: 700; }
 .editor-status { margin-top: 8px; }
+.codeview .l.ignoree { opacity: .55; text-decoration: line-through dotted; }
+.codeview .l.ignoree .tag { text-decoration: none; background: #e9edf2; color: var(--gris); }
+.ignoree-txt { font-weight: 600; color: #7a5300; }
+.msg.explique { background: #fff8e6; color: var(--encre); border-left: 4px solid var(--or); font-weight: 500; }
+
+/* ---------- les tests de la tortue (verdict 🟢 🟠 🔴, actions clés, tableau des situations) ---------- */
+.bilan { border-radius: 12px; padding: 10px 14px; margin: 8px 0; border: 2px solid transparent; background: var(--blanc); }
+.bilan-vert { background: var(--vrai-bg); border-color: #b5e6c8; }
+.bilan-orange { background: #fff4d6; border-color: #f3d58a; }
+.bilan-rouge { background: var(--faux-bg); border-color: #f5b8b8; }
+.bilan-verdict { display: flex; gap: 10px; align-items: flex-start; }
+.bilan-icone { font-size: 1.5rem; line-height: 1.1; }
+.bilan-verdict b { font-size: 1.05rem; font-weight: 900; }
+.bilan-vert .bilan-verdict b { color: #145c33; } .bilan-orange .bilan-verdict b { color: #7a5300; } .bilan-rouge .bilan-verdict b { color: #8a1c1c; }
+.bilan-cause { margin-top: 3px; line-height: 1.45; }
+.bilan .cles { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 6px; padding: 0; margin: 8px 0 4px; }
+.bilan .cles li { background: rgba(255, 255, 255, .7); border-radius: 999px; padding: 2px 10px; font-size: .86rem; font-weight: 700; }
+.bilan .cles li.ko { color: #8a1c1c; background: #fff; box-shadow: inset 0 0 0 1.5px #f0a6a6; }
+.bilan .cles small { font-weight: 600; }
+.bilan-tests summary { cursor: pointer; font-weight: 800; color: var(--ocean-800); margin-top: 4px; }
+.bilan-tests[open] summary { margin-bottom: 4px; }
+.table-defile { overflow-x: auto; max-width: 100%; }
+@media (max-width: 560px) { .table-defile code { white-space: normal; word-break: break-word; } }
+.tests-tortue { width: 100%; border-collapse: collapse; font-size: .88rem; background: var(--blanc); border-radius: 10px; overflow: hidden; }
+.tests-tortue th { text-align: left; background: var(--ocean-800); color: #fff; padding: 5px 8px; font-weight: 800; }
+.tests-tortue td { padding: 5px 8px; border-top: 1px solid var(--gris-clair); vertical-align: top; }
+.tests-tortue td.marque { text-align: center; width: 3em; }
+.tests-tortue tr.t-rate > td, .tests-tortue tr.explication.t-ponte > td { background: #fff1f1; }
+.tests-tortue tr.t-conseil > td, .tests-tortue tr.explication.t-conseil > td { background: #fffaea; }
+.tests-tortue tr.explication.cache { display: none; }
+.voir-pourquoi { font: inherit; background: none; border: 0; padding: 0 2px; cursor: pointer; white-space: nowrap; }
+.voir-pourquoi span { font-size: .75em; opacity: .7; }
+.voir-pourquoi[aria-expanded="true"] span { opacity: 1; }
+.tests-tortue tr.explication > td { border-top: 0; padding: 0 10px 8px 18px; font-size: .86rem; }
+.tests-tortue tr.explication p { margin: 3px 0; }
+.tests-tortue tr.explication p.faire { font-weight: 700; }
+.bilan .remarques { margin: 8px 0 0; padding-left: 0; list-style: none; }
+.bilan .remarques li { background: var(--blanc); border-radius: 10px; padding: 6px 10px; margin-top: 6px; font-size: .88rem; }
+.bilan .remarques li.rouge { box-shadow: inset 3px 0 0 var(--faux); }
+.bilan .remarques li.orange { box-shadow: inset 3px 0 0 var(--or); }
+.lien-ligne { font: inherit; font-weight: 800; color: var(--ocean-700); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px; }
+.lien-ligne:hover, .lien-ligne:focus-visible { color: var(--lagon); }
+#prog-grid.reduite #statut .bilan { font-size: .82rem; padding: 6px 8px; }
+#prog-grid.reduite #statut .bilan .cles, #prog-grid.reduite #statut .bilan-cause { display: none; }
 
 /* ---------- vue « pensée » ---------- */
 .pensee { display: grid; grid-template-columns: 1fr 200px; gap: 12px; }
@@ -716,3 +762,14 @@ a.compteur:hover { background: rgba(255,255,255,.22); }
 .lagon-grille input::placeholder { color: #9aa8b5; }
 .pill.lagon-perso { background: var(--lagon-pale); color: var(--ocean-800); font-weight: 700; white-space: normal; }
 .lagon-perso-ligne { font-weight: 700; color: var(--ocean-800); margin: 6px 0 0; }
+
+/* ---------- tutoriel : l'ordre des priorités (cartes à ranger) ---------- */
+.regles-ordre { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 6px; }
+.carte-regle { display: flex; align-items: center; gap: 10px; background: var(--blanc); border: 2px solid var(--gris-clair); border-radius: 12px; padding: 6px 8px 6px 6px; }
+.carte-regle.fixe { margin-top: 6px; background: var(--fond); border-style: dashed; }
+.carte-regle .rang { width: 1.8em; height: 1.8em; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--ocean-800); color: #fff; font-weight: 900; }
+.carte-regle .ic { font-size: 1.3rem; }
+.carte-regle .fr { flex: 1; }
+.carte-regle .fleches { display: flex; gap: 4px; }
+.carte-regle .fleches .btn { padding: 4px 8px; min-width: 2.4em; }
+.proposer-tuto .btn { margin: 4px 4px 0 0; }

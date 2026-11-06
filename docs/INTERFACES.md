@@ -189,7 +189,7 @@ Cette fiche apparaîtrait chez l'élève (programmer, tester), au tableau (penda
 
 **Propositions** :
 - **Un compteur « à vérifier »** visible sur la page publique quand on est connecté en administrateur. **[nouveau]**
-- **Le signalement** d'un pseudo ou d'un lycée par les enseignants (un bouton 🚩, qui ne retire rien tout seul). **[nouveau]**
+- **Le signalement** d'un pseudo ou d'un établissement par les enseignants (un bouton 🚩, qui ne retire rien tout seul). **[nouveau]**
 
 ### 12. Le Panthéon, côté public
 
@@ -197,7 +197,8 @@ Cette fiche apparaîtrait chez l'élève (programmer, tester), au tableau (penda
 
 **Propositions** :
 - **Un podium** des 3 premières en tête de page.
-- **Un classement des lycées** (moyenne de leurs 5 meilleures tortues).
+- **Chaque ligne affiche le pseudo, la classe (code de la salle) et la date**, plus l'établissement si l'enseignant l'a renseigné en créant la salle : deux élèves de classes différentes peuvent avoir le même pseudo. **[décidé]**
+- **Un classement des établissements** (moyenne de leurs 5 meilleures tortues), pour ceux qui sont renseignés.
 - **Un encadré « Comment entrer au Panthéon ? »** en 3 étapes.
 - **Les 20 lagons du banc d'essai** en miniatures : les élèves voient sur quoi leur tortue est jugée.
 
@@ -233,5 +234,5 @@ En reprenant tous les moments, voici ce qui **existe déjà mais reste caché**,
 | Démo qui se joue toute seule | enseignant | ⭐⭐ | moyen |
 | Messages « oubli dans 1 jour » et « effacement dans 7 jours » | tous | ⭐⭐ | faible |
 | Un seul code par élève | élève | ⭐ | à étudier |
-| Panthéon : podium, lycées, comment entrer, banc d'essai | élève | ⭐ | faible |
+| Panthéon : podium, classe et date, établissements, comment entrer, banc d'essai | élève | ⭐ | faible |
 | Pseudo au hasard | élève | ⭐ | faible |

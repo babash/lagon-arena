@@ -5,16 +5,28 @@ import { check } from "../interp.js";
 import { CodeEditor, boiteOutils } from "../editor.js";
 import { CODE_DEPART } from "../engine.js";
 import { coupDePouceHTML } from "../pouce.js";
+import { bilanHTML, brancherLiens, lignesEnCause } from "../bilan.js";
+import { diagnostiquer } from "../moteur/diagnostic.js";
 import { RAPPELS, estAvance, setAvance, estEquipe } from "../primitives.js";
-import { $, el, esc, toast, store, activerCopie } from "../common.js";
+import { $, el, esc, toast, store, activerCopie, CLE_TORTUE_TUTO } from "../common.js";
 import { cleCode } from "./etat.js";
 
 // à chaque modification du code (par l'élève ou par la page), d'autres parties se mettent à jour (envoi…)
 const apresModif = [];
 export const quandModifie = (f) => apresModif.push(f);
 let minuterie = null;
+// la tortue construite à la fin du tutoriel : chargée d'office si l'éditeur est vide, proposée sinon
+const tortueTuto = store.get(CLE_TORTUE_TUTO);
+const dejaEcrit = store.get(cleCode);
+const marquerPrise = () => { const t = store.get(CLE_TORTUE_TUTO); if (t) store.set(CLE_TORTUE_TUTO, { ...t, pris: [...(t.pris || []), cleCode] }); };
+let aProposer = false, depart = dejaEcrit || CODE_DEPART;
+if (tortueTuto && tortueTuto.code && !(tortueTuto.pris || []).includes(cleCode)) {
+  if (!dejaEcrit) { depart = tortueTuto.code; store.set(cleCode, depart); marquerPrise(); setTimeout(() => toast("🐢 Ta tortue du tutoriel t'attend dans l'éditeur !"), 400); }
+  else if (dejaEcrit !== tortueTuto.code) aProposer = true;
+  else marquerPrise();
+}
 export const ed = new CodeEditor($("#ed"), {
-  value: store.get(cleCode) || CODE_DEPART,
+  value: depart,
   onChange: (v) => { store.set(cleCode, v); clearTimeout(minuterie); minuterie = setTimeout(verifier, 450); apresModif.forEach((f) => f()); },
 });
 boiteOutils($("#outils"), ed);
@@ -26,18 +38,31 @@ export function remplacerCode(code) {
   apresModif.forEach((f) => f());
 }
 
+// à chaque modification : la syntaxe d'abord (🐞), puis les tests de la tortue (🟢 / 🟠 / 🔴)
+let ouvert = store.get("lagon:tests-ouverts", false);
 export function verifier() {
   const c = check(ed.value), st = $("#statut");
   if (!c.ok) {
     ed.setErreur(c.error.line);
     st.innerHTML = `<div class="msg err">🐞 <b>Ligne ${c.error.line}</b> : ${esc(c.error.message)}</div>`;
   } else {
-    st.innerHTML = (c.warnings.length ? "" : `<div class="msg ok">✅ Code valide : ta tortue est prête à nager.</div>`) +
-      c.warnings.map((w) => `<div class="msg warn">⚠️ Ligne ${w.line} : ${esc(w.msg)}</div>`).join("");
+    const d = diagnostiquer(ed.value);
+    st.innerHTML = bilanHTML(d, { ouvert }) + c.warnings.map((w) => `<div class="msg warn">⚠️ Ligne ${w.line} : ${esc(w.msg)}</div>`).join("");
+    ed.marquer(lignesEnCause(d));
+    const det = st.querySelector(".bilan-tests");
+    if (det) det.addEventListener("toggle", () => { ouvert = det.open; store.set("lagon:tests-ouverts", ouvert); });
   }
   return c;
 }
+brancherLiens($("#statut"), ed);
 verifier();
+if (aProposer) {
+  const m = el("div", { class: "msg info proposer-tuto", html: `🐢 Tu as construit une tortue dans le tutoriel. <button type="button" class="btn small vert">Prendre ma tortue du tutoriel</button> <button type="button" class="btn small ghost">Non merci</button>` });
+  const [oui, non] = m.querySelectorAll("button");
+  oui.addEventListener("click", () => { if (!confirm("Remplacer ton code actuel par ta tortue du tutoriel ?")) return; remplacerCode(tortueTuto.code); marquerPrise(); m.remove(); toast("🐢 Ta tortue du tutoriel est dans l'éditeur."); });
+  non.addEventListener("click", () => { marquerPrise(); m.remove(); });
+  $("#statut").before(m);
+}
 $("#reinit").addEventListener("click", () => {
   if (confirm("Remplacer ton code par la tortue de départ ? (ton code actuel sera perdu)")) remplacerCode(CODE_DEPART);
 });

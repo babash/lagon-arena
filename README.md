@@ -20,7 +20,7 @@
 
 | | |
 |---|---|
-| ![Le tutoriel](docs/img/tutoriel.webp) **Le tutoriel** : 14 étapes par l'exemple, des exercices vérifiés tout de suite, 4 tortues à réparer. | ![L'écran élève](docs/img/eleve.webp) **L'écran élève** : un éditeur qui complète les mots (même en français), un bac à sable pour tester. |
+| ![Le tutoriel](docs/img/tutoriel.webp) **Le tutoriel** : 15 étapes par l'exemple, des exercices vérifiés tout de suite, et l'élève repart avec une tortue qui pond. | ![L'écran élève](docs/img/eleve.webp) **L'écran élève** : un éditeur qui complète les mots (même en français), un bac à sable pour tester. |
 | ![Les résultats de l'élève](docs/img/eleve-resultats.webp) **Après le brawl** : le match rejoué en suivant sa tortue, ce qu'elle pensait, des conseils qui disent quoi écrire. | ![Les résultats projetés](docs/img/prof-resultats.webp) **Au tableau** : podium, résultats du match, classement de la séance. |
 
 Vous voulez d'abord découvrir seul ? Ouvrez l'[espace enseignant en mode démo](https://babash.github.io/lagon-arena/prof.html?demo) et ajoutez des élèves fictifs.

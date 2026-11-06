@@ -63,7 +63,7 @@ export class MatchViewer {
 }
 
 // texte avec `code` → <code>code</code>
-export const codeTxt = (t) => esc(t).replace(/`([^`]+)`/g, "<code>$1</code>");
+export const codeTxt = (t) => esc(t).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
 
 // Bloc « rapport du match » : ce qui s'est passé + conseils
 export function rapportHTML(sim, id) {

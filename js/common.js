@@ -76,6 +76,9 @@ export function salleInvitee() {
   if (q) { store.set("lagon:invitation", q.toUpperCase()); return q.toUpperCase(); }
   return String(store.get("lagon:invitation", "") || "");
 }
+// la tortue construite à la fin du tutoriel : elle attend dans l'éditeur de la partie (ou du bac à sable)
+//  { code, at, pris: [clés de code où elle a déjà été proposée] }
+export const CLE_TORTUE_TUTO = "lagon:tortue-tuto";
 export const lienPartie = () => { const s = salleInvitee(); return "index.html" + (s ? "?salle=" + encodeURIComponent(s) : ""); };
 
 // ---------- code de session : pour reprendre son pseudo sur un autre ordinateur (à la maison…) ----------

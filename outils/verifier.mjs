@@ -6,9 +6,13 @@
 //  3. cartes aléatoires : jamais de blocage (zone fermée, cul-de-sac, départ mal placé…) ;
 //  3 bis. lagons personnalisés : réglages appliqués, parties reproductibles, partie normale inchangée ;
 //  3 ter. Panthéon : banc d'essai reproductible, copies refusées ; primitives toutes rangées par catégorie ;
+//  3 quater. tests de la tortue : les 6 tortues types (pièges vus en classe) ont le bon verdict et la bonne
+//         explication, aucune fausse alerte sur les bonnes tortues, le rapport ne conseille jamais d'ajouter pondre() déjà écrit ;
 //  4. équilibrage : nombre moyen de nids des tortues d'entraînement selon la nouveauté.
 // =====================================================================
-import { simulate, MISSIONS, MISSIONS_AVANCEES, BOTS, TWISTS, CODE_DEPART, genererCarte, carteSansBlocage, CARTE_CLASSIQUE, W, H } from "../js/engine.js";
+import { simulate, MISSIONS, MISSIONS_AVANCEES, MISSIONS_PONTE, BOTS, BOT_PIRATE, TWISTS, CODE_DEPART, genererCarte, carteSansBlocage, CARTE_CLASSIQUE, W, H, rapport } from "../js/engine.js";
+import { diagnostiquer } from "../js/moteur/diagnostic.js";
+import { readFileSync } from "node:fs";
 
 const CORRECTIONS = {
   1: "def tour():\n    if algue_ici():\n        manger()\n    else:\n        aller_vers_algue()\n",
@@ -24,6 +28,14 @@ for (const M of MISSIONS) {
   const bon = !M.reussi(a) && M.reussi(b);
   ok &&= bon;
   console.log(`   ${bon ? "✔" : "✘"} Mission ${M.id} : code donné → ${M.reussi(a) ? "réussit (problème !)" : "échoue"} ; corrigé → ${M.reussi(b) ? "réussit" : "échoue (problème !)"}`);
+}
+
+for (const M of MISSIONS_PONTE) {
+  const jouer = (code) => simulate({ joueurs: [{ id: "t", nom: "t", couleur: "#f00", code }], graine: 7, scenario: M.scenario });
+  const a = jouer(M.code), b = jouer(M.solution);
+  const bon = !M.reussi(a) && M.reussi(b) && !diagnostiquer(M.code).tests.find((t) => t.id === M.test).ok;
+  ok &&= bon;
+  console.log(`   ${bon ? "✔" : "✘"} Mission ${M.id} : code donné → ${M.reussi(a) ? "réussit (problème !)" : "échoue"}, expliqué par le test « ${M.test} » ; solution → ${M.reussi(b) ? "réussit" : "échoue (problème !)"}`);
 }
 
 console.log("1 bis. Missions du tutoriel avancé");
@@ -130,6 +142,63 @@ console.log("3 ter. Panthéon et primitives");
   console.log(`   ${b2 ? "✔" : "✘"} copie d'une tortue d'entraînement refusée (même avec un commentaire), tortue inventée acceptée`); ok &&= b2;
   const sans = [...CAPTEURS, ...ACTIONS_INFO].filter((p) => !p.cat).map((p) => p.nom);
   console.log(`   ${sans.length ? "✘" : "✔"} toutes les primitives ont une catégorie${sans.length ? " (manque : " + sans.join(", ") + ")" : ""}`); ok &&= !sans.length;
+}
+
+console.log("3 quater. Tests de la tortue (verdict 🟢 🟠 🔴 et explications)");
+{
+  const T = (l) => "def tour():\n" + l.map((x) => "    " + x).join("\n") + "\n";
+  // les pièges vus en classe : ce que doit dire le verdict (couleur + mots de l'explication)
+  const TYPES = [
+    ["A. deux if/else à la suite", T(["if algue_ici():", "    manger()", "else:", "    aller_vers_algue()", "if sur_plage() and est_la_nuit():", "    pondre()", "else:", "    aller_vers_plage()"]),
+      "rouge", [/une seule action par tour/, /lignes 6 à 9/]],
+    ["B. manger en premier", T(["if algue_ici():", "    manger()", "elif sur_plage() and est_la_nuit():", "    pondre()", "elif est_la_nuit():", "    aller_vers_plage()", "else:", "    aller_vers_algue()"]),
+      "orange", [/ligne 2/, /premier vrai gagne/]],
+    ["C. rentrer avant de pondre", T(["if est_la_nuit():", "    aller_vers_plage()", "elif sur_plage() and est_la_nuit():", "    pondre()", "elif algue_ici():", "    manger()", "else:", "    aller_vers_algue()"]),
+      "rouge", [/ligne 4/, /ligne 2/, /premier vrai gagne/]],
+    ["D. pondre sans la nuit", T(["if sur_plage():", "    pondre()", "elif algue_ici():", "    manger()", "else:", "    aller_vers_plage()"]),
+      "orange", [/premier vrai gagne/]],
+    ["E. des if séparés", T(["if est_la_nuit():", "    aller_vers_plage()", "if sur_plage():", "    pondre()", "if algue_ici():", "    manger()", "aller_vers_algue()"]),
+      "rouge", [/trop tard/, /une seule chaîne/]],
+    ["F. coup de pouce n° 1", T(["if sur_plage() and est_la_nuit():", "    pondre()", "elif est_la_nuit():", "    aller_vers_plage()", "elif algue_ici():", "    manger()", "else:", "    aller_vers_algue()"]),
+      "vert", []],
+    ["tortue de départ", CODE_DEPART, "rouge", [/pas de `pondre\(\)`/]],
+  ];
+  for (const [nom, code, couleur, mots] of TYPES) {
+    const d = diagnostiquer(code), v = d.verdict;
+    const bon = v.couleur === couleur && mots.every((m) => m.test(v.cause));
+    ok &&= bon;
+    console.log(`   ${bon ? "✔" : "✘"} ${nom} : ${v.icone} ${v.titre}${bon ? "" : ` (attendu : ${couleur}, ${mots.join(" ")}) · ${v.cause}`}`);
+  }
+  const dD = diagnostiquer(TYPES[3][1]).tests.find((t) => t.id === "repartir");
+  const bD = !dD.ok && /refusé/.test(dD.raison) && /est_la_nuit/.test(dD.conseil);
+  console.log(`   ${bD ? "✔" : "✘"} D : « le jour, sur la plage » explique que pondre() est refusé et propose est_la_nuit()`); ok &&= bD;
+
+  // pas de fausse alerte : les bonnes tortues sont 🟢, sans remarque rouge ; Bulle (sans pondre) 🔴, Gourmande (mange la nuit) 🟠
+  const { CODE_EXPERT, CODE_EQUIPE } = await import("../js/tuto-avance/strategies.js");
+  const pouce = [...readFileSync(new URL("../js/pouce.js", import.meta.url), "utf8").matchAll(/code: `([^`]+)`/g)].map((m) => m[1].replace(/^\+/gm, ""));
+  const bonnes = [...BOTS.slice(2), BOT_PIRATE].map((b) => [b.nom, b.code]).concat([["stratégie d'expert", CODE_EXPERT], ["stratégie d'équipe", CODE_EQUIPE], ["mission 3 corrigée", CORRECTIONS[3]]],
+    MISSIONS_PONTE.map((M) => ["mission " + M.id + " corrigée", M.solution]), pouce.map((c, i) => [`coup de pouce ${i + 1}`, c]));
+  const fausses = bonnes.filter(([, c]) => { const d = diagnostiquer(c); return d.verdict.couleur !== "vert" || d.remarques.some((r) => r.gravite === "rouge"); });
+  const bulle = diagnostiquer(BOTS[0].code).verdict.couleur, gourmande = diagnostiquer(BOTS[1].code).verdict.couleur;
+  const bF = !fausses.length && bulle === "rouge" && gourmande === "orange";
+  console.log(`   ${bF ? "✔" : "✘"} aucune fausse alerte sur ${bonnes.length} bonnes tortues${fausses.length ? " (" + fausses.map(([n]) => n).join(", ") + ")" : ""} · Bulle ${bulle} · Gourmande ${gourmande}`); ok &&= bF;
+
+  // le rapport de match ne conseille jamais d'ajouter pondre() quand il est écrit, et nomme une ligne
+  const bots = BOTS.map((b, i) => ({ id: "bot" + i, nom: b.nom, couleur: "#888", code: b.code }));
+  const mauvais = [];
+  for (const [nom, code] of TYPES.slice(0, 5)) {
+    const sim = simulate({ joueurs: [{ id: "moi", nom: "moi", couleur: "#fff", code }, ...bots], graine: 900001, twist: "calme" });
+    const r = rapport(sim, "moi");
+    const moi = sim.tortues.find((t) => t.id === "moi");   // (si elle a pondu puis perdu son nid, le conseil parle des requins : c'est juste)
+    if (moi.nids === 0 && !moi.stats.pontes.length && (!/ligne/.test(r.conseils[0] || "") || /pas de `pondre\(\)`/.test(r.conseils.join(" ")))) mauvais.push(nom + " → " + r.conseils[0]);
+  }
+  console.log(`   ${mauvais.length ? "✘" : "✔"} rapport : la vraie cause, avec une ligne, jamais « ajoute pondre() » s'il est écrit${mauvais.length ? " : " + mauvais.join(" | ") : ""}`); ok &&= !mauvais.length;
+
+  // assez rapide pour tourner à chaque frappe (le cache est contourné par un commentaire différent)
+  const t0 = performance.now(); let n = 0;
+  for (const [, code] of [...TYPES, ...bonnes]) { diagnostiquer(code + "\n# " + n++); }
+  const ms = (performance.now() - t0) / n;
+  console.log(`   ${ms < 50 ? "✔" : "✘"} ${ms.toFixed(1)} ms par analyse en moyenne (objectif : moins de 50 ms)`); ok &&= ms < 50;
 }
 
 console.log("4. Équilibrage : nids moyens sur 30 parties de 20 tortues, cartes aléatoires (entre parenthèses : part des parties sans aucun nid)");
