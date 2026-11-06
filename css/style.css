@@ -773,3 +773,9 @@ a.compteur:hover { background: rgba(255,255,255,.22); }
 .carte-regle .fleches { display: flex; gap: 4px; }
 .carte-regle .fleches .btn { padding: 4px 8px; min-width: 2.4em; }
 .proposer-tuto .btn { margin: 4px 4px 0 0; }
+/* l'établissement de la salle (facultatif) */
+.etab-salle { margin: -2px 0 6px; font-weight: 800; color: var(--ocean-700); }
+.etab-salle:empty { display: none; }
+.etab-card .champ { margin-bottom: 4px; }
+.etab-card p { margin: 4px 0 0; }
+.reglages .r-etab { grid-column: 1 / -1; }

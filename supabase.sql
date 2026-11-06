@@ -80,6 +80,9 @@ alter table public.scores add column if not exists equipe int not null default 0
 -- réglages de la manche (préparés par l'enseignant, visibles par les élèves AVANT la manche) :
 --   { "mode": "solo" | "equipes", "nbEquipes": 2..6, "equipes": {"pseudo": 1..6}, "coef": 1|2|0, "bots": 8, "titre": "…" }
 alter table public.salles add column if not exists config jsonb;
+-- l'établissement de la classe (facultatif) : renseigné par l'enseignant en créant la salle ou le devoir.
+-- La classe elle-même, c'est le code de la salle.
+alter table public.salles add column if not exists etablissement text;
 -- le lagon personnalisé de la manche (nombre de requins, de coraux…) : pour la rejouer à l'identique (null = lagon normal)
 alter table public.scores add column if not exists lagon jsonb;
 
@@ -199,11 +202,24 @@ begin
     'pantheon',     (select count(*) from pantheon));
 end $$;
 
-create or replace function public.creer_salle() returns json
+-- un nom d'établissement propre (espaces resserrés), ou null s'il est vide
+create or replace function public.nom_etablissement(p text) returns text
+language plpgsql immutable set search_path = public as $$
+declare v text := nullif(regexp_replace(btrim(coalesce(p, '')), '\s+', ' ', 'g'), '');
+begin
+  if v is not null and (length(v) > 60 or v !~ '^[A-Za-z0-9À-ÿ ''’.,()&/-]+$') then
+    raise exception 'Nom d''établissement invalide : 60 caractères au plus, lettres et chiffres.';
+  end if;
+  return v;
+end $$;
+
+drop function if exists public.creer_salle();   -- (ancienne version, sans établissement)
+create or replace function public.creer_salle(p_etablissement text default null) returns json
 language plpgsql security definer set search_path = public as $$
 declare
   lettres constant text := 'ABCDEFGHJKLMNPQRSTUVWXYZ';
   v_code text; v_secret text; i int;
+  v_etab text := nom_etablissement(p_etablissement);
 begin
   perform menage();
   loop
@@ -214,7 +230,7 @@ begin
     exit when not exists (select 1 from salles where code = v_code);
   end loop;
   v_secret := md5(random()::text || clock_timestamp()::text || v_code);
-  insert into salles (code, graine) values (v_code, 1 + floor(random() * 1000000)::int);
+  insert into salles (code, graine, etablissement) values (v_code, 1 + floor(random() * 1000000)::int, v_etab);
   insert into salles_secret (code, secret) values (v_code, v_secret);
   perform compter('salles');
   return json_build_object('code', v_code, 'secret', v_secret);
@@ -251,6 +267,16 @@ begin
   perform verifier_prof(p_code, p_secret);
   if length(coalesce(p_config::text, '')) > 20000 then raise exception 'Réglages trop longs.'; end if;
   update salles set config = p_config, maj = now() where code = p_code;
+end $$;
+
+-- l'enseignant renseigne (ou corrige, ou efface) l'établissement de la salle
+create or replace function public.definir_etablissement(p_code text, p_secret text, p_etablissement text) returns text
+language plpgsql security definer set search_path = public as $$
+declare v text := nom_etablissement(p_etablissement);
+begin
+  perform verifier_prof(p_code, p_secret);
+  update salles set etablissement = v, maj = now() where code = p_code;
+  return v;
 end $$;
 
 -- l'enseignant « débloque » un pseudo : l'élève pourra le reprendre depuis un autre appareil
@@ -490,8 +516,8 @@ begin
 end $$;
 
 revoke execute on function public.verifier_prof(text, text), public.verifier_admin(text),
-  public.compter(text, int), public.menage() from public, anon, authenticated;
-grant execute on function public.heure_serveur(), public.creer_salle(),
+  public.compter(text, int), public.menage(), public.nom_etablissement(text) from public, anon, authenticated;
+grant execute on function public.heure_serveur(), public.creer_salle(text), public.definir_etablissement(text, text, text),
   public.piloter_salle(text, text, int, text, int, int, text, text[]),
   public.retirer_joueur(text, text, text), public.liberer_pseudo(text, text, text), public.definir_config(text, text, jsonb),
   public.rejoindre(text, text, text, text),

@@ -16,7 +16,7 @@ Tout ce qu'il faut pour mener une séance, donner un devoir ou laisser les élè
 | `eleve.html` | élèves | Programmer, tester, envoyer sa tortue ; résultats, rapport, « Et si… ? », classement, aide |
 | `eleve.html?libre=1` | élèves | **Bac à sable** seul, sans salle (pour s'entraîner n'importe quand) |
 | `prof.html` | enseignant | Créer une salle ou un devoir, lancer les manches, projeter les brawls, podium, export CSV |
-| `pantheon.html` | tous | Le **Panthéon** : les 100 meilleures tortues de tous les temps, classement par lycée |
+| `pantheon.html` | tous | Le **Panthéon** : les 100 meilleures tortues de tous les temps, classement par établissement |
 
 ![Le tutoriel : un exemple à manipuler, puis un exercice](img/tutoriel.webp)
 
@@ -24,7 +24,7 @@ Tout ce qu'il faut pour mener une séance, donner un devoir ou laisser les élè
 
 | Temps | Élèves | Enseignant (écran projeté) |
 |---|---|---|
-| 0–15 min | Font le **tutoriel** (`index.html` → « Commencer le tutoriel ») | Crée la salle dans `prof.html` : le code s'affiche en grand |
+| 0–15 min | Font le **tutoriel** (`index.html` → « Commencer le tutoriel ») | Crée la salle dans `prof.html` (avec le nom de l'établissement, si on le souhaite) : le code s'affiche en grand |
 | 15 min | Rejoignent la salle (code + pseudo) | Voit les élèves arriver, puis clique sur **▶ Lancer la manche 1** |
 | 15–23 min | Programment, testent dans le bac à sable, **envoient** leur tortue | Chrono géant ; ✅ ou ⏳ pour chaque élève |
 | 23–25 min | « Brawl en cours, regarde le tableau » | **Lancer le brawl** : match animé, classement en direct, fil des événements |
@@ -92,7 +92,7 @@ Le bouton **🔗 Lien d'accès élèves** de la salle redonne le lien et le mess
 Le [Panthéon](https://babash.github.io/lagon-arena/pantheon.html) classe les **100 meilleures tortues de tous les temps**, toutes classes confondues. Depuis son bac à sable, un élève clique sur **🏛️ Proposer au Panthéon** :
 
 - sa tortue joue **20 parties** dans le lagon calme contre les 5 tortues d'entraînement, sur **les mêmes 20 lagons pour tout le monde** : son score est sa **moyenne de nids** ;
-- il choisit un pseudo et, s'il le veut, son **lycée** (on peut ensuite afficher le classement d'un seul lycée) ;
+- il choisit un pseudo et, s'il le veut, son **établissement** (on peut ensuite afficher le classement d'un seul établissement). Si l'enseignant a renseigné l'établissement de la salle, il est déjà proposé ;
 - il reçoit un **code Panthéon** pour améliorer sa tortue plus tard : la nouvelle version remplace l'ancienne si elle fait mieux ;
 - son **programme est gardé mais jamais lisible** ; on ne peut pas entrer deux fois avec le même programme, ni avec une tortue d'entraînement ou une stratégie des tutoriels recopiée telle quelle.
 

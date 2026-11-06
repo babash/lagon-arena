@@ -11,7 +11,7 @@ import { $, el, esc, toast, store, nouveauCodePerso, normaliserCode, codeValide,
 import { BANC, evaluerBanc, codeConnu } from "../pantheon.js";
 import { PALIERS, PALIER_EQUIPE } from "../pouce.js";
 import { ed, verifier } from "./editeur.js";
-import { PSEUDO } from "./etat.js";
+import { PSEUDO, S } from "./etat.js";
 import { overlay } from "./ui.js";
 
 const CLE = "lagon:pantheon";   // { code (code Panthéon), pseudo, lycee } — 1 jour, comme tout ce qui est à l'élève
@@ -62,14 +62,14 @@ async function formulaire(code, r, top) {
     <form id="pt-form" class="form-pantheon">
       <label class="champ"><span>Pseudo au Panthéon <span class="petit muted">(pas ton vrai nom)</span></span>
         <input type="text" id="pt-pseudo" maxlength="14" required value="${esc(memo.pseudo || PSEUDO || "")}" autocomplete="off"></label>
-      <label class="champ"><span>Ton lycée <span class="petit muted">(facultatif)</span></span>
-        <input type="text" id="pt-lycee" maxlength="60" list="pt-lycees" value="${esc(memo.lycee || "")}" placeholder="ex. Lycée de Chirongui" autocomplete="off"></label>
+      <label class="champ"><span>Ton établissement <span class="petit muted">(facultatif)</span></span>
+        <input type="text" id="pt-lycee" maxlength="60" list="pt-lycees" value="${esc(memo.lycee || (S.salle && S.salle.etablissement) || "")}" placeholder="ex. Lycée de Chirongui" autocomplete="off"></label>
       <datalist id="pt-lycees"></datalist>
       <details ${memo.code ? "open" : ""}><summary>🔑 Ta tortue est déjà au Panthéon ?</summary>
         <label class="champ"><span>Ton code Panthéon <span class="petit muted">(la nouvelle tortue remplace l'ancienne si elle fait mieux)</span></span>
           <input type="text" id="pt-code" maxlength="12" class="input-code" value="${esc(codeLisible(memo.code || ""))}" placeholder="ex. K7PQ-2XMA" autocomplete="off" spellcheck="false"></label>
       </details>
-      <p class="petit muted">Ton programme est gardé, mais <b>personne ne pourra le lire</b>. Ton pseudo, ton lycée et ta moyenne seront visibles par tous.</p>
+      <p class="petit muted">Ton programme est gardé, mais <b>personne ne pourra le lire</b>. Ton pseudo, ton établissement et ta moyenne seront visibles par tous.</p>
       <div class="row" style="justify-content:center"><button class="btn big" type="submit">🏛️ Entrer au Panthéon</button>
         <button class="btn ghost" type="button" id="pt-annuler">Plus tard</button></div>
       <div id="pt-erreur" class="msg err cache"></div>

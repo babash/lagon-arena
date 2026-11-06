@@ -7,6 +7,14 @@
 import { CONFIG } from "./config.js";
 import { store } from "./stockage.js";
 
+// l'établissement d'une salle (facultatif) : espaces resserrés, null s'il est vide ; mêmes règles que la base
+export function nomEtablissement(t) {
+  const v = String(t || "").trim().replace(/\s+/g, " ");
+  if (!v) return null;
+  if (v.length > 60 || !/^[A-Za-z0-9À-ÿ '’.,()&/-]+$/.test(v)) throw new Error("Nom d'établissement invalide : 60 caractères au plus, lettres et chiffres.");
+  return v;
+}
+
 const params = new URLSearchParams(location.search);
 // ?demo force le mode démo (mémorisé pour cet onglet), ?demo=0 l'annule
 let forceDemo = false;
@@ -47,7 +55,17 @@ class Supabase {
   get(table, query) { return this.req(`/${table}?${query}`); }
 
   async heureServeur() { return new Date(await this.rpc("heure_serveur")); }
-  creerSalle() { return this.rpc("creer_salle"); }
+  // l'établissement est facultatif ; si la base n'a pas encore le script à jour, la salle est créée sans lui
+  async creerSalle(etablissement = "") {
+    const e = nomEtablissement(etablissement);
+    if (!e) return this.rpc("creer_salle");
+    try { return await this.rpc("creer_salle", { p_etablissement: e }); }
+    catch (err) {
+      if (!/pas prête/.test(err.message)) throw err;
+      return { ...(await this.rpc("creer_salle")), sansEtablissement: true };
+    }
+  }
+  definirEtablissement(code, secret, etablissement) { return this.rpc("definir_etablissement", { p_code: code, p_secret: secret, p_etablissement: nomEtablissement(etablissement) }); }
   async salle(code) { const r = await this.get("salles", `code=eq.${encodeURIComponent(code)}&select=*`); return r[0] || null; }
   piloter(code, secret, s) {
     return this.rpc("piloter_salle", { p_code: code, p_secret: secret, p_manche: s.manche, p_phase: s.phase,
@@ -104,18 +122,27 @@ class Demo {
   verifProf(s, code, secret) { if (s.secrets[code] !== secret) throw new Error("Accès refusé : cette salle appartient à un autre enseignant."); }
 
   async heureServeur() { return new Date(); }
-  async creerSalle() {
+  async creerSalle(etablissement = "") {
     await this.pause();
+    const etab = nomEtablissement(etablissement);
     const s = this.load();
     const L = "ABCDEFGHJKLMNPQRSTUVWXYZ";
     let code; do { code = Array.from({ length: 4 }, () => L[Math.floor(Math.random() * L.length)]).join(""); } while (s.salles[code]);
     const secret = Math.random().toString(36).slice(2) + Date.now().toString(36);
-    s.salles[code] = { code, cree_le: new Date().toISOString(), manche: 0, phase: "attente", fin_chrono: null, graine: 1 + Math.floor(Math.random() * 1e6), nouveaute: "calme", duel: null };
+    s.salles[code] = { code, cree_le: new Date().toISOString(), manche: 0, phase: "attente", fin_chrono: null, graine: 1 + Math.floor(Math.random() * 1e6), nouveaute: "calme", duel: null, etablissement: etab };
     s.secrets[code] = secret; s.joueurs[code] = []; s.jetons[code] = {};
     this.save(s);
     return { code, secret };
   }
   async salle(code) { await this.pause(); return this.load().salles[code] || null; }
+  async definirEtablissement(code, secret, etablissement) {
+    await this.pause();
+    const s = this.load(); this.verifProf(s, code, secret);
+    const etab = nomEtablissement(etablissement);
+    s.salles[code].etablissement = etab;
+    this.save(s);
+    return etab;
+  }
   async piloter(code, secret, p) {
     await this.pause();
     const s = this.load(); this.verifProf(s, code, secret);

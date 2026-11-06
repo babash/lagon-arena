@@ -3,9 +3,9 @@
 //  Créer une salle (séance en classe), créer un DEVOIR (salle préparée hors cours, à faire à la maison),
 //  ou reprendre une salle.
 // =====================================================================
-import { db, MODE } from "../db.js";
+import { db, MODE, nomEtablissement } from "../db.js";
 import { POINTS_RANG, BONUS_PROGRESSION } from "../engine.js";
-import { $, $$, toast } from "../common.js";
+import { $, $$, toast, esc, store } from "../common.js";
 import { reglages, mesSalles, memoriserSalle, oublierSalle } from "./etat.js";
 import { ouvrir, fermer } from "./salle.js";
 import { prevoirDevoir } from "./preparer.js";
@@ -19,6 +19,11 @@ export function accueil() {
   const anciennes = Object.entries(mesSalles()).sort((a, b) => (b[1].cree || "").localeCompare(a[1].cree || ""));
   $("#main").innerHTML = `<div class="grid2">
     <div>
+      <div class="card etab-card">
+        <label class="champ"><span>🏫 Établissement <span class="petit muted">(facultatif)</span></span>
+          <input type="text" id="etablissement" maxlength="60" value="${esc(store.get("lagon:etablissement") || "")}" placeholder="ex. Lycée de Chirongui" autocomplete="organization"></label>
+        <p class="petit muted">La classe est reconnue par le <b>code de la salle</b>. L'établissement, si vous le donnez, s'affiche à côté (au Panthéon notamment) ; il est proposé aux élèves qui y inscrivent leur tortue. Vous pourrez le changer dans les réglages de la salle.</p>
+      </div>
       <div class="card">
         <h2>🌊 Séance en classe</h2>
         <p>Créez une salle : un <b>code de 4 lettres</b> s'affiche au tableau, les élèves le tapent sur la page d'accueil avec un pseudo.</p>
@@ -35,7 +40,7 @@ export function accueil() {
     <div class="card">
       <h2>⏱️ Déroulé conseillé (≈ 55 min)</h2>
       <ol class="seance">
-        <li><b>Tutoriel</b> (10-15 min) : les élèves font <a href="tuto.html" target="_blank">le tutoriel</a> (règles + 3 missions de réparation).</li>
+        <li><b>Tutoriel</b> (10-15 min) : les élèves font <a href="tuto.html" target="_blank">le tutoriel</a> : les règles, 2 tortues à réparer, et ils repartent avec <b>une tortue qui pond</b>.</li>
         <li><b>Manche 1</b> : ${Math.round(reglages.duree1 / 60)} min de programmation → brawl projeté (≈ 1 min 15) → 3 min de rapport.</li>
         <li><b>Manche 2 — rematch</b> avec une nouveauté : ${Math.round(reglages.duree / 60)} min → brawl → rapport.</li>
         <li><b>Manche 3 — finale</b> : ${Math.round(reglages.duree / 60)} min → brawl → rapport.</li>
@@ -56,7 +61,10 @@ export function accueil() {
 
 async function creer(devoir) {
   try {
-    const r = await db.creerSalle();
+    const etab = nomEtablissement($("#etablissement").value) || "";
+    const r = await db.creerSalle(etab);
+    store.set("lagon:etablissement", etab);   // proposé la prochaine fois (60 jours)
+    if (r.sansEtablissement) toast("Salle créée, mais sans l'établissement : la base de données n'est pas à jour (relancer supabase.sql).", "err");
     memoriserSalle(r.code, r.secret, devoir ? { devoir: true } : {});
     if (devoir) prevoirDevoir(r.code);   // manche 1 sans limite de temps, à régler puis lancer
     await ouvrir(r.code);

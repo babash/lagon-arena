@@ -284,7 +284,8 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
   3. leur fait passer le banc d'essai (20 parties, en arrière-plan : chantier 9) ;
   4. les inscrit au Panthéon.
 - [ ] **Ce qu'affiche le Panthéon : le pseudo, la classe et la date.** La classe, c'est le **code de la salle** (ou du devoir). Le trio pseudo + classe + date est unique : deux élèves de classes différentes peuvent avoir le même pseudo.
-- [ ] **L'établissement est facultatif** : l'enseignant peut le renseigner **en créant la salle ou le devoir** (un champ de plus, vide par défaut). S'il le fait, il s'affiche à côté de la classe et sert de filtre au Panthéon. Il est gardé avec la salle, pas dans un réglage à part.
+- [x] **L'établissement est facultatif** : l'enseignant peut le renseigner **en créant la salle ou le devoir** (un champ de plus, vide par défaut, prérempli avec le dernier utilisé), puis le changer dans les réglages de la salle. Il s'affiche sous le code de la salle et il est proposé à l'élève qui inscrit sa tortue au Panthéon. Il est gardé avec la salle.
+  - [ ] Reste à faire avec le Panthéon automatique : l'afficher à côté de la classe, et filtrer par établissement.
 - [ ] **Réglages enseignant** (gardés 60 jours) :
   - « 🏛️ Envoyer les meilleures tortues au Panthéon » : oui par défaut ;
   - 1 ou 3 tortues par manche.
@@ -301,7 +302,7 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 
 ### Côté base
 
-- [ ] `salles.etablissement` (texte facultatif), rempli par `creer_salle` et la création du devoir.
+- [x] `salles.etablissement` (texte facultatif), rempli par `creer_salle(établissement)` ; `definir_etablissement(code, secret, établissement)` pour le changer.
 - [ ] `pantheon_classe(code, secret, entrées)` : l'inscription par l'enseignant (avec le secret de la salle).
 - [ ] Les entrées gardent leur origine : salle (la classe), manche, pseudo, date, établissement.
 - [ ] L'index unique `pantheon_pseudo` est remplacé par un index sur (pseudo, salle, date) ; `pantheon_lycees` devient la liste des établissements.

@@ -25,6 +25,7 @@ export async function ouvrir(code) {
     <aside class="card cote">
       <div class="petit muted">Code de la salle${m.devoir ? ' · <span class="pill or-pill petit">📚 devoir</span>' : ""}</div>
       <div class="code-salle">${code}</div>
+      <div class="petit etab-salle" id="etab-salle"></div>
       <div class="petit lien-salle">${esc(adresseCourte())}</div>
       <button class="btn small" id="lien-eleves">🔗 Lien d'accès élèves</button>
       <div class="sep"></div>
@@ -38,6 +39,7 @@ export async function ouvrir(code) {
           <label class="champ petit">Rematchs (min)<input type="number" min="1" max="30" step="0.5" id="r-d" value="${reglages.duree / 60}"></label>
           <label class="champ petit">Duel (min)<input type="number" min="1" max="30" step="0.5" id="r-dd" value="${reglages.dureeDuel / 60}"></label>
           <label class="champ petit">Tortues minimum (🤖 sinon)<input type="number" min="0" max="20" id="r-min" value="${reglages.min}"></label>
+          <label class="champ petit r-etab">🏫 Établissement (facultatif)<input type="text" maxlength="60" id="r-etab" value="${esc(S.salle.etablissement || "")}" placeholder="ex. Lycée de Chirongui"></label>
         </div></details>
       <div class="sep"></div>
       <div class="row"><button class="btn small ghost" id="quitter">← Mes salles</button>
@@ -53,6 +55,17 @@ export async function ouvrir(code) {
   if ($("#faux")) $("#faux").addEventListener("click", () => ajouterFaux().then(sonder));
   for (const [id, k, f] of [["r-d1", "duree1", 60], ["r-d", "duree", 60], ["r-dd", "dureeDuel", 60], ["r-min", "min", 1]])
     $("#" + id).addEventListener("change", (e) => { const v = parseFloat(e.target.value); if (v >= 0) { reglages[k] = Math.round(v * f); sauverReglages(); } });
+  // l'établissement de la salle : affiché sous le code, modifiable dans les réglages
+  const montrerEtab = () => { $("#etab-salle").textContent = S.salle.etablissement ? "🏫 " + S.salle.etablissement : ""; };
+  montrerEtab();
+  $("#r-etab").addEventListener("change", async (e) => {
+    try {
+      S.salle.etablissement = await db.definirEtablissement(code, S.secret, e.target.value);
+      e.target.value = S.salle.etablissement || "";
+      montrerEtab();
+      toast(S.salle.etablissement ? "🏫 Établissement enregistré." : "Établissement retiré.");
+    } catch (err) { toast(/pas prête/.test(err.message) ? "L'établissement ne peut pas être enregistré : la base de données n'est pas à jour (relancer supabase.sql)." : err.message, "err"); e.target.value = S.salle.etablissement || ""; }
+  });
   majInfo();
   await sonder();
   S.sondage = setInterval(sonder, 3000);

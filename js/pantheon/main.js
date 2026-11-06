@@ -21,7 +21,7 @@ async function charger() {
     top = await db.pantheonTop(100, lycee || null);
   } catch (e) { $("#classement").innerHTML = `<tr><td colspan="5" class="msg err">${esc(e.message)}</td></tr>`; return; }
   afficher();
-  $("#resume").textContent = top.length ? `${top.length} tortue${top.length > 1 ? "s" : ""}${lycee ? " dans ce lycée" : ""}` : "";
+  $("#resume").textContent = top.length ? `${top.length} tortue${top.length > 1 ? "s" : ""}${lycee ? " dans cet établissement" : ""}` : "";
 }
 
 function afficher() {
@@ -33,7 +33,7 @@ function afficher() {
     lignes.splice(i < 0 ? lignes.length : i, 0, { type: "repere", pseudo: r.nom, moyenne: r.moyenne });
   }
   const tb = $("#classement"); tb.innerHTML = "";
-  if (!top.length) tb.append(el("tr", {}, el("td", { colspan: 5, class: "muted" }, lycee ? "Aucune tortue de ce lycée pour l'instant." : "Le Panthéon est encore vide : à toi d'y entrer le premier !")));
+  if (!top.length) tb.append(el("tr", {}, el("td", { colspan: 5, class: "muted" }, lycee ? "Aucune tortue de cet établissement pour l'instant." : "Le Panthéon est encore vide : à toi d'y entrer le premier !")));
   for (const l of lignes) {
     if (l.type === "repere") {
       tb.append(el("tr", { class: "bot repere" }, el("td", { class: "num" }, ""), el("td", {}, `🤖 ${l.pseudo}`), el("td", {}, "tortue d'entraînement"),
@@ -43,7 +43,7 @@ function afficher() {
     tb.append(el("tr", { class: l.pseudo === moi ? "moi" : l.rang <= 3 ? "top3" : "" },
       el("td", { class: "num" }, String(medaille(Number(l.rang)))),
       el("td", {}, el("b", {}, l.pseudo)),
-      el("td", {}, l.lycee ? el("a", { href: "#", "data-lycee": l.lycee, title: "Voir ce lycée" }, l.lycee) : el("span", { class: "muted" }, "—")),
+      el("td", {}, l.lycee ? el("a", { href: "#", "data-lycee": l.lycee, title: "Voir cet établissement" }, l.lycee) : el("span", { class: "muted" }, "—")),
       el("td", { class: "num" }, nombre(l.moyenne)),
       el("td", { title: l.verifie ? "Score recalculé et vérifié" : "En attente de vérification" }, l.verifie ? "✔" : "⏳")));
   }

@@ -39,7 +39,7 @@ function afficher() {
       <button class="btn small ghost" id="adm-tout">Tout revérifier (${liste.length})</button>
       <span class="petit muted" id="adm-etat"></span>
     </div>
-    <table class="scores"><thead><tr><th class="num">#</th><th>Tortue</th><th>Lycée</th><th class="num">Moyenne</th><th>État</th><th></th></tr></thead><tbody id="adm-liste"></tbody></table>`;
+    <table class="scores"><thead><tr><th class="num">#</th><th>Tortue</th><th>Établissement</th><th class="num">Moyenne</th><th>État</th><th></th></tr></thead><tbody id="adm-liste"></tbody></table>`;
   const tb = $("#adm-liste");
   liste.forEach((t, i) => {
     const code = el("details", {}, el("summary", {}, "programme"), el("pre", { class: "code-admin" }, t.code));

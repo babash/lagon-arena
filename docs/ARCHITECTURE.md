@@ -136,19 +136,20 @@ Un mini-Python écrit pour l'occasion, en trois temps : découpage en mots (*tok
 
 | Table | Contenu | Lecture |
 |---|---|---|
-| `salles` | code, manche, phase, fin du chrono, graine, nouveauté, duel, `config` (réglages de la manche préparée, en JSON) | publique |
+| `salles` | code (c'est lui qui identifie la classe), établissement (facultatif), manche, phase, fin du chrono, graine, nouveauté, duel, `config` (réglages de la manche préparée, en JSON) | publique |
 | `salles_secret` | jeton enseignant de chaque salle | personne |
 | `joueurs` | pseudo, couleur | publique |
 | `joueurs_secret` | jeton de chaque élève | personne |
 | `tortues` | code envoyé par manche | **seulement après le brawl** de la manche (politique RLS) |
 | `scores` | nids, rang, points, bonus, nouveauté (+ version), duel, équipe, lagon personnalisé | publique |
 | `compteurs` | compteurs de l'accueil (parties, participants, salles), gardés à part pour que le ménage ne les fasse pas baisser | personne (fonction `statistiques`) |
-| `pantheon` | pseudo, lycée, moyenne, version du banc, **programme**, empreinte du programme, jeton (code Panthéon), vérifié | personne (fonctions ci-dessous) |
+| `pantheon` | pseudo, établissement (colonne `lycee`), moyenne, version du banc, **programme**, empreinte du programme, jeton (code Panthéon), vérifié | personne (fonctions ci-dessous) |
 | `admin_secret` | le mot de passe de l'administrateur du Panthéon | personne |
 
 | Fonction | Qui | Rôle |
 |---|---|---|
-| `creer_salle()` | tous | crée une salle, renvoie le code et le secret ; supprime les salles inutilisées depuis 60 jours |
+| `creer_salle(établissement)` | tous | crée une salle (l'établissement est facultatif), renvoie le code et le secret ; supprime les salles inutilisées depuis 60 jours |
+| `definir_etablissement(code, secret, établissement)` | enseignant | renseigner, corriger ou effacer l'établissement de la salle |
 | `piloter_salle(code, secret, …)` | enseignant | change de manche, de phase, de chrono, de nouveauté |
 | `definir_config(code, secret, config)` | enseignant | publie les réglages de la manche préparée (équipes, points…) |
 | `enregistrer_scores(code, secret, manche, scores)` | enseignant | enregistre les scores calculés par son navigateur |
