@@ -468,5 +468,5 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 | Déjà sur `main` | Ménage, compteurs, Panthéon, lagon personnalisé : **à relancer** si ce n'est pas encore fait |
 | 1 bis | ✅ `retrouver_session(jeton)` et l'index `joueurs_secret_jeton` : entrer avec le seul code de session (appliqué en production le 10 novembre 2026) |
 | 3 | ✅ `codes_manche` (enseignant), appliqué en production le 10 novembre 2026 ; option non faite : table `etats` des brouillons |
-| 4 | ✅ `salles.etablissement`, `pantheon.salle` (la classe), fin de l'unicité des pseudos ; ✅ `pantheon.manche`, `mon_entree_pantheon`, `nouveau_jeton_pantheon` (en production le 10 novembre) ; **⏳ à appliquer** : `pantheon_classe` et la nouvelle `pantheon_admin` (elles contiennent une suppression : il faut la confirmation de l'enseignant ; d'ici là, l'écran affiche « Panthéon automatique : bientôt disponible ») |
+| 4 | ✅ `salles.etablissement`, `pantheon.salle` (la classe), fin de l'unicité des pseudos ; ✅ `pantheon.manche`, `mon_entree_pantheon`, `nouveau_jeton_pantheon` (en production le 10 novembre) ; ✅ `pantheon_classe` et la nouvelle `pantheon_admin` (migration `supabase/0001-pantheon-automatique.sql`, appliquée le 10 novembre au soir avec l'accord de l'enseignant) |
 | 10 | consigne et date du devoir (dans les réglages de la manche, sans nouvelle table) |
