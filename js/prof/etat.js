@@ -11,12 +11,14 @@ export const S = {
   salle: null,                // manche, phase, chrono, nouveauté, réglages publiés (config)…
   joueurs: [],                // élèves connectés
   depots: [],                 // tortues envoyées pour la manche en cours
+  codes: null,                // { pseudo: { code, manche, depose_le } } : la dernière tortue de chaque élève (null = indisponible)
+  resultats: null,            // le match des résultats affichés : { manche, sim, revoir(pseudo) } (pour les fiches)
   viewer: null,               // le lecteur de match affiché
   chrono: null, sondage: null, // minuteries (scène, liste des élèves)
 };
 
-// réglages de l'enseignant (durées, nombre de tortues), gardés dans ce navigateur
-export const reglages = Object.assign({ duree1: CONFIG.DUREE_PROG_1, duree: CONFIG.DUREE_PROG, dureeDuel: 240, min: CONFIG.MIN_TORTUES }, store.get("lagon:reglages", {}));
+// réglages de l'enseignant (durées, nombre de tortues, Panthéon automatique : oui, 1 tortue par manche), gardés dans ce navigateur
+export const reglages = Object.assign({ duree1: CONFIG.DUREE_PROG_1, duree: CONFIG.DUREE_PROG, dureeDuel: 240, min: CONFIG.MIN_TORTUES, pantheonAuto: true, pantheonNb: 1 }, store.get("lagon:reglages", {}));
 export const sauverReglages = () => store.set("lagon:reglages", reglages);
 
 // les salles pilotées depuis ce navigateur (avec leur jeton enseignant)

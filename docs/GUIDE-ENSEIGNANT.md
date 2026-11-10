@@ -26,9 +26,9 @@ Tout ce qu'il faut pour mener une séance, donner un devoir ou laisser les élè
 |---|---|---|
 | 0–15 min | Font le **tutoriel** (`index.html` → « Commencer le tutoriel ») | Crée la salle dans `prof.html` (avec le nom de l'établissement, si on le souhaite) : le code s'affiche en grand |
 | 15 min | Rejoignent la salle (code + pseudo) | Voit les élèves arriver, puis clique sur **▶ Lancer la manche 1** |
-| 15–23 min | Programment, testent dans le bac à sable, **envoient** leur tortue | Chrono géant ; ✅ ou ⏳ pour chaque élève |
+| 15–23 min | Programment, testent dans le bac à sable, **envoient** leur tortue | Chrono géant ; l'état de chaque tortue (🟢 🟠 🔴 🐞 ⏳) et « 🥚 12 tortues sur 25 pondent » : un clic pour voir qui bloque, et pourquoi |
 | 23–25 min | « Brawl en cours, regarde le tableau » | **Lancer le brawl** : match animé, classement en direct, fil des événements |
-| 25–28 min | Onglet **Résultats** : rang, rapport, conseils, rejeu de *leur* tortue avec ses pensées, « Et si… ? » | Podium de la manche et classement de la séance |
+| 25–28 min | Onglet **Résultats** : rang, rapport, conseils, rejeu de *leur* tortue avec ses pensées, « Et si… ? » | Podium de la manche, classement de la séance, la meilleure tortue entre au **Panthéon** ; un clic sur un élève : son code et ses tests |
 | 28–40 min | **Rematch** (manche 2, invasion de plastique), 6 min | Idem |
 | 40–52 min | **Finale** (manche 3), par exemple **en équipes** | Idem |
 | 52–55 min | (Duel des champions) puis bilan | Podium final, meilleure progression, **export CSV** |
@@ -64,6 +64,28 @@ Avant chaque manche (dans la salle d'attente, puis sous les résultats de la man
 Les réglages sont **publiés tout de suite** : les élèves voient la prochaine manche (et leur équipe) pendant qu'ils préparent leur tortue.
 
 ![Les résultats projetés : podium, match et classement de la séance](img/prof-resultats.webp)
+
+### Voir les codes et les difficultés des élèves
+
+**Pendant la programmation**, la liste des élèves (à gauche) montre l'état de la **dernière tortue envoyée** par chacun, d'après les mêmes tests que ceux de l'élève :
+
+| | |
+|---|---|
+| 🟢 | elle sait pondre |
+| 🟠 | elle peut pondre, mais rate une situation clé (elle mange la nuit au lieu de rentrer…) |
+| 🔴 | elle ne pondra jamais (deux blocs `if` à la suite, pas de `pondre()`, règles dans le mauvais ordre…) |
+| 🐞 | une erreur dans le code |
+| ⏳ | rien envoyé : c'est la tortue de départ qui jouera |
+
+Une icône pâle : la tortue date d'une manche précédente (l'élève ne l'a pas encore renvoyée). En haut de la liste, **« 🥚 12 tortues sur 25 pondent »** : un clic ouvre **🩺 Les tortues de la classe**, les causes regroupées (« 4 · deux blocs `if` à la suite »). Un clic sur une cause montre les élèves concernés.
+
+**Un clic sur un pseudo** ouvre sa **fiche** : son code en couleur, ses tests (le verdict, les situations ratées, l'explication ligne par ligne) et un bouton pour copier le code. Les autres élèves ne voient jamais ce code avant le brawl.
+
+**Après le brawl**, un clic sur un élève dans le tableau « Ce match » ouvre sa fiche avec, en plus, ses nids, ses captures, ses épuisements et **▶ Revoir le match en suivant cette tortue** (avec sa pensée). Sous les tableaux, **🩺 Les tortues de la classe** résume le match : « 🥚 18 tortues sur 25 ont pondu. Les 7 autres : 4 · deux blocs `if` à la suite, 2 · manger passe avant pondre… ».
+
+> ⚠️ **Attention au projecteur** : la fiche est visible au tableau si votre écran est projeté. Elle s'ouvre avec un avertissement et un bouton **🙈 Masquer** (la touche Échap marche aussi).
+
+En fin de séance, **⬇️ Exporter le classement (CSV)** peut inclure le code joué par chaque élève à chaque manche (case « avec les codes des tortues »).
 
 ## 4. Le devoir à la maison
 
@@ -101,6 +123,19 @@ Le [Panthéon](https://babash.github.io/lagon-arena/pantheon.html) classe les **
 Les tortues d'entraînement apparaissent dans le classement comme **repères** (la Championne fait 5,5 nids en moyenne sur ce banc d'essai). Chaque score est **recalculé** par l'administrateur du site (⏳ puis ✔), qui peut aussi retirer une tortue au pseudo ou à l'établissement inapproprié.
 
 C'est un bon objectif pour les élèves rapides, ou pour prolonger le travail à la maison : « Entrez au Panthéon, et battez la Championne ! »
+
+### Le Panthéon automatique
+
+À la fin de **chaque manche**, quand les résultats s'affichent, votre navigateur envoie **la meilleure tortue de la classe** au Panthéon, sans que personne ait rien à faire :
+
+- elle doit avoir pondu au moins un nid pendant le match, et être un programme **inventé par l'élève** (pas la tortue de départ, une tortue d'entraînement, une solution des tutoriels ni un programme du coup de pouce) ;
+- elle passe le même banc d'essai de 20 parties (quelques secondes, la page reste utilisable), puis elle est inscrite avec **le pseudo, la classe** (le code de la salle), l'établissement et la date ;
+- au tableau : « 🏛️ **Maki_Rapide entre au Panthéon (12e) !** » ;
+- l'élève le voit dans ses résultats (« 🏛️ Ta tortue entre au Panthéon à la 12e place ! »), avec **son code Panthéon** pour l'améliorer plus tard ;
+- même programme déjà au Panthéon : il n'est pas ajouté ; même élève de la même salle : sa tortue est remplacée seulement si la nouvelle fait mieux ;
+- comme les autres, le score reste ⏳ jusqu'à la vérification de l'administrateur.
+
+Dans **⚙️ Réglages** (colonne de gauche) : décocher « 🏛️ Envoyer les meilleures tortues au Panthéon », ou choisir **les 3 meilleures** de chaque manche au lieu d'une seule. Ces réglages sont gardés 60 jours dans votre navigateur.
 
 ## 7. Ce que voit l'élève
 

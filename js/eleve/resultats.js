@@ -5,7 +5,7 @@ import { db } from "../db.js";
 import { TWISTS, BONUS_PROGRESSION, styleEquipe } from "../engine.js";
 import { MatchViewer, rapportHTML, tableauMatch } from "../viewer.js";
 import { lancerSimulation, codeDe, estBot, infosManche, classementCumule, baremeEquipes } from "../brawl.js";
-import { $, el, esc, toast, store, cartesEquipesHTML, nomEquipe, placeTxt } from "../common.js";
+import { $, el, esc, toast, store, cartesEquipesHTML, nomEquipe, placeTxt, codeLisible } from "../common.js";
 import { ed, verifier, remplacerCode } from "./editeur.js";
 import { S, SALLE, PSEUDO, cleCode } from "./etat.js";
 import { onglet, notifier, overlay } from "./ui.js";
@@ -42,7 +42,7 @@ function afficherResultats(info, scores, tortues, joueurs) {
     : info.duel ? `<p>Ce match était le duel des finalistes. Regarde-le quand même : que font les meilleures tortues ?</p>`
     : `<p>🆕 Tu es arrivé·e après ce match : ta tortue n'y était pas. Regarde-le quand même (que font les meilleures tortues ?) : <b>ta tortue jouera au prochain brawl</b>.</p>`;
   $("#t-res").innerHTML = `<div class="grid2"><div>
-      <div class="card"><h2>${titre} · ${T.icone} ${esc(T.nom)}</h2>${bloc}</div>
+      <div class="card"><h2>${titre} · ${T.icone} ${esc(T.nom)}</h2><div id="pt-auto-eleve"></div>${bloc}</div>
       ${joue ? `<div class="card"><h2>🤔 Et si… ?</h2>
         <p>Corrige ta tortue dans l'onglet <b>⌨️ Programmer</b>, puis rejoue <b>exactement le même match</b> avec ton nouveau code pour vérifier que ta correction marche.</p>
         <div class="row"><button class="btn" id="etsi">▶ Rejouer avec mon nouveau code</button><button class="btn ghost small" id="modifier">✏️ Modifier mon code</button></div><div id="etsi-res"></div></div>` : ""}
@@ -53,12 +53,43 @@ function afficherResultats(info, scores, tortues, joueurs) {
       <p class="petit muted" style="margin-top:0">${joue ? "Clique sur les icônes de la frise (🦈 attrapée, 🥚 nid, 🛍️ plastique, 😵 épuisée) pour aller directement aux moments importants, puis avance tour par tour." : ""}</p>
       <div id="res-vue"></div>
     </div></div>`;
+  suivrePantheon(m);
   if (viewerRes) viewerRes.destroy();
   viewerRes = new MatchViewer($("#res-vue"), { sim, focus: joue ? PSEUDO : null, code: codeDe(PSEUDO, m, tortues), autoplay: false, vitesse: 2.4 });
   $("#rejouer").classList.toggle("cache", !joue);
   if (!joue) return;
   $("#modifier").addEventListener("click", () => { onglet("prog"); ed.ta.focus(); });
   $("#etsi").addEventListener("click", () => etSi(sim, info, joueurs, tortues));
+}
+
+// ---------- le Panthéon automatique ----------
+//  À la fin de la manche, le navigateur de l'enseignant inscrit la meilleure tortue de la classe au Panthéon
+//  (le banc d'essai prend quelques secondes) : on regarde de temps en temps si c'est la mienne.
+//  Mon code Panthéon (pour l'améliorer plus tard) est retrouvé grâce à mon jeton de session.
+let suiviPt = null;
+const vuPt = new Set();
+const nombre = (x) => Number(x).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function suivrePantheon(manche) {
+  clearTimeout(suiviPt);
+  const delais = [1500, 8000, 20000, 45000, 90000, 180000];
+  let i = 0;
+  const essai = async () => {
+    let e = null;
+    try { e = await db.monEntreePantheon(SALLE, PSEUDO, S.jeton); } catch { e = null; }
+    if (e) montrerPantheon(e, manche);
+    if (!(e && e.manche === manche) && i < delais.length) suiviPt = setTimeout(essai, delais[i++]);
+  };
+  suiviPt = setTimeout(essai, delais[i++]);
+}
+function montrerPantheon(e, manche) {
+  const box = $("#pt-auto-eleve"); if (!box) return;
+  const r = placeTxt(e.rang), nouveau = e.manche === manche;
+  // le formulaire « 🏛️ Proposer au Panthéon » reprendra ce code : la tortue améliorée remplacera celle-ci
+  if (e.code) store.set("lagon:pantheon", { ...(store.get("lagon:pantheon", {}) || {}), code: e.code, pseudo: PSEUDO, salle: SALLE });
+  box.innerHTML = `<div class="pt-eleve${nouveau ? " nouveau" : ""}">${nouveau ? `🏛️ <b>Ta tortue entre au Panthéon à la ${r} place !</b>` : `🏛️ Ta tortue est au Panthéon : ${r} place.`}
+      <div class="petit">${nombre(e.moyenne)} nids en moyenne sur le banc d'essai ${e.verifie ? "· ✔ vérifié" : "· ⏳ score à vérifier"} · <a href="pantheon.html" target="_blank">voir le Panthéon</a></div>
+      ${e.code ? `<div class="petit">Ton <b>code Panthéon</b> : <b class="code-pt">${codeLisible(e.code)}</b>. Note-le : avec lui, tu pourras l'améliorer plus tard (bouton « 🏛️ Proposer au Panthéon »), même depuis un autre ordinateur.</div>` : ""}</div>`;
+  if (nouveau && !vuPt.has(manche)) { vuPt.add(manche); toast(`🏛️ Ta tortue entre au Panthéon (${r}) !`); notifier("res"); }
 }
 
 function blocEquipe(sim, moi, info) {

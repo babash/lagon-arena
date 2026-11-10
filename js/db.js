@@ -78,6 +78,12 @@ class Supabase {
   changerJeton(code, pseudo, ancien, nouveau) { return this.rpc("changer_jeton", { p_salle: code, p_pseudo: pseudo, p_ancien: ancien, p_nouveau: nouveau }); }
   async maTortue(code, pseudo, jeton) { const r = await this.rpc("ma_tortue", { p_salle: code, p_pseudo: pseudo, p_jeton: jeton }); return (r && r[0]) || null; }
   codesSession(code, secret) { return this.rpc("codes_session", { p_code: code, p_secret: secret }); }
+  // l'enseignant voit la dernière tortue envoyée par chaque élève, même pendant la programmation
+  // (null si la base n'a pas encore la fonction : la page montre alors seulement qui a envoyé)
+  async codesManche(code, secret, manche) {
+    try { return await this.rpc("codes_manche", { p_code: code, p_secret: secret, p_manche: manche }); }
+    catch (err) { if (/pas prête/.test(err.message)) return null; throw err; }
+  }
   tortues(code) { return this.get("tortues", `salle=eq.${encodeURIComponent(code)}&select=pseudo,manche,code`); }
   enregistrerScores(code, secret, manche, scores) { return this.rpc("enregistrer_scores", { p_code: code, p_secret: secret, p_manche: manche, p_scores: scores }); }
   scores(code) { return this.get("scores", `salle=eq.${encodeURIComponent(code)}&select=*&order=manche,rang`); }
@@ -113,6 +119,13 @@ class Supabase {
   pantheonTop(limite = 100, lycee = null) { return this.rpc("pantheon_top", { p_limite: limite, p_lycee: lycee || null }); }
   pantheonLycees() { return this.rpc("pantheon_lycees"); }
   async maTortuePantheon(jeton) { const r = await this.rpc("ma_tortue_pantheon", { p_jeton: jeton }); return (r && r[0]) || null; }
+  // le Panthéon automatique : l'enseignant inscrit les meilleures tortues de la manche (au plus 3)
+  pantheonClasse(code, secret, manche, entrees) { return this.rpc("pantheon_classe", { p_code: code, p_secret: secret, p_manche: manche, p_entrees: entrees }); }
+  // l'élève retrouve sa tortue de la classe au Panthéon, avec son code Panthéon (null si aucune, ou base pas à jour)
+  async monEntreePantheon(salle, pseudo, jeton) {
+    try { const r = await this.rpc("mon_entree_pantheon", { p_salle: salle, p_pseudo: pseudo, p_jeton: jeton }); return (r && r[0]) || null; }
+    catch (err) { if (/pas prête/.test(err.message)) return null; throw err; }
+  }
   pantheonAdmin(secret) { return this.rpc("pantheon_admin", { p_secret: secret }); }
   pantheonValider(secret, id, moyenne) { return this.rpc("pantheon_valider", { p_secret: secret, p_id: id, p_moyenne: moyenne }); }
   pantheonRetirer(secret, id) { return this.rpc("pantheon_retirer", { p_secret: secret, p_id: id }); }
@@ -200,6 +213,13 @@ class Demo {
     return Object.entries(s.jetons[code] || {}).map(([pseudo, j]) => ({ pseudo, code: /^perso-[A-Z0-9]{8}-lagon$/.test(j || "") ? j.slice(6, 14) : null }))
       .sort((a, b) => a.pseudo.localeCompare(b.pseudo));
   }
+  async codesManche(code, secret, manche) {
+    await this.pause();
+    const s = this.load(); this.verifProf(s, code, secret);
+    const der = {};
+    for (const t of s.tortues) if (t.salle === code && t.manche <= manche && (!der[t.pseudo] || t.manche > der[t.pseudo].manche)) der[t.pseudo] = t;
+    return Object.values(der).map(({ pseudo, manche: m, code: c, depose_le }) => ({ pseudo, manche: m, code: c, depose_le })).sort((a, b) => a.pseudo.localeCompare(b.pseudo));
+  }
   async maTortue(code, pseudo, jeton) {
     await this.pause();
     const s = this.load();
@@ -286,12 +306,59 @@ class Demo {
     const p = this.classementPantheon(this.load()).find((x) => x.jeton === jeton);
     return p ? { pseudo: p.pseudo, lycee: p.lycee, salle: p.salle || null, cree_le: p.cree_le, moyenne: p.moyenne, verifie: p.verifie, rang: p.rang } : null;
   }
+  // le Panthéon automatique (mêmes règles que pantheon_classe dans supabase.sql)
+  async pantheonClasse(code, secret, manche, entrees) {
+    await this.pause();
+    const s = this.load(); this.verifProf(s, code, secret); s.pantheon = s.pantheon || [];
+    if (!Array.isArray(entrees) || entrees.length > 3) throw new Error("Trois tortues au plus par manche.");
+    const lycee = (s.salles[code] && s.salles[code].etablissement) || null, faits = [];
+    for (const x of entrees) {
+      if (x.banc !== 1) throw new Error("Votre page est trop ancienne : rechargez-la (Ctrl+F5).");
+      const m = Math.round(x.moyenne * 100) / 100;
+      if (!(m >= 0 && m <= 30)) throw new Error("Moyenne impossible.");
+      let statut, p = null;
+      if (!s.tortues.some((t) => t.salle === code && t.pseudo === x.pseudo && t.manche <= manche && t.code === x.code)) statut = "inconnue";
+      else {
+        const empreinte = x.code.replace(/#[^\n]*/g, "").replace(/\s+/g, "");
+        const moi = (q) => q.salle === code && q.pseudo.toLowerCase() === x.pseudo.toLowerCase();
+        const v = s.pantheon.filter(moi).sort((a, b) => b.moyenne - a.moyenne)[0], d = s.pantheon.find((q) => q.empreinte === empreinte);
+        if (d) { statut = moi(d) ? "deja" : "copie"; if (statut === "deja") p = d; }
+        else if (!v) {
+          p = { id: Date.now() + Math.floor(Math.random() * 1000), pseudo: x.pseudo, lycee, salle: code, manche, moyenne: m, banc: 1, code: x.code, empreinte,
+            jeton: `pantheon-${codeHasard()}-lagon`, verifie: false, cree_le: new Date().toISOString() };
+          s.pantheon.push(p); statut = "nouveau";
+        } else if (m > v.moyenne) { Object.assign(v, { moyenne: m, banc: 1, code: x.code, empreinte, manche, lycee: lycee || v.lycee, verifie: false }); p = v; statut = "ameliore"; }
+        else { p = v; statut = "moins_bien"; }
+      }
+      faits.push({ pseudo: x.pseudo, statut, p });
+    }
+    s.pantheon = this.classementPantheon(s).slice(0, 1000).map(({ rang, ...p }) => p);
+    this.save(s);
+    const cl = this.classementPantheon(s);
+    return faits.map(({ pseudo, statut, p }) => { const r = p && cl.find((q) => q.id === p.id); return { pseudo, statut, moyenne: r ? r.moyenne : null, rang: r ? r.rang : null }; });
+  }
+  async monEntreePantheon(salle, pseudo, jeton) {
+    await this.pause();
+    const s = this.load(); salle = salle.toUpperCase();
+    if (!s.jetons[salle] || s.jetons[salle][pseudo] !== jeton) throw new Error("Joueur inconnu : reconnecte-toi à la salle.");
+    const p = this.classementPantheon(s).filter((q) => q.salle === salle && q.pseudo.toLowerCase() === pseudo.toLowerCase()).sort((a, b) => b.moyenne - a.moyenne)[0];
+    if (!p) return null;
+    const c = /^pantheon-[A-Z0-9]{8}-lagon$/.test(p.jeton) ? p.jeton.slice(9, 17) : null;
+    return { pseudo: p.pseudo, salle: p.salle, manche: p.manche ?? null, moyenne: p.moyenne, verifie: p.verifie, rang: p.rang, code: c, cree_le: p.cree_le, maj: p.cree_le };
+  }
   async pantheonAdmin(secret) { if (!secret) throw new Error("Mot de passe administrateur incorrect."); return this.classementPantheon(this.load()); }
   async pantheonValider(secret, id, moyenne) {
     const s = this.load(), p = (s.pantheon || []).find((x) => x.id === id);
     if (p) { p.moyenne = Math.round(moyenne * 100) / 100; p.verifie = true; this.save(s); }
   }
   async pantheonRetirer(secret, id) { const s = this.load(); s.pantheon = (s.pantheon || []).filter((x) => x.id !== id); this.save(s); }
+}
+
+// un code Panthéon de 8 caractères faciles à recopier (comme les codes de session)
+function codeHasard() {
+  const A = "ABCDEFGHJKMNPQRSTUVWXYZ23456789", a = new Uint32Array(8);
+  crypto.getRandomValues(a);
+  return [...a].map((v) => A[v % A.length]).join("");
 }
 
 export const db = MODE === "db" ? new Supabase(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY) : new Demo();
