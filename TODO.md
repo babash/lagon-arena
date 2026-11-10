@@ -92,20 +92,21 @@ Les chantiers 1, 2 et 3 se répondent : le diagnostic (1) s'affiche dans « Prog
 
 *Pour garantir « aucune fonctionnalité perdue » pendant tous les chantiers suivants.*
 
-- [ ] Ranger dans `outils/tests/` les parcours Playwright utilisés jusqu'ici (hors dépôt) :
-  - [ ] séance en démo ;
-  - [ ] équipes ;
-  - [ ] manche longue et code de session ;
-  - [ ] devoir ;
-  - [ ] bac à sable et estimation ;
-  - [ ] tutoriels (3 niveaux) ;
-  - [ ] Panthéon et son administration ;
-  - [ ] lagon personnalisé ;
-  - [ ] accueil et compteurs ;
-  - [ ] aide ;
-  - [ ] stockage d'un jour.
-- [ ] Un script unique `node outils/tests/tout.mjs` : il démarre un petit serveur, lance les parcours en mode démo et, si une base locale est disponible, ceux qui ont besoin de la base.
-- [ ] Les captures de référence aux 5 tailles d'écran, pour comparer avant et après.
+- [x] Ranger dans `outils/tests/` les parcours Playwright utilisés jusqu'ici (hors dépôt), avec de **vraies vérifications** (un parcours s'arrête au premier problème, ou à la première erreur JavaScript) :
+  - [x] séance en démo (`seance`) ;
+  - [x] équipes (`equipes`) ;
+  - [x] manche longue et code de session, y compris le code seul et le lien `#code=` (`session`) ;
+  - [x] devoir (`devoir`) ;
+  - [x] bac à sable et estimation (`bac`), 🧩 Mes règles (`mesregles`) ;
+  - [x] tutoriels : débutant en 4 missions (`tutoriel`) et 3 niveaux avancés (`tuto-avance`) ;
+  - [x] Panthéon et son administration (`pantheon`), établissement (`etablissement`) ;
+  - [x] lagon personnalisé (`lagon`) ;
+  - [x] accueil et compteurs (`accueil`) ;
+  - [x] aide : règles et conseils (`regles`) ;
+  - [x] stockage d'un jour (`stockage`) ;
+  - [x] téléphone : aucune page ne déborde à 390 px (`telephone`).
+- [x] Un script unique `node outils/tests/tout.mjs` : il démarre un petit serveur, lance les parcours en mode démo et, si une base locale est disponible (`LAGON_DB=http://localhost:3300`), ceux qui ont besoin de la base. Voir [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#les-tests-outilstests).
+- [x] Les captures de référence aux 5 tailles d'écran, pour comparer avant et après : `node outils/tests/captures.mjs` (`--reference` pour en faire la nouvelle référence).
 - [x] Les **6 tortues types** du constat dans `outils/verifier.mjs` : ce sont les tests du chantier 1 (section « 3 quater »).
 - [ ] (Plus tard) Lancement automatique sur GitHub à chaque envoi.
 
