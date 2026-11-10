@@ -52,7 +52,7 @@ Le point de départ est volontairement **incomplet** : la tortue fournie mange, 
 
 La formule vient de Papert, reprise par Resnick (2009) pour Scratch :
 
-- **Plancher bas** : un tutoriel par l'exemple (on manipule avant de lire), l'autocomplétion qui comprend le français (*si*, *sinon*, *nuit*…), la boîte à outils cliquable, le coup de pouce gradué, des messages d'erreur en français qui proposent la correction.
+- **Plancher bas** (dès la Seconde) : un parcours en 4 missions qui **commence sans code** (on pilote sa tortue à la main pour vivre les règles, puis on écrit ses règles en français avec des listes, puis on complète le code, et seulement ensuite on tape), les règles du jeu en 6 cartes, **🧩 Mes règles** pour ajouter une règle sans taper, l'autocomplétion qui comprend le français (*si*, *sinon*, *nuit*…), la boîte à outils cliquable, le coup de pouce gradué, des messages d'erreur en français qui proposent la correction.
 - **Plafond haut** : des primitives avancées **cachées par défaut** (divulgation progressive), trois niveaux de tutoriel avancé, la lecture du lagon (où sont les algues sûres ?), le jeu en équipes, l'estimation statistique.
 - **Murs larges** : plusieurs stratégies gagnent. Se cacher dans les algues, fuir vers la plage, anticiper la nuit, choisir des algues loin des requins, pousser les rivales, nourrir ses équipières… Deux bonnes tortues ne se ressemblent pas.
 
@@ -60,10 +60,11 @@ La formule vient de Papert, reprise par Resnick (2009) pour Scratch :
 
 Le parcours suit la progression *Utiliser → Modifier → Créer* (Lee et al., 2011), proche de la démarche PRIMM (*Predict, Run, Investigate, Modify, Make* ; Sentance et al., 2019) :
 
-1. **Prédire et observer** : dans le tutoriel, un interrupteur True/False montre l'effet d'une condition ; un quiz demande « Devine ce que fait la tortue ».
-2. **Examiner** : la « pensée de la tortue » montre quelles conditions sont vraies à chaque tour.
-3. **Modifier** : les missions « Répare la tortue » donnent un code presque juste, avec une seule erreur à trouver.
-4. **Créer** : sa propre tortue, d'abord à la fin du tutoriel (« Construis ta tortue », jusqu'au 🟢), puis en compétition.
+1. **Vivre la règle avant de la coder** : dans « 🎮 Pilote ta tortue », l'élève décide lui-même, tour par tour ; il découvre que la ponte est refusée le jour ou sans énergie. Le programme devient ensuite « écrire à l'avance ce que j'ai fait à la main ».
+2. **Prédire et observer** : dans le tutoriel, un interrupteur True/False montre l'effet d'une condition ; un quiz demande « Devine ce que fait la tortue ».
+3. **Examiner** : la « pensée de la tortue » montre quelles conditions sont vraies à chaque tour.
+4. **Modifier** : les missions « Répare la tortue » donnent un code presque juste, avec une seule erreur à trouver.
+5. **Créer** : sa propre tortue, d'abord à la fin du tutoriel (« Construis ta tortue », jusqu'au 🟢), puis en compétition.
 
 Les exemples travaillés précèdent les problèmes, l'aide s'efface progressivement (indice, puis solution après deux essais), comme le recommande la théorie de la charge cognitive.
 
@@ -146,7 +147,7 @@ Ce qui suit est volontairement franc : un outil pédagogique s'améliore en rega
 | **La compétition peut décourager** | un classement public met en scène les derniers | pseudos, bonus de progression, équipes, manches hors classement | n'afficher que le haut du classement au tableau ; mettre en avant la meilleure progression ; objectifs personnels (« bats la Prudente ») |
 | **Un seul brawl est bruité** | le rang dépend en partie de la chance | 📊 Estimer montre la moyenne | classer sur plusieurs lagons (calcul instantané en mode léger), n'en projeter qu'un |
 | **Copier sans comprendre** | le coup de pouce montre un programme complet ; les boutons 📋 Copier existent partout | le coup de pouce demande de recopier les lignes en vert | retirer la copie dans le coup de pouce ; après le brawl, demander à l'élève d'**expliquer** un moment de la frise |
-| **Les plus rapides attendent, les plus lents décrochent** | 15 minutes de tutoriel ne suffisent pas à tous | niveaux avancés, bac à sable, devoir à la maison | faire faire le tutoriel **avant** la séance (devoir) ; défis optionnels pendant l'attente |
+| **Les plus rapides attendent, les plus lents décrochent** | le parcours (≈ 30 min en 4 missions) ne se finit pas au même rythme | niveaux avancés, bac à sable, devoir à la maison | faire faire les missions 1 et 2 **avant** la séance (devoir), les missions 3 et 4 au début du cours ; défis optionnels pendant l'attente |
 | **Accessibilité non auditée** | lagon dessiné (canvas), information portée par les couleurs, lecteurs d'écran non testés | les équipes ont aussi une icône et un nom | audit RGAA de base, navigation au clavier, mode contrasté |
 | **Fracture numérique** | le devoir suppose un ordinateur et une connexion à la maison ; l'éditeur est peu pratique sur téléphone | le bac à sable marche hors salle, n'importe quand | créneaux au CDI ; un éditeur « tactile » fondé sur la boîte à outils |
 | **Dépendances techniques** | le projet Supabase gratuit se met en pause après une semaine sans activité ; les salles sont lisibles par l'API publique (n'importe qui peut lister les codes et rejoindre une salle) | aucune donnée personnelle ; l'enseignant peut retirer un élève (✕) ; ménage automatique des vieilles salles | un code de salle plus long pour les devoirs |
@@ -171,7 +172,7 @@ Ce qui suit est volontairement franc : un outil pédagogique s'améliore en rega
 >
 > **L'idée.** Dans Lagon Arena, le programme de l'élève est le cerveau d'une tortue. À chaque tour, le jeu l'appelle ; la tortue fait la première action qu'elle rencontre. Un match, c'est 180 tours : le même programme affronte des centaines de situations. L'ordre des `elif` devient une question de survie : si la tortue mange avant de regarder les requins, elle se fait manger. La tortue de départ ne pond jamais : sans rien changer, c'est zéro.
 >
-> **La séance.** Quinze minutes de tutoriel par l'exemple, puis trois manches : huit minutes de programmation, un match projeté où toutes les tortues de la classe nagent ensemble, trois minutes de rapport. Chaque élève revoit le match en suivant sa tortue, avec ce qu'elle « pensait » à chaque tour : les conditions vraies en vert, les fausses en rouge. Il corrige, et peut rejouer exactement le même match pour vérifier. Puis rematch, avec une nouveauté : une invasion de plastique qui oblige à écrire `not`, des nuits courtes qui obligent à anticiper avec `heure()`.
+> **La séance.** Un parcours en missions par l'exemple (la première sans code), puis trois manches : huit minutes de programmation, un match projeté où toutes les tortues de la classe nagent ensemble, trois minutes de rapport. Chaque élève revoit le match en suivant sa tortue, avec ce qu'elle « pensait » à chaque tour : les conditions vraies en vert, les fausses en rouge. Il corrige, et peut rejouer exactement le même match pour vérifier. Puis rematch, avec une nouveauté : une invasion de plastique qui oblige à écrire `not`, des nuits courtes qui obligent à anticiper avec `heure()`.
 >
 > **Pour tous.** Les débutants ont l'autocomplétion en français, un coup de pouce gradué, des messages d'erreur qui proposent la correction. Les plus à l'aise ont des niveaux avancés : lire le lagon pour choisir ses algues, jouer en équipes, estimer statistiquement leur stratégie sur cinquante parties.
 >
@@ -183,7 +184,7 @@ Voir le texte prêt à dire dans le [guide de l'enseignant](GUIDE-ENSEIGNANT.md#
 
 ### Les questions qu'on vous posera
 
-- **« Et ceux qui n'ont jamais programmé ? »** Le tutoriel part de zéro, par l'exemple, en quinze minutes. L'éditeur complète les mots, comprend le français et explique les erreurs. Le coup de pouce donne la prochaine idée. Un élève qui ajoute seulement deux conditions à la tortue de départ (pondre sur la plage la nuit, aller vers la plage la nuit) passe de 0 à près de 4 nids en moyenne dans le bac à sable (mesuré sur 60 lagons) : la première victoire arrive vite.
+- **« Et ceux qui n'ont jamais programmé ? »** Le parcours part de zéro, par l'exemple : on pilote d'abord sa tortue à la main, on écrit ses règles en français, on complète le code avec des listes, puis on tape. Il convient dès la Seconde. L'éditeur complète les mots, comprend le français et explique les erreurs. Le coup de pouce donne la prochaine idée. Un élève qui ajoute seulement deux conditions à la tortue de départ (pondre sur la plage la nuit, aller vers la plage la nuit) passe de 0 à près de 4 nids en moyenne dans le bac à sable (mesuré sur 60 lagons) : la première victoire arrive vite.
 - **« C'est un jeu : qu'est-ce qu'ils apprennent vraiment ? »** À écrire, lire et **déboguer** des chaînes de conditions et des expressions booléennes, dans des centaines de situations. Le jeu ne fait que fournir les situations et le retour. Demandez à un élève d'expliquer sa tortue : vous entendrez « le premier vrai gagne ».
 - **« La compétition, ça ne décourage pas les plus faibles ? »** C'est le risque principal. Les pseudos, le bonus de progression, les équipes équilibrées et les manches hors classement le limitent ; à vous de choisir ce que vous projetez.
 - **« Et les données des élèves ? »** Aucune : un pseudo, une couleur, le code de la tortue et les scores. Pas de compte, pas d'e-mail. Les salles sont effacées après 60 jours.

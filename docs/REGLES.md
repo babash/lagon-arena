@@ -4,6 +4,21 @@
 
 Ce document décrit les règles **exactes** du moteur (`js/moteur/`). Les valeurs viennent de l'objet `P` de `js/moteur/regles.js` : si vous les changez, ce document doit suivre.
 
+## Les règles en 1 minute (ce que voient les élèves)
+
+Les mêmes 6 cartes s'affichent sur l'accueil, dans le tutoriel (mission 1) et dans l'onglet 📜 Règles (source : `js/regles-vue.js`).
+
+| | Carte | En une phrase |
+|---|---|---|
+| 🎯 | **Le but** | Pondre le plus de nids possible : 1 nid = 1 point. Toutes les tortues de la classe jouent en même temps. |
+| 🥚 | **Pour pondre** | Être **sur la plage**, **la nuit**, avec **6 d'énergie** ou plus (les trois à la fois). Pondre coûte 4 ⚡. |
+| ⚡ | **L'énergie** | Elle baisse toute seule (−1 tous les 6 tours). Algues : +3. Sac plastique : −3. À 0 : épuisée, retour au départ. |
+| 🦈 | **Les requins** | Attrapée : −1 nid et retour au départ. À l'abri sur la plage et dans les algues… sauf pendant qu'on mange. |
+| 🕐 | **Le temps** | Une partie = 3 jours (180 tours). La nuit : de 19 h à 6 h. Le jour, sur la plage, le soleil fatigue. |
+| 🧠 | **Ton programme** | À chaque tour, une seule action : Python lit les règles de haut en bas, la première règle vraie gagne. |
+
+Sous l'éditeur, un **aide-mémoire** reste toujours visible : 🥚 = 🏖️ plage + 🌙 nuit + ⚡ 6 · 🌿 +3 ⚡ · 🛍️ −3 ⚡ · 🦈 −1 nid · 1 action par tour : la 1re règle vraie.
+
 ---
 
 ## 1. Le principe
@@ -27,7 +42,7 @@ def tour():
         aller_vers_algue()
 ```
 
-> **La tortue de départ** sait manger mais **ne pond jamais** : sans rien changer, l'élève marque 0 nid. C'est voulu : il faut lire le code et l'améliorer.
+> **La tortue de départ** sait manger mais **ne pond jamais** : sans rien changer, l'élève marque 0 nid. C'est voulu : il faut lire le code et l'améliorer. Ses commentaires disent où ajouter les règles (au-dessus de `manger`) et dans quel ordre (danger, pondre, rentrer la nuit) ; le bouton **🧩 Mes règles** les ajoute au bon rang.
 
 ## 2. Le temps
 

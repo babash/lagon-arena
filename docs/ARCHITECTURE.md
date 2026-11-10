@@ -72,16 +72,22 @@ js/editor.js          ← éditeur coloré, autocomplétion, boîte à outils, i
 js/pouce.js           ← le « coup de pouce » gradué (il suit les tests de la tortue)
 js/bilan.js           ← l'affichage des tests de la tortue (verdict, actions clés, tableau, liens « ligne 7 »)
 js/common.js          ← outils de page, liens à donner, code de session
-js/aide.js            ← l'aide de l'écran élève : 📜 Règles et 💡 Conseils
-js/accueil.js         ← la page d'accueil (vues élève / enseignant, compteurs, rejoindre une salle)
+js/aide.js            ← les onglets 📜 Règles et 💡 Conseils de l'écran élève
+js/regles-vue.js      ← les règles du jeu en 6 cartes, l'aide-mémoire, le modèle français / Python (source unique)
+js/regles-code.js     ← lire la chaîne if / elif / else comme une liste de règles ; ajouter, déplacer, supprimer
+js/regles-panneau.js  ← le panneau « 🧩 Mes règles » (page élève et dernière étape du tutoriel)
+js/parcours.js        ← les 4 missions du tutoriel débutant et leur progression (lue par l'accueil)
+js/accueil.js         ← la page d'accueil (vues élève / enseignant, compteurs, entrer dans la partie
+                        par la salle ou par le seul code de session, le parcours, les règles)
 js/pantheon.js        ← le banc d'essai du Panthéon (20 parties fixes), repères, programmes déjà connus
 js/pantheon/          ← la page du Panthéon : main.js (classement, lycées, ma tortue), admin.js (vérifier, retirer)
 js/tutokit.js         ← composants des tutoriels (exemples, exercices, quiz, missions, navigation)
-js/tuto.js            ← le tutoriel débutant
+js/tuto.js            ← le tutoriel débutant, en 4 missions
+js/tuto-pilote.js     ← la mission 1 « 🎮 Pilote ta tortue » (la tortue jouée à la main, vrai moteur)
 js/tuto-avance/       ← main.js (choix du niveau), commun.js, moyen.js, expert.js, equipe.js,
                         strategies.js (les stratégies complètes données en exemple)
-js/eleve/             ← main.js, etat.js (état partagé S), ui.js, editeur.js, bac.js (bac à sable,
-                        estimation), envoi.js, session.js (code de session), manche.js (suivre la salle),
+js/eleve/             ← main.js, etat.js (état partagé S), ui.js (6 onglets, côte à côte), editeur.js,
+                        mesregles.js (🧩), bac.js (onglet 🧪 Tester, estimation), envoi.js, session.js (code de session), manche.js (suivre la salle),
                         resultats.js, pantheon.js (proposer sa tortue au Panthéon)
 js/prof/              ← main.js, etat.js (état partagé S, piloter), accueil.js, salle.js, scenes.js
                         (ce qui est projeté), preparer.js (préparer la manche), liens.js, demo.js
@@ -93,7 +99,8 @@ Les écrans `eleve/` et `prof/` suivent le même schéma : un état partagé `S`
 
 ## 4. Le moteur
 
-`simulate({ joueurs, graine, twist, ticks, scenario, version, leger, lagon })` (`js/moteur/simulation.js`) :
+`simulate({ joueurs, graine, twist, ticks, scenario, version, leger, lagon })` (`js/moteur/simulation.js`). Un joueur peut avoir une option `pilote` (une fonction tour → action) : sa tortue est alors jouée « à la main » au lieu de son programme (tutoriel « 🎮 Pilote ta tortue » ; on rejoue la partie depuis le début à chaque tour, ce qui reste déterministe).
+
 
 1. `creerMonde` prépare la partie : la carte (classique ou tirée de la graine), les tortues, les requins, les algues, les sacs.
 2. À chaque tour :

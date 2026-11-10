@@ -1,6 +1,6 @@
 # 🐢 Lagon Arena
 
-**Le chapitre des conditions en Python, transformé en tournoi de tortues marines.** Pour la 1re NSI.
+**Le chapitre des conditions en Python, transformé en tournoi de tortues marines.** Pour la 1re NSI, et dès la Seconde (SNT).
 
 > Vos élèves écrivent le cerveau d'une tortue de mer avec des `if`, des `elif` et des `else`. Elle doit manger, échapper aux requins et pondre la nuit sur la plage. Puis **toutes les tortues de la classe plongent en même temps dans le même lagon**, projeté au tableau. Après le match, chacun revoit ce que sa tortue a « pensé » tour par tour, comprend pourquoi elle s'est fait manger, la corrige… et c'est le rematch.
 
@@ -15,12 +15,12 @@
 ## Une séance en trois étapes
 
 1. **Vous** ouvrez l'[espace enseignant](https://babash.github.io/lagon-arena/prof.html) et cliquez sur **Créer une salle** : un code de 4 lettres s'affiche au tableau. C'est lui qui identifie la classe ; vous pouvez y ajouter le nom de votre établissement, si vous le souhaitez.
-2. **Les élèves** vont sur [le site](https://babash.github.io/lagon-arena/index.html), font le **tutoriel** (15 minutes, aucun prérequis), puis tapent le code et un pseudo.
+2. **Les élèves** vont sur [le site](https://babash.github.io/lagon-arena/index.html), suivent leur **parcours en 4 missions** (environ 30 minutes, aucun prérequis : la première se joue sans code), puis tapent le code et un pseudo.
 3. **Vous lancez les manches** : 8 minutes de programmation, le **brawl** projeté (1 minute), 3 minutes de rapport… puis un rematch avec une nouveauté (invasion de plastique, nuits courtes, requins affamés).
 
 | | |
 |---|---|
-| ![Le tutoriel](docs/img/tutoriel.webp) **Le tutoriel** : 15 étapes par l'exemple, des exercices vérifiés tout de suite, et l'élève repart avec une tortue qui pond. | ![L'écran élève](docs/img/eleve.webp) **L'écran élève** : un éditeur qui complète les mots (même en français), un bac à sable pour tester. |
+| ![Le tutoriel](docs/img/tutoriel.webp) **Le parcours en 4 missions** : piloter sa tortue à la main pour découvrir les règles, écrire ses règles en français, compléter le code avec des listes, puis l'écrire. L'élève repart avec une tortue qui pond. | ![L'écran élève](docs/img/eleve.webp) **L'écran élève** : ✍️ Programmer (un éditeur qui complète les mots, même en français, et 🧩 Mes règles pour ajouter une règle sans taper), 🧪 Tester (le lagon et la « pensée » côte à côte), 📜 Règles, 💡 Conseils. |
 | ![Les résultats de l'élève](docs/img/eleve-resultats.webp) **Après le brawl** : le match rejoué en suivant sa tortue, ce qu'elle pensait, des conseils qui disent quoi écrire. | ![Les résultats projetés](docs/img/prof-resultats.webp) **Au tableau** : podium, résultats du match, classement de la séance. |
 
 Vous voulez d'abord découvrir seul ? Ouvrez l'[espace enseignant en mode démo](https://babash.github.io/lagon-arena/prof.html?demo) et ajoutez des élèves fictifs.
@@ -49,17 +49,17 @@ La tortue fournie au départ sait manger… mais **ne pond jamais** : sans rien 
 |---|---|
 | **Une séance en classe** (≈ 55 min, jusqu'à 30 élèves) | Tutoriel, puis trois manches : programmation, brawl projeté, rapport, rematch. Le déroulé est [prêt à l'emploi](docs/GUIDE-ENSEIGNANT.md#2-le-déroulé-conseillé-dune-séance--55-min). |
 | **Un devoir à la maison** | **📚 Créer un devoir** : choisissez la nouveauté, lancez, envoyez le lien aux élèves. Ils programment de chez eux ; vous lancez le brawl quand vous voulez. |
-| **Une manche sur plusieurs cours** | ♾️ Temps illimité : chaque élève reprend sa tortue sur n'importe quel ordinateur avec son **code de session**. |
+| **Une manche sur plusieurs cours** | ♾️ Temps illimité : chaque élève reprend sa tortue sur n'importe quel ordinateur avec son seul **code de session** (8 caractères) : pas besoin de retaper la salle ni le pseudo. |
 | **En équipes** | 2 à 6 équipes, équilibrées d'après le classement : seul le rang de l'équipe compte, et l'entraide devient une stratégie. |
 | **Un lagon sur mesure** | La nouveauté de manche (calme, plastique, tempête…), puis, si vous voulez, le détail : nombre de requins, leur vitesse, le plastique, les heures de nuit, le corail, les algues. |
-| **Pour les élèves les plus à l'aise** | Un [tutoriel avancé](https://babash.github.io/lagon-arena/tuto-avance.html) en trois niveaux : 🥈 intermédiaire, 🥇 expert (choisir ses algues), 👥 équipe. |
+| **Pour les élèves les plus à l'aise** | Des [missions avancées](https://babash.github.io/lagon-arena/tuto-avance.html) en trois niveaux : 🥈 intermédiaire, 🥇 expert (choisir ses algues), 👥 équipe. |
 | **Pour s'entraîner seul** | Le [bac à sable](https://babash.github.io/lagon-arena/eleve.html?libre=1), contre 5 tortues d'entraînement, avec une estimation sur 50 parties. |
 | **Le Panthéon** | Les [100 meilleures tortues de tous les temps](https://babash.github.io/lagon-arena/pantheon.html), toutes jugées sur les mêmes 20 lagons, affichées avec le pseudo, la classe et la date ; classement par établissement. Le programme des tortues reste secret. |
 
 ## Pourquoi ça marche
 
 - **Un seul concept, et il est nécessaire** : chaque construction (`if`, ordre des `elif`, `and`, `not`, comparaisons) a une raison d'être dans le lagon.
-- **Pour tous les niveaux** : du grand débutant (tutoriel par l'exemple, coup de pouce, erreurs expliquées en français) à l'élève expert.
+- **Pour tous les niveaux** : du grand débutant de Seconde (parcours en missions qui commence sans code, règles en 6 cartes, coup de pouce, erreurs expliquées en français) à l'élève expert.
 - **L'exécution rendue visible** : « Dans la tête de ta tortue », les conditions vraies s'affichent en vert, les fausses en rouge, à chaque tour.
 - **Des retours rapides et utiles** : au bout de quelques secondes dans le bac à sable, de quelques minutes avec le rapport, puis à chaque manche avec le rematch. Et **« Et si… ? »** rejoue exactement le même match avec le code corrigé.
 - **Un vrai moment de classe**, qui récompense aussi la **progression** et la **coopération**.

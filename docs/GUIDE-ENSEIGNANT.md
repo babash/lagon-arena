@@ -10,8 +10,8 @@ Tout ce qu'il faut pour mener une séance, donner un devoir ou laisser les élè
 
 | Page | Pour qui | Rôle |
 |---|---|---|
-| `index.html` | tous | Accueil en deux vues : **🐢 élève** (rejoindre une salle, tutoriel, bac à sable, Panthéon) et **👩‍🏫 enseignant** (le jeu en bref, créer une salle ou un devoir, mode démo, documentation), avec le nombre de parties jouées et de participants |
-| `tuto.html` | élèves débutants | **Tutoriel** en 15 étapes courtes : un exemple à manipuler, puis un petit exercice vérifié tout de suite. L'élève en sort avec **une tortue qui pond** |
+| `index.html` | tous | Accueil en deux vues : **🐢 élève** (entrer dans la partie avec la salle et un pseudo, ou avec le seul code de session ; le parcours en 4 missions avec sa progression ; les règles en 1 minute ; bac à sable, missions avancées, Panthéon) et **👩‍🏫 enseignant** (le jeu en bref, créer une salle ou un devoir, mode démo, documentation), avec le nombre de parties jouées et de participants |
+| `tuto.html` | élèves débutants (dès la Seconde) | **Parcours en 4 missions** (`tuto.html?mission=1` à `4`) : comprendre le jeu sans code (🎮 piloter sa tortue à la main), parler à sa tortue (règles en français), premières règles en Python (d'abord avec des listes, puis au clavier), une tortue qui pond. L'élève en sort avec **une tortue qui pond** |
 | `tuto-avance.html` | élèves à l'aise | **Tutoriel avancé** en 3 niveaux : 🥈 intermédiaire, 🥇 expert, 👥 équipe |
 | `eleve.html` | élèves | Programmer, tester, envoyer sa tortue ; résultats, rapport, « Et si… ? », classement, aide |
 | `eleve.html?libre=1` | élèves | **Bac à sable** seul, sans salle (pour s'entraîner n'importe quand) |
@@ -24,7 +24,7 @@ Tout ce qu'il faut pour mener une séance, donner un devoir ou laisser les élè
 
 | Temps | Élèves | Enseignant (écran projeté) |
 |---|---|---|
-| 0–15 min | Font le **tutoriel** (`index.html` → « Commencer le tutoriel ») | Crée la salle dans `prof.html` (avec le nom de l'établissement, si on le souhaite) : le code s'affiche en grand |
+| 0–15 min | Font les **missions 1 et 2** du parcours (`index.html` → « 🗺️ Ton parcours ») ; les missions 3 et 4 peuvent se finir en devoir, ou au cours suivant | Crée la salle dans `prof.html` (avec le nom de l'établissement, si on le souhaite) : le code s'affiche en grand |
 | 15 min | Rejoignent la salle (code + pseudo) | Voit les élèves arriver, puis clique sur **▶ Lancer la manche 1** |
 | 15–23 min | Programment, testent dans le bac à sable, **envoient** leur tortue | Chrono géant ; ✅ ou ⏳ pour chaque élève |
 | 23–25 min | « Brawl en cours, regarde le tableau » | **Lancer le brawl** : match animé, classement en direct, fil des événements |
@@ -41,7 +41,7 @@ Tout ce qu'il faut pour mener une séance, donner un devoir ou laisser les élè
 >
 > La tortue qu'on vous donne au départ sait manger… mais elle ne pond jamais. Si vous ne changez rien, vous aurez zéro. Après chaque match, vous pourrez revoir votre tortue tour par tour, voir ce qu'elle « pensait », comprendre pourquoi elle s'est fait attraper, la corriger… et il y aura un rematch.
 >
-> Pas besoin de savoir programmer : commencez par le tutoriel, il vous apprend tout en quinze minutes. Un pseudo, pas votre vrai nom. Allez, à l'eau ! »
+> Pas besoin de savoir programmer : commencez par les missions de l'accueil, la première se joue sans code. Un pseudo, pas votre vrai nom. Allez, à l'eau ! »
 
 ## 3. Préparer la manche suivante
 
@@ -83,7 +83,7 @@ Le bouton **🔗 Lien d'accès élèves** de la salle redonne le lien et le mess
 ## 5. La manche longue : continuer à la maison
 
 - Cochez **♾️ temps illimité** (ou le raccourci ♾️ Manche longue) : la manche reste ouverte, sans chrono, **jusqu'à ce que vous lanciez le brawl**, par exemple au cours suivant. Les élèves programment, testent et renvoient leur tortue quand ils veulent, y compris depuis chez eux. Le moment venu, « ⏱️ Chrono de 5 min » remet un compte à rebours, ou lancez directement le brawl.
-- **Code de session** : chaque élève a un code de 8 caractères (ex. `R8GS-Z4AN`), visible avec le bouton **🏠 Mon code de session** de sa page. Sur un autre ordinateur, il tape la salle, son pseudo, puis ce code dans « 🏠 Tu reviens depuis un autre ordinateur ? ». Il retrouve sa dernière tortue envoyée et ses points. Le bouton **🔑 Codes de session** de la salle vous en donne la liste (imprimable), si un élève a oublié le sien.
+- **Code de session** : chaque élève a un code de 8 caractères (ex. `R8GS-Z4AN`), visible avec le bouton **🏠 Mon code de session** de sa page. Sur un autre ordinateur, il clique sur « 🏠 J'ai un code de session » et tape **seulement ce code** : sa salle et son pseudo sont retrouvés tout seuls (son lien personnel, `…/index.html#code=…`, ouvre même directement sa partie). Sur le même navigateur, « ▶ Reprendre ma partie » suffit. Il retrouve sa dernière tortue envoyée et ses points. Le bouton **🔑 Codes de session** de la salle vous en donne la liste (imprimable), si un élève a oublié le sien.
 - **Vous aussi, depuis un autre ordinateur** : le bouton **🏠 Autre ordinateur** de la salle donne un **lien enseignant** à ouvrir chez vous. Ne le donnez pas aux élèves : il permet de piloter la salle.
 - Une salle est gardée **60 jours** après sa dernière utilisation.
 
@@ -106,6 +106,8 @@ C'est un bon objectif pour les élèves rapides, ou pour prolonger le travail à
 
 ![L'écran élève : l'éditeur et le bac à sable](img/eleve.webp)
 
+La page a **6 onglets** au même niveau : **✍️ Programmer · 🧪 Tester · 📊 Résultats · 🏆 Classement · 📜 Règles · 💡 Conseils**. Sur un grand écran, la case « 🪟 Code et test côte à côte » affiche Programmer et Tester ensemble.
+
 **Pour écrire son programme** :
 
 - **Autocomplétion** :
@@ -118,14 +120,16 @@ C'est un bon objectif pour les élèves rapides, ou pour prolonger le travail à
 - **Deux-points ajoutés automatiquement** quand on les oublie après `if`, `elif` ou `else` (l'éditeur le signale), et **indentation automatique**.
 - **🧪 Les tests de la tortue**, sous l'éditeur, à chaque modification : un verdict en une ligne (🟢 « Ta tortue sait pondre ! », 🟠 « peut pondre, mais pas souvent », 🔴 « ne pondra jamais »), les 4 actions clés (pondre, aller vers la plage, manger, aller vers les algues), puis le tableau de 10 situations (« 🌙 La nuit, sur la plage → on attend `pondre()` → ta tortue fait `manger()` ligne 3 ❌ »). Chaque ❌ dit **quelle ligne agit à la place, et pourquoi** (« une seule action par tour », « le premier vrai gagne », « `energie() >= 9` est faux »), et les lignes en cause sont surlignées dans le code. Les tests ne bloquent jamais : la tortue peut toujours être testée et envoyée.
 - **💡 Coup de pouce** : l'idée suivante d'après les tests de la tortue (d'abord la faire pondre, avec la vraie cause : deux blocs à la suite, mauvais ordre…), en 5 paliers (pondre la nuit sur la plage, se méfier des requins, vérifier l'énergie, éviter le plastique, partir avant la nuit ; en équipes, « Aide ton équipe ! »). Chaque palier montre un programme complet, les lignes à ajouter en vert : l'élève les recopie lui-même.
-- **Rappels** : sous l'éditeur, une règle importante change toutes les 15 secondes.
-- **❓ Aide**, en deux onglets : **📜 Règles** et **💡 Conseils**. Chacun commence par **l'essentiel en 5 lignes**, puis des sections à déplier pour les plus acharnés (toutes les règles ; construire sa tortue pas à pas, comprendre pourquoi ça ne marche pas, erreurs fréquentes, conseils par niveau et par nouveauté).
-- **◀ Réduire** replie l'éditeur : le lagon du bac à sable prend toute la largeur, les boutons Tester / Envoyer restent visibles.
+- **🧩 Mes règles** : les règles de la tortue numérotées dans l'ordre où Python les lit (« 1. Si `requin_proche()` → `fuir()` »), avec ⬆️ ⬇️ pour changer leur priorité et 🗑️ pour en retirer une. **➕ Ajouter une règle** : une question, un ordre et la place (« tout en haut », « après la règle 2 ») choisis dans des listes ; le code s'écrit tout seul, toujours en une seule chaîne `if` / `elif` / `else`. Idéal pour les élèves qui bloquent sur la syntaxe.
+- **📌 L'aide-mémoire**, toujours visible sous l'éditeur : 🥚 = 🏖️ plage + 🌙 nuit + ⚡ 6 · 🌿 +3 ⚡ · 🛍️ −3 ⚡ · 🦈 −1 nid · 1 action par tour.
+- **📤 Envoyer** : l'état se lit sur le bouton (« ✅ Envoyée à 14:05 », « ⚠️ Modifiée : renvoyer »).
+- **📜 Règles** : les règles en **6 cartes** (le but, pondre, l'énergie, les requins, le temps, ton programme), le modèle en français et en Python, puis le détail à déplier. **💡 Conseils** : l'essentiel en 5 lignes, puis construire sa tortue pas à pas, comprendre pourquoi ça ne marche pas, erreurs fréquentes, conseils par niveau et par nouveauté.
 - **🚀 Primitives avancées** : ajoute les primitives des niveaux intermédiaire et expert à l'autocomplétion, à la boîte à outils et à l'aide ; la tortue Pirate 🤖 rejoint le bac à sable.
 
-**Pour tester** (bac à sable) :
+**Pour tester** (onglet 🧪 Tester) :
 
-- chaque **▶ Tester** se joue dans un **nouveau lagon** ; « 🔁 Rejouer ce lagon » rejoue le même (pour vérifier une correction) ;
+- **▶ Tester** (sous l'éditeur) ouvre l'onglet et lance la partie. Le lagon et **« Dans la tête de ta tortue »** sont côte à côte, en grand ; **un clic sur une ligne de la pensée ramène à cette ligne dans l'éditeur** ;
+- chaque test se joue dans un **nouveau lagon** ; « 🔁 Rejouer ce lagon » rejoue le même (pour vérifier une correction) ;
 - **📊 Estimer** : la tortue joue 10, 20 ou 50 parties **sans les afficher**. L'élève obtient son **nombre d'œufs moyen**, de la pire à la meilleure partie, la part des parties sans œuf, ses captures, et la moyenne de chaque tortue d'entraînement. Ce sont toujours les mêmes lagons : l'élève compare ses versions (« Estimation précédente : 1,2 → maintenant 2,8 »).
 
 **Après chaque brawl** (onglet Résultats) :
@@ -139,30 +143,38 @@ C'est un bon objectif pour les élèves rapides, ou pour prolonger le travail à
 
 ## 8. Les tutoriels
 
-### Le tutoriel débutant (`tuto.html`)
+### Le parcours débutant en 4 missions (`tuto.html`)
 
-Chaque étape montre **d'abord un exemple à manipuler**, avec très peu de texte, puis un **petit exercice vérifié tout de suite**. Une étoile ⭐ marque chaque exercice réussi.
+Le tutoriel est un **parcours en 4 missions** (environ 30 minutes en tout), affiché sur l'accueil avec la progression de l'élève (✅ réussie, ⏳ en cours, 👉 à faire maintenant). On peut s'arrêter entre deux missions. Il convient **dès la Seconde** : la première mission se joue sans code, et le clavier n'arrive qu'à la mission 3. Chaque étape montre d'abord un exemple à manipuler, puis un petit exercice vérifié tout de suite ; une étoile ⭐ marque chaque exercice réussi.
 
+**🌊 Mission 1 · Comprendre le jeu** (5 min, sans code)
 1. **Le jeu** : le but en une phrase et un match de démonstration animé.
 2. **Le lagon** : la légende illustrée.
-3. **Les questions (capteurs)** : un quiz en images (« Que répond `algue_ici()` ? True ou False ? »).
-4. **Les ordres (actions)** : un quiz « quel ordre donner dans cette situation ? ».
-5. **Ton premier `if`** : un `if` décortiqué en couleurs, un interrupteur True/False pour voir l'effet, puis l'élève écrit son premier `if`, vérifié dans 2 situations.
-6. **`else`** : un exemple avec interrupteur, puis un exercice.
-7. **`and`** : un testeur de ponte, puis un exercice.
-8. **`elif`, le premier vrai gagne** : un exemple et un quiz « Devine ce que fait la tortue ».
-9. **Une seule chaîne** : la tortue fait **une seule action par tour**. Une tortue à deux blocs `if` / `else` à la suite (le piège le plus fréquent en classe) : avec les interrupteurs, l'élève voit que la ligne `pondre()` est « ignorée ». Puis il la répare en une seule chaîne `if` / `elif` / `else`.
-10. **L'ordre des priorités** : 4 règles à ranger avec des flèches (danger, pondre, rentrer la nuit, manger), vérifiées dans 6 situations ; le code se met à jour.
-11. **Énergie et dangers** : une jauge à manipuler et quelques règles d'une ligne.
-12. et 13. **2 tortues à réparer** dans le lagon, chacune avec un indice ; « Voir la solution » apparaît après 2 essais.
+3. **🎮 Pilote ta tortue** : l'élève choisit lui-même l'ordre de sa tortue, tour par tour (manger, pondre, aller vers les algues ou la plage, fuir), pour pondre 1 nid. Il voit ce que « voit » sa tortue (algues ? plage ? nuit ? requin ?), son énergie, et pourquoi un ordre est refusé (« il fait jour », « pas sur une plage », « pas assez d'énergie »). Il découvre ainsi les règles en les vivant, puis comprend qu'en classe il faudra écrire ces décisions **à l'avance**.
+4. **Les règles en 1 minute** : les 6 cartes, une jauge d'énergie à manipuler et un vrai / faux.
+
+**💬 Mission 2 · Parler à ta tortue** (5 min)
+1. **Les questions (capteurs)** : un quiz en images (« Que répond `algue_ici()` ? True ou False ? »).
+2. **Les ordres (actions)** : un quiz « quel ordre donner dans cette situation ? ».
+3. **Si… alors…** : trois règles à composer **en français** avec deux listes (« Si 🦈 un requin est proche → 💨 fuir »). La traduction en Python s'affiche dessous.
+
+**✍️ Mission 3 · Tes premières règles en Python** (10 min)
+1. **Complète le code** : la même règle en français puis en Python ; l'élève complète `if ___:` / `___` avec des listes déroulantes, sans clavier.
+2. **Ton premier `if`** : un `if` décortiqué en couleurs, un interrupteur True/False, puis l'élève l'écrit au clavier.
+3. **`else`**, 4. **`and`**, 5. **`elif`, le premier vrai gagne** : un exemple à manipuler, puis un exercice ou un quiz.
+
+**🥚 Mission 4 · Une tortue qui pond** (10 min)
+1. **Une seule chaîne** : une tortue à deux blocs `if` / `else` à la suite (le piège le plus fréquent en classe) ; l'élève la répare en une seule chaîne.
+2. **L'ordre des priorités** : 4 règles à ranger avec des flèches, vérifiées dans 6 situations.
+3. et 4. **2 tortues à réparer** dans le lagon, chacune avec un indice ; « Voir la solution » apparaît après 2 essais.
 
     | Mission | Notion | Ce qui ne va pas |
     |---|---|---|
-    | M1 | ordre des règles | La nuit, elle mange au lieu d'aller pondre. |
-    | M2 | ordre des `elif` | Elle mange alors qu'un requin arrive. |
+    | 🔧 3 | ordre des règles | La nuit, elle mange au lieu d'aller pondre. |
+    | 🔧 4 | ordre des `elif` | Elle mange alors qu'un requin arrive. |
 
-14. **🐢 Construis ta tortue** : la tortue de départ de la partie, à compléter avec ses **tests en direct** jusqu'au 🟢 ; on peut la voir jouer contre les tortues d'entraînement. « 🐢 Emporter ma tortue » la place dans l'éditeur de la partie (ou du bac à sable).
-15. **En classe** : le déroulé de la séance et le barème des points.
+5. **🐢 Construis ta tortue** : la tortue de départ de la partie, à compléter avec ses **tests en direct** jusqu'au 🟢, au clavier ou avec **🧩 Ajouter une règle sans taper**. « 🐢 Emporter ma tortue » la place dans l'éditeur de la partie (ou du bac à sable).
+6. **En classe** : le déroulé de la séance et le barème des points.
 
 Quand un exercice ou une mission échoue, l'élève voit **pourquoi** : « 🔍 La nuit, sur la plage : ta tortue fait `manger()` (ligne 3), parce que `algue_ici()` est vrai. La ligne 5 `pondre()` n'est même pas regardée : le premier vrai gagne. »
 

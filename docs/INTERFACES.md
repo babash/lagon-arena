@@ -32,6 +32,8 @@ Avant d'entrer dans le détail, trois constats reviennent à chaque moment.
 
 Cette fiche apparaîtrait chez l'élève (programmer, tester), au tableau (pendant la programmation) et dans le panneau de préparation de l'enseignant (avec un aperçu de la carte). C'est le pont entre « les règles changent » et « mon code peut s'adapter ». **[nouveau]**
 
+> *Novembre 2026 : l'accueil montre désormais le parcours en 4 missions avec la progression de l'élève (✅ / ⏳ / 👉), et « 🔑 Entrer dans la partie » vient en premier ; le seul code de session suffit pour revenir.*
+
 **3. Le parcours de l'élève doit se voir.** Le tutoriel, les trois niveaux avancés, l'estimation, le rang en classe et le Panthéon forment une **progression**, mais elle est éparpillée sur cinq pages. Et depuis que les données ne vivent qu'un jour, une partie de cette progression s'efface (les étoiles des tutoriels). Il faut à la fois la **montrer** et décider **comment la garder** (voir le moment 6).
 
 ---

@@ -1,6 +1,6 @@
 # 🛠️ TODO : prochains chantiers (branche `dev`)
 
-*Mis à jour le 29 octobre 2026, après les séances en classe. Ce TODO remplace le précédent : il repart du constat de la classe et reprend, par ordre de priorité, l'audit (design, fluidité, pédagogie) et la réflexion sur les interfaces ([docs/INTERFACES.md](docs/INTERFACES.md)).*
+*Mis à jour le 10 novembre 2026 (nouveau constat : les élèves comprennent mal le jeu ; voir le chantier 1 bis). Version précédente : 29 octobre 2026, après les séances en classe. Ce TODO remplace le précédent : il repart du constat de la classe et reprend, par ordre de priorité, l'audit (design, fluidité, pédagogie) et la réflexion sur les interfaces ([docs/INTERFACES.md](docs/INTERFACES.md)).*
 
 Les chantiers se développent sur la branche `dev`, puis sont fusionnés dans `main`.
 
@@ -52,6 +52,14 @@ Six tortues « types » d'élèves, 20 parties chacune, lagon calme :
 
 ---
 
+## Le constat n° 2 (novembre 2026) : les élèves comprennent mal le jeu
+
+> À l'usage, les règles du jeu sont mal comprises, le tutoriel n'est pas assez progressif (il doit aussi convenir à des élèves de **Seconde**), l'accueil est peu pratique et les rappels des règles sont brouillons. Un élève qui a son code de session ne devrait pas avoir à retaper son pseudo.
+
+C'est le **chantier 1 bis** ci-dessous.
+
+---
+
 ## Règles communes à tous les chantiers
 
 - **Aucune fonctionnalité perdue**, sur ordinateur comme sur téléphone.
@@ -65,6 +73,7 @@ Six tortues « types » d'élèves, 20 parties chacune, lagon calme :
 |---|---|---|
 | **P1** | **0.** Le filet de tests | Avant de toucher aux écrans, pour ne rien casser |
 | **P1** | **1.** Faire pondre toutes les tortues | Le problème n° 1 en classe |
+| **P1** | **1 bis.** Un parcours progressif, des règles claires, un accueil pratique | ✅ Fait en novembre : les élèves comprenaient mal le jeu |
 | **P1** | **2.** Séparer Programmer, Tester, Aide et Conseils | Indispensable pour comprendre sa tortue ; c'est là que s'affichent les diagnostics du chantier 1 |
 | **P1** | **3.** L'enseignant voit les codes et les difficultés | Pour aider les élèves au bon moment |
 | P2 | **4.** Le Panthéon automatique | Les meilleures tortues de chaque manche y entrent seules |
@@ -163,7 +172,7 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 
 ### 1.3. Une structure guidée dès le départ
 
-- [ ] **Une tortue de départ qui montre la bonne forme.** Elle ne pond toujours pas, puisque c'est à l'élève de l'améliorer, mais elle est déjà **une seule chaîne**. Des commentaires indiquent où ajouter les règles et dans quel ordre. Par exemple :
+- [x] **Une tortue de départ qui montre la bonne forme.** Elle ne pond toujours pas, puisque c'est à l'élève de l'améliorer, mais elle est déjà **une seule chaîne**. Des commentaires indiquent où ajouter les règles et dans quel ordre. Par exemple :
 
   ```python
   def tour():
@@ -176,9 +185,10 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
           aller_vers_algue()
   ```
 
-  - [ ] À trancher : où placer la ligne d'insertion. Il faut aussi rester compatible avec les tortues déjà envoyées, et ajouter au vérificateur un contrôle « la tortue de départ ne pond pas » (aujourd'hui, il l'affiche seulement dans l'équilibrage).
-- [ ] **« ➕ Ajouter une règle »** dans l'éditeur. L'élève choisit une condition et une action dans la boîte à outils, puis le **rang** de la règle (« avant manger », « tout en haut »). L'éditeur insère un `elif` bien indenté, au bon endroit. On ne peut plus fabriquer un second bloc par erreur.
-- [ ] **La vue « Priorités »** (en option, à côté de la vue code) : chaque règle est une carte numérotée (« 1. si requin proche → fuir »). On les **fait glisser** pour changer l'ordre, et le code se met à jour. C'est l'image directe de « le premier vrai gagne ».
+  - [x] Tranché : les commentaires disent « ajoute tes règles AU-DESSUS de manger, dans cet ordre » ; le bouton 🧩 Mes règles fait l'insertion au bon rang. Seuls les commentaires changent : la tortue joue comme avant (anciennes manches identiques). Le vérificateur contrôle qu'elle est 🔴 et pond 0 nid.
+  - (ancienne question) À trancher : où placer la ligne d'insertion. Il faut aussi rester compatible avec les tortues déjà envoyées, et ajouter au vérificateur un contrôle « la tortue de départ ne pond pas » (aujourd'hui, il l'affiche seulement dans l'équilibrage).
+- [x] **« ➕ Ajouter une règle »** dans l'éditeur (bouton **🧩 Mes règles**, `js/regles-panneau.js` et `js/regles-code.js`). L'élève choisit une condition et une action dans la boîte à outils, puis le **rang** de la règle (« avant manger », « tout en haut »). L'éditeur insère un `elif` bien indenté, au bon endroit. On ne peut plus fabriquer un second bloc par erreur.
+- [x] **La vue « Priorités »** (dans 🧩 Mes règles, avec ⬆️ ⬇️ 🗑️ plutôt que glisser : utilisable au clavier et sur téléphone) : chaque règle est une carte numérotée (« 1. si requin proche → fuir »). On les **fait glisser** pour changer l'ordre, et le code se met à jour. C'est l'image directe de « le premier vrai gagne ».
 - [ ] **Pendant la frappe** : si l'élève commence un `if` juste après un bloc `if` / `else` complet, l'éditeur propose tout de suite « Ici, écris plutôt `elif` : sinon cette règle ne sera jamais atteinte ».
 
 ### 1.4. Un tutoriel qui finit avec une tortue qui pond
@@ -205,32 +215,49 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 
 ---
 
+## 1 bis. Un parcours progressif, des règles claires, un accueil pratique (novembre 2026)
+
+*Fait sur `dev` le 10 novembre 2026.*
+
+- [x] **Le tutoriel devient un parcours en 4 missions** (`js/parcours.js`), qu'on peut faire en plusieurs fois :
+  1. 🌊 **Comprendre le jeu** (sans code) : le but, le lagon, **🎮 Pilote ta tortue** (l'élève choisit l'action à chaque tour : il découvre la ponte refusée le jour ou sans énergie, la plage, le requin), puis **les règles en 1 minute** (6 cartes, l'énergie à manipuler, un vrai/faux) ;
+  2. 💬 **Parler à ta tortue** : les questions, les ordres, puis **« Si… alors… »** en français (deux listes ; la traduction Python s'affiche dessous) ;
+  3. ✍️ **Tes premières règles en Python** : **« Complète le code »** (des listes à la place des trous, sans clavier), puis `if`, `else`, `and`, `elif` au clavier ;
+  4. 🥚 **Une tortue qui pond** : une seule chaîne, l'ordre des priorités, deux tortues à réparer, puis **Construis ta tortue** (avec 🧩, sans taper si besoin).
+- [x] La navigation du tutoriel est rangée par mission (titre de mission au début, « Mission 2 : … → » sur le bouton Suivant, `tuto.html?mission=2`).
+- [x] **Les règles en 6 cartes** (`js/regles-vue.js`, une seule source) : le but, pondre, l'énergie, les requins, le temps, ton programme. Sur l'accueil, dans le tutoriel et dans l'onglet 📜 Règles.
+- [x] **Un aide-mémoire fixe** sous l'éditeur (🥚 = 🏖️ + 🌙 + ⚡ 6 · 🌿 +3 · 🛍️ −3 · 🦈 −1 nid · 1 action par tour) à la place du rappel qui changeait toutes les 15 secondes.
+- [x] **L'accueil refait** : « 🔑 Entrer dans la partie » d'abord (première fois : salle + pseudo ; ou « 🏠 J'ai un code de session »), « ▶ Reprendre ma partie » en un clic sur le même navigateur, le **parcours** avec sa progression (✅ / ⏳ / 👉), les missions avancées, le bac à sable, le Panthéon, puis les règles en 1 minute.
+- [x] **Le code de session suffit** : `retrouver_session(jeton)` retrouve la salle et le pseudo. Le lien personnel `index.html#code=…` ouvre directement la partie. Repli si la base n'est pas à jour : on demande aussi la salle et le pseudo.
+- [x] Moteur : une tortue peut être « pilotée » (option `pilote` de `simulate`, pour le tutoriel) ; l'empreinte des anciennes parties est inchangée.
+- [ ] À observer en classe : combien d'élèves de Seconde finissent la mission 4, et en combien de temps.
+
 ## 2. Séparer « Programmer », « Tester », « Aide » et « Conseils »
 
 *Indispensable. Aujourd'hui, le bac à sable partage l'écran avec l'éditeur : « Dans la tête de ta tortue » est petit et loin, alors que c'est l'outil qui fait comprendre.*
 
-- [ ] **Les onglets de la page élève, tous au même niveau** : **✍️ Programmer · 🧪 Tester · 📊 Résultats · 🏆 Classement · ❓ Aide · 💡 Conseils**. L'aide (les règles) et les conseils deviennent deux onglets principaux, à la place de l'unique onglet ❓ Aide qui les contient aujourd'hui en sous-onglets. Chacun garde son « essentiel en 5 lignes » et ses sections à déplier.
-- [ ] **✍️ Programmer** :
+- [x] **Les onglets de la page élève, tous au même niveau** : **✍️ Programmer · 🧪 Tester · 📊 Résultats · 🏆 Classement · ❓ Aide · 💡 Conseils**. L'aide (les règles) et les conseils deviennent deux onglets principaux, à la place de l'unique onglet ❓ Aide qui les contient aujourd'hui en sous-onglets. Chacun garde son « essentiel en 5 lignes » et ses sections à déplier.
+- [x] **✍️ Programmer** :
   - le verdict 🟢 / 🟠 / 🔴 et les 4 actions clés (chantier 1) ;
   - l'éditeur, la boîte à outils, « ➕ Ajouter une règle » ;
   - le coup de pouce ;
   - les boutons **▶ Tester** et **📤 Envoyer**, avec l'état d'envoi bien visible sur le bouton (« ✅ Envoyée à 14 h 05 » ou « ⚠️ Modifiée, pas encore envoyée »).
-- [ ] **🧪 Tester** : le lagon et **« Dans la tête de ta tortue »** côte à côte, en grand et synchronisés. On y trouve :
+- [x] **🧪 Tester** : le lagon et **« Dans la tête de ta tortue »** côte à côte, en grand et synchronisés. On y trouve :
   - le code avec ses lignes vraies, fausses et exécutées ;
   - le tableau des capteurs ;
   - la frise des moments importants ;
   - le pas à pas (◀ 1 tour / 1 tour ▶) ;
   - le bilan de santé (chantier 1), à côté du match.
-- [ ] **Navigation** :
-  - [ ] **▶ Tester** bascule vers « Tester » et lance la partie ;
-  - [ ] un clic sur une ligne de la « pensée » ramène à cette ligne dans l'éditeur (« ✏️ corriger ici ») ;
-  - [ ] **🔁 Rejouer ce lagon** reste sur « Tester ».
-- [ ] **Tout est conservé** :
+- [x] **Navigation** :
+  - [x] **▶ Tester** bascule vers « Tester » et lance la partie ;
+  - [x] un clic sur une ligne de la « pensée » ramène à cette ligne dans l'éditeur (« ✏️ corriger ici ») ;
+  - [x] **🔁 Rejouer ce lagon** reste sur « Tester ».
+- [x] **Tout est conservé** :
   - nouveau lagon à chaque test, rejouer le même lagon ;
   - 📊 Estimer, 🏛️ Panthéon ;
   - choix de la nouveauté en bac à sable libre, lagon personnalisé de la manche ;
   - rapport et conseils du test.
-- [ ] Sur un grand écran, une option « côte à côte » (le code et le test ensemble) remplace l'actuel « ◀ Réduire ».
+- [x] Sur un grand écran, une option « côte à côte » (le code et le test ensemble) remplace l'actuel « ◀ Réduire ».
 - [ ] Même logique dans l'onglet 📊 Résultats (rejeu du brawl) et dans « Et si… ? ».
 
 **C'est fini quand** un élève peut tester, suivre sa tortue pas à pas avec sa pensée bien visible, et revenir corriger la bonne ligne en un clic, sur ordinateur comme sur téléphone, sans qu'aucune fonction actuelle ne manque.
@@ -435,6 +462,7 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 | Chantier | Modification de `supabase.sql` |
 |---|---|
 | Déjà sur `main` | Ménage, compteurs, Panthéon, lagon personnalisé : **à relancer** si ce n'est pas encore fait |
+| 1 bis | ✅ `retrouver_session(jeton)` et l'index `joueurs_secret_jeton` : entrer avec le seul code de session (appliqué en production le 10 novembre 2026) |
 | 3 | `codes_manche` (enseignant) ; option : table `etats` des brouillons |
 | 4 | ✅ `salles.etablissement`, `pantheon.salle` (la classe), fin de l'unicité des pseudos ; reste : `pantheon_classe`, la manche d'origine, `mon_entree_pantheon` |
 | 10 | consigne et date du devoir (dans les réglages de la manche, sans nouvelle table) |
