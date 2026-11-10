@@ -37,10 +37,10 @@ export function messageEleves({ devoir = false } = {}) {
   return devoir
     ? `🐢 Lagon Arena : devoir
 1. Ouvre ce lien : ${lien}
-2. Si tu n'as jamais joué, fais d'abord le tutoriel (bouton « Commencer le tutoriel »).
+2. Si tu n'as jamais joué, fais d'abord les missions de « Ton parcours », sur la même page.
 3. Choisis un pseudo (pas ton vrai nom) et clique sur « Plonger dans le lagon ».
-4. Programme ta tortue, teste-la dans le bac à sable, puis clique sur « Envoyer ma tortue ». Tu peux la renvoyer autant que tu veux jusqu'au brawl.
-5. Note ton code de session (bouton « 🏠 Mon code de session ») : il te permet de revenir depuis un autre ordinateur.`
+4. Programme ta tortue, teste-la (onglet « Tester »), puis clique sur « Envoyer ma tortue ». Tu peux la renvoyer autant que tu veux jusqu'au brawl.
+5. Note ton code de session (bouton « 🏠 Mon code de session ») : avec lui seul, tu reviens depuis n'importe quel ordinateur.`
     : `🐢 Lagon Arena : rejoins la salle ${S.code}
 ${lien}
 Choisis un pseudo (pas ton vrai nom), puis plonge dans le lagon !`;
@@ -76,7 +76,7 @@ export async function fenetreCodesSession() {
   let l;
   try { l = await db.codesSession(S.code, S.secret); } catch { return toast("Codes de session indisponibles : relancez supabase.sql dans Supabase.", "err"); }
   const o = fenetre(`<h2>🔑 Codes de session · salle ${esc(S.code)}</h2>
-    <p class="petit">Pour se reconnecter depuis un autre ordinateur (chez soi…), l'élève tape la salle, son pseudo et son code de session (« 🏠 Tu reviens depuis un autre ordinateur ? »). Chaque élève voit aussi le sien avec le bouton « 🏠 Mon code de session ».</p>
+    <p class="petit">Pour se reconnecter depuis un autre ordinateur (chez soi…), l'élève clique sur « 🏠 J'ai un code de session » sur l'accueil et tape <b>seulement son code</b> : sa salle et son pseudo sont retrouvés tout seuls. Chaque élève voit aussi le sien avec le bouton « 🏠 Mon code de session ».</p>
     <table class="scores codes-table"><tr><th>Pseudo</th><th>Code de session</th></tr>
       ${l.map((x) => `<tr><td>${esc(x.pseudo)}</td><td class="code-cell">${x.code ? codeLisible(x.code) : '<span class="muted petit">créé quand l\'élève ouvrira sa page</span>'}</td></tr>`).join("") || '<tr><td colspan="2" class="muted">Aucun élève</td></tr>'}</table>
     <p class="petit">⚠️ À ne pas projeter : chaque code permet d'envoyer une tortue à la place de l'élève.</p>

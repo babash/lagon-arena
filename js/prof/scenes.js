@@ -34,7 +34,7 @@ function scAttente(st) {
     <div id="qr" class="qr cache"></div>
     <p class="consigne"><b id="nb-grand">${S.joueurs.length}</b> élève(s) connecté(s)</p>
     <p class="row centre"><button class="btn ghost" id="lien-acces">🔗 Lien d'accès à donner aux élèves</button></p>
-    <p class="petit muted">Conseil : laissez d'abord 10 à 15 minutes aux élèves pour le tutoriel (bouton « Commencer le tutoriel » sur l'accueil).</p>
+    <p class="petit muted">Conseil : laissez d'abord 10 à 15 minutes aux élèves pour les missions 1 et 2 de leur parcours (« 🗺️ Ton parcours », sur l'accueil).</p>
   </div>
   <div id="prep"></div>`;
   dessinerQR($("#qr"), lienEleves());
