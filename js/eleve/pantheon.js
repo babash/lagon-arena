@@ -65,19 +65,19 @@ async function formulaire(code, r, top) {
       : `Il faut plus de <b>${nombre(place.seuil)}</b> nids en moyenne pour entrer dans le top 100. Continue à l'améliorer !`}</p>
     <form id="pt-form" class="form-pantheon">
       ${classe ? `<div class="pt-classe">🐢 <b>${esc(PSEUDO)}</b> · 🏫 classe <b>${esc(classe)}</b>${etab ? ` · ${esc(etab)}` : ""} · ${new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
-          <div class="petit muted">C'est ce qui sera affiché au Panthéon : ton pseudo de la salle, ta classe et la date${etab ? ", avec l'établissement donné par ton enseignant" : ""}.</div></div>
+          <div class="petit muted">C'est ce qui sera affiché au Panthéon : ton pseudo de la salle, ta classe et la date${etab ? ", avec l'établissement donné par ton enseignant·e" : ""}.</div></div>
         <input type="hidden" id="pt-pseudo" value="${esc(PSEUDO)}"><input type="hidden" id="pt-lycee" value="">`
       : `<label class="champ"><span>Pseudo au Panthéon <span class="petit muted">(pas ton vrai nom)</span></span>
         <input type="text" id="pt-pseudo" maxlength="14" required value="${esc(memo.pseudo || PSEUDO || "")}" autocomplete="off"></label>
       <label class="champ"><span>Ton établissement <span class="petit muted">(facultatif)</span></span>
         <input type="text" id="pt-lycee" maxlength="60" list="pt-lycees" value="${esc(etab)}" placeholder="ex. Lycée de Chirongui" autocomplete="off"></label>
       <datalist id="pt-lycees"></datalist>
-      <p class="petit muted">Proposée depuis le bac à sable, ta tortue sera affichée « hors classe ». Pour l'afficher avec ta classe, propose-la depuis la salle de ton enseignant.</p>`}
+      <p class="petit muted">Proposée depuis le bac à sable, ta tortue sera affichée « hors classe ». Pour l'afficher avec ta classe, propose-la depuis la salle de ton enseignant·e.</p>`}
       <details ${memo.code ? "open" : ""}><summary>🔑 Ta tortue est déjà au Panthéon ?</summary>
         <label class="champ"><span>Ton code Panthéon <span class="petit muted">(la nouvelle tortue remplace l'ancienne si elle fait mieux)</span></span>
           <input type="text" id="pt-code" maxlength="12" class="input-code" value="${esc(codeLisible(memo.code || ""))}" placeholder="ex. K7PQ-2XMA" autocomplete="off" spellcheck="false"></label>
       </details>
-      <p class="petit muted">Ton programme est gardé, mais <b>personne ne pourra le lire</b>. Ton pseudo, ${classe ? "ta classe" : "ton établissement"}, la date et ta moyenne seront visibles par tous.</p>
+      <p class="petit muted">Ton programme est gardé, mais <b>personne ne pourra le lire</b>. Ton pseudo, ${classe ? "ta classe" : "ton établissement"}, la date et ta moyenne seront visibles par tout le monde.</p>
       <div class="row" style="justify-content:center"><button class="btn big" type="submit">🏛️ Entrer au Panthéon</button>
         <button class="btn ghost" type="button" id="pt-annuler">Plus tard</button></div>
       <div id="pt-erreur" class="msg err cache"></div>

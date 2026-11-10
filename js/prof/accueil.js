@@ -22,33 +22,33 @@ export function accueil() {
       <div class="card etab-card">
         <label class="champ"><span>🏫 Établissement <span class="petit muted">(facultatif)</span></span>
           <input type="text" id="etablissement" maxlength="60" value="${esc(store.get("lagon:etablissement") || "")}" placeholder="ex. Lycée de Chirongui" autocomplete="organization"></label>
-        <p class="petit muted">La classe est reconnue par le <b>code de la salle</b>. L'établissement, si vous le donnez, s'affiche à côté (au Panthéon notamment) ; il est proposé aux élèves qui y inscrivent leur tortue. Vous pourrez le changer dans les réglages de la salle.</p>
+        <p class="petit muted">La classe est reconnue par le <b>code de la salle</b>. L'établissement, si tu le donnes, s'affiche à côté (au Panthéon notamment) ; il est proposé aux élèves qui y inscrivent leur tortue. Tu pourras le changer dans les réglages de la salle.</p>
       </div>
       <div class="card">
         <h2>🌊 Séance en classe</h2>
-        <p>Créez une salle : un <b>code de 4 lettres</b> s'affiche au tableau, les élèves le tapent sur la page d'accueil avec un pseudo.</p>
+        <p>Crée une salle : un <b>code de 4 lettres</b> s'affiche au tableau, les élèves le tapent sur la page d'accueil avec un pseudo.</p>
         <button class="btn big corail" id="creer">➕ Créer une salle</button>
       </div>
       <div class="card">
         <h2>📚 Devoir à la maison</h2>
-        <p>Une salle créée <b>hors cours</b>, avec une manche <b>sans limite de temps</b> : choisissez la nouveauté (calme, plastique, tempête…), les équipes si vous le voulez, puis lancez-la. Vous recevez un <b>lien d'accès</b> et un message prêt à envoyer aux élèves (messagerie de l'établissement…). Ils programment et envoient leur tortue de chez eux ; vous lancez le brawl quand vous voulez (en classe, ou d'ici).</p>
+        <p>Une salle créée <b>hors cours</b>, avec une manche <b>sans limite de temps</b> : choisis la nouveauté (calme, plastique, tempête…), les équipes si tu le veux, puis lance-la. Tu reçois un <b>lien d'accès</b> et un message prêt à envoyer aux élèves (messagerie de l'établissement…). Ils et elles programment et envoient leur tortue depuis la maison ; tu lances le brawl quand tu veux (en classe, ou d'ici).</p>
         <button class="btn big" id="devoir">📚 Créer un devoir</button>
       </div>
-      ${MODE === "demo" ? `<div class="msg warn"><b>Mode démo</b> : la base de données n'est pas configurée (voir <code>js/config.js</code> et le README). Tout reste dans <b>ce navigateur</b> : pour tester, ouvrez des élèves dans d'autres onglets, ou ajoutez des élèves fictifs.</div>` : ""}
+      ${MODE === "demo" ? `<div class="msg warn"><b>Mode démo</b> : la base de données n'est pas configurée (voir <code>js/config.js</code> et le README). Tout reste dans <b>ce navigateur</b> : pour tester, ouvre des élèves dans d'autres onglets, ou ajoute des élèves fictif·ve·s.</div>` : ""}
       ${anciennes.length ? `<div class="card"><h3>Reprendre une salle</h3><ul class="joueurs-liste">${anciennes.map(([c, v]) => `<li><b>${c}</b>${v.devoir ? ' <span class="pill or-pill petit">📚 devoir</span>' : ""}<span class="petit muted">${v.cree ? new Date(v.cree).toLocaleString("fr-FR") : ""}</span><span class="etat"><button class="btn small" data-reprendre="${c}">Reprendre</button> <button class="x" data-oublier="${c}" title="Oublier">✕</button></span></li>`).join("")}</ul></div>` : ""}
     </div>
     <div class="card">
       <h2>⏱️ Déroulé conseillé (≈ 55 min)</h2>
       <ol class="seance">
-        <li><b>Tutoriel</b> (10-15 min) : les élèves font <a href="tuto.html" target="_blank">le tutoriel</a> : les règles, 2 tortues à réparer, et ils repartent avec <b>une tortue qui pond</b>.</li>
+        <li><b>Tutoriel</b> (10-15 min) : les élèves font <a href="tuto.html" target="_blank">le tutoriel</a> : les règles, 2 tortues à réparer, et chacun·e repart avec <b>une tortue qui pond</b>.</li>
         <li><b>Manche 1</b> : ${Math.round(reglages.duree1 / 60)} min de programmation → brawl projeté (≈ 1 min 15) → 3 min de rapport.</li>
         <li><b>Manche 2 — rematch</b> avec une nouveauté : ${Math.round(reglages.duree / 60)} min → brawl → rapport.</li>
         <li><b>Manche 3 — finale</b> : ${Math.round(reglages.duree / 60)} min → brawl → rapport.</li>
-        <li><b>Duel des champions</b> (facultatif) : les 3 premiers, dans la tempête.</li>
+        <li><b>Duel des champion·ne·s</b> (facultatif) : les 3 premier·e·s, dans la tempête.</li>
         <li><b>Bilan</b> : podium, meilleure progression, export CSV.</li>
       </ol>
       <h3>♾️ Manche longue, devoir</h3>
-      <p>Une manche à <b>temps illimité</b> reste ouverte jusqu'à ce que vous lanciez le brawl. Chaque élève a un <b>code de session</b> pour se reconnecter depuis chez lui (bouton « 🏠 Mon code de session » de sa page ; vous les retrouvez tous avec « 🔑 Codes de session »). Une salle est gardée <b>60 jours</b> après sa dernière utilisation.</p>
+      <p>Une manche à <b>temps illimité</b> reste ouverte jusqu'à ce que tu lances le brawl. Chaque élève a un <b>code de session</b> pour se reconnecter depuis la maison (bouton « 🏠 Mon code de session » de sa page ; tu les retrouves tous avec « 🔑 Codes de session »). Une salle est gardée <b>60 jours</b> après sa dernière utilisation.</p>
       <h3>🧮 Points</h3>
       <p>Points selon le rang parmi les élèves : ${POINTS_RANG.slice(0, 6).join(", ")}… (1 point minimum), <b>+${BONUS_PROGRESSION}</b> si l'élève pond plus de nids qu'à la manche précédente. Les tortues d'entraînement 🤖 complètent le lagon s'il y a moins de ${reglages.min} élèves ; elles ne marquent pas de points.</p>
     </div></div>`;

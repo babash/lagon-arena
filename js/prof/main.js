@@ -20,6 +20,6 @@ const cleLien = new URLSearchParams(location.hash.slice(1)).get("cle");
 if (demande && cleLien) {
   memoriserSalle(demande, cleLien);
   history.replaceState(null, "", "prof.html?salle=" + demande);
-  toast(`🏠 Salle ${demande} ajoutée à vos salles sur cet ordinateur.`);
+  toast(`🏠 Salle ${demande} ajoutée à tes salles sur cet ordinateur.`);
 }
 if (demande && mesSalles()[demande]) ouvrir(demande); else accueil();

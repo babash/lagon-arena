@@ -34,7 +34,7 @@ export async function ouvrir(code) {
       <button type="button" class="etat-classe cache" id="etat-classe" title="Qui ne pond pas, et pourquoi"></button>
       <ul class="joueurs-liste" id="liste"></ul>
       <p class="petit muted cache" id="aide-liste">👆 Un clic sur un pseudo : son code et ses tests.</p>
-      ${MODE === "demo" ? `<div class="row" style="margin-top:8px"><button class="btn small ghost" id="faux">🤖 + 3 élèves fictifs</button><a class="btn small ghost" target="_blank" href="${lienEleves()}">➕ Ouvrir un élève</a></div>` : ""}
+      ${MODE === "demo" ? `<div class="row" style="margin-top:8px"><button class="btn small ghost" id="faux">🤖 + 3 élèves fictif·ve·s</button><a class="btn small ghost" target="_blank" href="${lienEleves()}">➕ Ouvrir un·e élève</a></div>` : ""}
       <div class="sep"></div>
       <details class="reglages-d"><summary><b>⚙️ Réglages</b></summary>
         <div class="reglages" style="margin-top:8px">
@@ -126,7 +126,7 @@ function elevesClasse() {
 
 // la fiche d'un élève (après un brawl : avec ses chiffres du match et « revoir le match »)
 export function ouvrirFiche(pseudo) {
-  if (!S.codes) return toast("Les codes ne sont pas disponibles : relancez supabase.sql dans Supabase (fonction codes_manche).", "err");
+  if (!S.codes) return toast("Les codes ne sont pas disponibles : relance supabase.sql dans Supabase (fonction codes_manche).", "err");
   const j = S.joueurs.find((x) => x.pseudo === pseudo) || {}, c = S.codes[pseudo] || null;
   const R = S.resultats && S.resultats.manche === S.salle.manche && ["resultats", "fin"].includes(S.salle.phase) ? S.resultats : null;
   const t = R && R.sim.tortues.find((x) => x.id === pseudo), r = R && R.sim.resultats.find((x) => x.id === pseudo);
@@ -155,14 +155,14 @@ function listeEleves() {
     const spect = s.duel && !s.duel.includes(j.pseudo);
     const c = avecCodes ? S.codes[j.pseudo] : null;
     const etat = s.manche === 0 ? "" : spect ? "👀" : avecCodes ? null : envoyes.has(j.pseudo) ? "✅" : s.phase === "prog" ? "⏳" : "·";
-    const x = el("button", { class: "x", title: "Retirer cet élève (et ses tortues)" }, "✕");
+    const x = el("button", { class: "x", title: "Retirer cet·te élève (et ses tortues)" }, "✕");
     x.addEventListener("click", async () => {
       if (!confirm(`Retirer ${j.pseudo} de la salle ? (ses tortues sont supprimées)`)) return;
       try { await db.retirerJoueur(S.code, S.secret, j.pseudo); sonder(); } catch (e) { toast(e.message, "err"); }
     });
-    const cle = el("button", { class: "x", title: "Débloquer ce pseudo : l'élève pourra se reconnecter depuis un autre ordinateur sans code de session (il garde ses tortues et ses points)" }, "🔓");
+    const cle = el("button", { class: "x", title: "Débloquer ce pseudo : l'élève pourra se reconnecter depuis un autre ordinateur sans code de session (ses tortues et ses points sont gardés)" }, "🔓");
     cle.addEventListener("click", async () => {
-      if (!confirm(`Débloquer le pseudo ${j.pseudo} ?\nL'élève pourra le reprendre en rejoignant la salle depuis un autre ordinateur, sans code de session ; il garde ses tortues et ses points.`)) return;
+      if (!confirm(`Débloquer le pseudo ${j.pseudo} ?\nL'élève pourra le reprendre en rejoignant la salle depuis un autre ordinateur, sans code de session ; ses tortues et ses points sont gardés.`)) return;
       try { await db.libererPseudo(S.code, S.secret, j.pseudo); toast(`🔓 ${j.pseudo} peut se reconnecter.`); } catch (e) { toast(e.message, "err"); }
     });
     let marque;

@@ -57,7 +57,7 @@ export function ficheEleve(o) {
     : o.mancheCode != null && o.manche != null && o.mancheCode < o.manche ? `Tortue envoyée à la manche ${o.mancheCode} (pas encore renvoyée pour la manche ${o.manche}).`
     : `Tortue envoyée${o.mancheCode != null ? ` pour la manche ${o.mancheCode}` : ""}${quand ? ` à ${quand}` : ""}.`;
   const m = o.match;
-  const box = fenetre(`<div class="fiche-alerte" role="alert"><span>👀 <b>Visible au tableau</b> si votre écran est projeté.</span>
+  const box = fenetre(`<div class="fiche-alerte" role="alert"><span>👀 <b>Visible au tableau</b> si ton écran est projeté.</span>
       <button type="button" class="btn small sombre" data-masquer>🙈 Masquer</button></div>
     <h2 class="fiche-titre"><span class="swatch" style="background:${esc(o.couleur || "#ccc")}"></span>${esc(o.pseudo)} <span class="pill etat-${st.couleur}">${st.icone} ${riche(st.texte)}</span></h2>
     ${m ? `<div class="fiche-chiffres"><span><b>${m.nids}</b> 🥚 nid${m.nids > 1 ? "s" : ""}</span><span><b>${m.captures}</b> × 🦈 attrapée</span><span><b>${m.epuisee}</b> × 😵 épuisée</span></div>` : ""}
@@ -104,7 +104,7 @@ export function resumeClasseHTML(eleves, { match = false } = {}) {
       <div class="cause-eleves cache">${g.eleves.map((p) => `<button type="button" class="btn small ghost" data-eleve="${esc(p)}">${esc(p)}</button>`).join("")}</div></li>`;
   }).join("");
   return `<div class="resume-classe"><p class="resume-tete">${tete}${autres.length ? ` Les ${autres.length} autre${autres.length > 1 ? "s" : ""} :` : " 🎉"}</p>
-    ${autres.length ? `<ul class="causes">${groupes}</ul><p class="petit muted">Un clic sur une cause montre les élèves concernés, un clic sur un élève ouvre sa fiche.</p>` : ""}</div>`;
+    ${autres.length ? `<ul class="causes">${groupes}</ul><p class="petit muted">Un clic sur une cause montre les élèves concerné·e·s, un clic sur un·e élève ouvre sa fiche.</p>` : ""}</div>`;
 }
 export function brancherResume(box, ouvrir) {
   box.addEventListener("click", (e) => {
@@ -135,11 +135,11 @@ export async function chargerCodes() {
 
 // la fenêtre « 🩺 Les tortues de la classe » (pendant la programmation)
 export function fenetreClasse(eleves, ouvrir) {
-  const o = fenetre(`<div class="fiche-alerte" role="alert"><span>👀 <b>Visible au tableau</b> si votre écran est projeté.</span>
+  const o = fenetre(`<div class="fiche-alerte" role="alert"><span>👀 <b>Visible au tableau</b> si ton écran est projeté.</span>
       <button type="button" class="btn small sombre" data-masquer>🙈 Masquer</button></div>
     <h2>🩺 Les tortues de la classe</h2>
     <p class="petit muted">D'après la <b>dernière tortue envoyée</b> par chaque élève, et ses tests (une situation à la fois : la nuit sur la plage, le jour sur des algues…).</p>
-    ${resumeClasseHTML(eleves) || "<p>Aucun élève pour l'instant.</p>"}`, { large: true });
+    ${resumeClasseHTML(eleves) || "<p>Aucun·e élève pour l'instant.</p>"}`, { large: true });
   o.classList.add("fenetre-classe");
   const fermer = () => { o.remove(); document.removeEventListener("keydown", echap); };
   const echap = (e) => { if (e.key === "Escape") fermer(); };

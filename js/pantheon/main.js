@@ -38,7 +38,7 @@ function afficher() {
     lignes.splice(i < 0 ? lignes.length : i, 0, { type: "repere", pseudo: r.nom, moyenne: r.moyenne });
   }
   const tb = $("#classement"); tb.innerHTML = "";
-  if (!top.length) tb.append(el("tr", {}, el("td", { colspan: 5, class: "muted" }, lycee ? "Aucune tortue de cet établissement pour l'instant." : "Le Panthéon est encore vide : à toi d'y entrer le premier !")));
+  if (!top.length) tb.append(el("tr", {}, el("td", { colspan: 5, class: "muted" }, lycee ? "Aucune tortue de cet établissement pour l'instant." : "Le Panthéon est encore vide : à toi d'y entrer en premier !")));
   for (const l of lignes) {
     if (l.type === "repere") {
       tb.append(el("tr", { class: "bot repere" }, el("td", { class: "num" }, ""), el("td", {}, `🤖 ${l.pseudo}`), el("td", {}, "tortue d'entraînement"),

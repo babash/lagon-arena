@@ -127,7 +127,7 @@ export function cartesEquipesHTML(E, { ordre = "rang", noms = null, points = nul
   const carte = (x) => `<div class="eqb ${x.e === moi ? "moi" : ""} ${tete(x) ? "premier" : ""}" style="${styleEquipe(x.e)}">
       <span class="eqb-nom">${ordre === "rang" ? (MEDAILLES[x.rang - 1] || placeTxt(x.rang)) + " " : tete(x) ? "👑 " : ""}${nomEquipe(x.e)}</span>
       <b>${x.nids} 🥚</b><small>${x.n} élève${x.n > 1 ? "s" : ""} · moy. ${x.moyenne.toFixed(decimales)}</small>
-      ${points ? `<small class="eqb-pts">+${points(x.e)} pts chacun</small>` : ""}
+      ${points ? `<small class="eqb-pts">+${points(x.e)} pts chacun·e</small>` : ""}
       ${noms ? `<div class="petit eqb-membres">${x.membres.map(noms).join(", ")}</div>` : ""}</div>`;
   return `<div class="duel-eq ${E.nb > 2 ? "multi" : ""}">${l.map(carte).join(E.nb === 2 ? '<div class="vs">VS</div>' : "")}</div>`;
 }

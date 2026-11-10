@@ -41,7 +41,7 @@ ETAPES_EXPERT.push({
   rendre(box) {
     box.innerHTML = `<div class="etape"><div class="texte">
       <h2>⚖️ Comparer deux choix</h2>
-      <p>Un expert compare : « les algues <b>sûres</b> sont-elles beaucoup plus loin que les plus proches ? »</p>
+      <p>Un·e expert·e compare : « les algues <b>sûres</b> sont-elles beaucoup plus loin que les plus proches ? »</p>
       <div class="msg info"><code>distance_algue_sure() &lt;= distance_algue() + 3</code><br>veut dire « les algues sans requin sont au plus 3 cases plus loin ».</div>
       <p>Et quand il n'y a <b>aucune</b> algue sûre, ${capt("distance_algue_sure")} vaut <b>99</b>.</p>
     </div><div class="card" id="q"></div></div>`;
@@ -144,7 +144,7 @@ ETAPES_EXPERT.push({
   court: "🏆", titre: "Le défi expert",
   rendre(box) {
     box.innerHTML = `<div class="etape"><div class="texte">
-      <h2>🏆 Le défi : une stratégie d'expert</h2>
+      <h2>🏆 Le défi : une stratégie d'expert·e</h2>
       <p>Cette tortue lit le lagon : elle quitte les zones à requins sans algues, rentre tôt quand ses algues sont loin des plages, et laisse les touffes presque vides. En moyenne, elle <b>bat la Championne</b> 🤖.</p>
       <div id="expert"></div>
       <div class="msg info">💡 Défi : copie-la dans le bac à sable, clique sur <b>📊 Estimer</b>, puis améliore-la pour monter sa moyenne d'œufs. Change une seule chose à la fois, et compare !</div>

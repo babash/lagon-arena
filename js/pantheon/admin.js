@@ -18,7 +18,7 @@ export function admin(opts) {
   const box = $("#admin"); box.classList.remove("cache");
   box.innerHTML = `<h2>🛠️ Administration du Panthéon</h2>
     <form id="adm-login" class="row">
-      <input type="password" id="adm-secret" placeholder="Mot de passe administrateur" autocomplete="current-password" style="max-width:280px">
+      <input type="password" id="adm-secret" placeholder="Mot de passe d'administration" autocomplete="current-password" style="max-width:280px">
       <button class="btn small sombre" type="submit">Entrer</button>
       <span class="petit muted">Le mot de passe se choisit dans la base (en-tête de <code>supabase.sql</code>).</span>
     </form>

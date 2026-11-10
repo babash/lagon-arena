@@ -6,7 +6,7 @@ Règles communes à toutes les applications : `architecture/regles-supabase.md` 
 
 | N° | Fichier | Ce qu'elle fait | Appliquée |
 |---|---|---|---|
-| 0001 | `0001-pantheon-automatique.sql` (inverse : `0001-pantheon-automatique-inverse.sql`) | `pantheon_classe` (le Panthéon automatique, avec la limite des 1 000 meilleures tortues) et `pantheon_admin` avec la manche | ✅ le 10/11/2026 à 23 h 08 (heure de Mayotte), sous le nom `lagon_0001_pantheon_automatique`, après accord de l'enseignant |
+| 0001 | `0001-pantheon-automatique.sql` (inverse : `0001-pantheon-automatique-inverse.sql`) | `pantheon_classe` (le Panthéon automatique, avec la limite des 1 000 meilleures tortues) et `pantheon_admin` avec la manche | ✅ le 10/11/2026 à 23 h 08 (heure de Mayotte), sous le nom `lagon_0001_pantheon_automatique`, après accord de l'enseignant·e |
 
 **Avant ces fichiers** (appliquées par leur nom, sans fichier séparé ; leur SQL est dans `supabase.sql`) : `etablissement_facultatif`, `pantheon_classe_et_date`, `retrouver_session_par_code` (10/11), `chantier_3_codes_manche_et_entree_pantheon` (10/11).
 

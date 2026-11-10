@@ -40,7 +40,7 @@ ETAPES_MOYEN.push({
       <h2>📏 Des questions qui répondent un nombre</h2>
       ${table(AV_BASE.filter((c) => c.rep === "un nombre"))}
       <p>On les <b>compare</b> : <code>&lt;</code> <code>&lt;=</code> <code>&gt;</code> <code>&gt;=</code> <code>==</code> (égal) <code>!=</code> (différent).</p>
-      <p class="petit">${capt("vision_requin")}, ${capt("debut_nuit")} et ${capt("fin_nuit")} dépendent de la <b>manche</b> (nouveauté, lagon choisi par ton enseignant) : avec elles, ton code s'adapte tout seul. Exemple : <code>distance_requin() &lt;= vision_requin()</code> veut dire « un requin peut me voir ».</p>
+      <p class="petit">${capt("vision_requin")}, ${capt("debut_nuit")} et ${capt("fin_nuit")} dépendent de la <b>manche</b> (nouveauté, lagon choisi par ton enseignant·e) : avec elles, ton code s'adapte tout seul. Exemple : <code>distance_requin() &lt;= vision_requin()</code> veut dire « un requin peut me voir ».</p>
       <h3>🔬 Essaie :</h3><div id="ex"></div>
     </div><div class="card" id="q"></div></div>`;
     exemple($("#ex", box), "if distance_requin() <= 2:\n    fuir()\nelif distance_algue() == 0:\n    manger()\nelse:\n    aller_vers_algue()",

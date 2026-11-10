@@ -62,7 +62,7 @@ export function codesConnus(extra = []) {
     { nom: "la tortue de départ", code: CODE_DEPART },
     ...[...BOTS, BOT_PIRATE].map((b) => ({ nom: `la tortue d'entraînement ${b.nom}`, code: b.code })),
     ...[...MISSIONS, ...MISSIONS_AVANCEES].flatMap((m) => [m.code, m.solution].filter(Boolean).map((code) => ({ nom: `une mission du tutoriel`, code }))),
-    { nom: "la stratégie d'expert du tutoriel avancé", code: CODE_EXPERT },
+    { nom: "la stratégie d'expert·e du tutoriel avancé", code: CODE_EXPERT },
     { nom: "la stratégie d'équipe du tutoriel avancé", code: CODE_EQUIPE },
     ...extra,
   ];

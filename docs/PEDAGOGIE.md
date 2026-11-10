@@ -1,6 +1,6 @@
 # 🎓 Pédagogie : pourquoi Lagon Arena marche, et où il bute
 
-[← Retour au README](../README.md) · [Guide de l'enseignant](GUIDE-ENSEIGNANT.md) · [Règles](REGLES.md)
+[← Retour au README](../README.md) · [Guide de l'enseignant·e](GUIDE-ENSEIGNANT.md) · [Règles](REGLES.md)
 
 Ce document prend du recul sur le projet : le problème de départ, les idées qui le fondent (et la recherche sur laquelle elles s'appuient), ses points forts, ses limites honnêtes, et le discours pour le présenter.
 
@@ -25,7 +25,7 @@ Trois conséquences :
 
 1. **La chaîne de conditions devient une liste de priorités.** « Le premier vrai gagne » n'est plus une règle de syntaxe à apprendre : c'est ce qui fait que la tortue mange au lieu de fuir quand un requin arrive. (En intelligence artificielle, une chaîne `if`/`elif` est une *liste de décision* au sens de Rivest, 1987, et la tortue un *agent réactif* à la Brooks, 1986 : pas de plan, des règles par priorité.)
 2. **Le jeu est un générateur de tests.** Chaque match essaie le programme dans des situations que l'élève n'avait pas imaginées : de nuit loin de la plage, épuisée sur des algues pleines de plastique, poursuivie par deux requins. Les erreurs de logique **se voient**.
-3. **L'élève ne joue pas : il programme quelqu'un qui joue.** Pendant le match, il ne peut plus rien faire. Toute sa stratégie doit être **écrite**. C'est exactement la posture de la programmation.
+3. **L'élève ne joue pas : il ou elle programme quelqu'un qui joue.** Pendant le match, impossible d'intervenir. Toute sa stratégie doit être **écrite**. C'est exactement la posture de la programmation.
 
 La tortue n'est pas un hasard : c'est un clin d'œil à la tortue de **Logo** (Papert, 1980), l'« objet pour penser » qui a fondé l'idée qu'on apprend en programmant quelque chose qui vit à l'écran.
 
@@ -60,7 +60,7 @@ La formule vient de Papert, reprise par Resnick (2009) pour Scratch :
 
 Le parcours suit la progression *Utiliser → Modifier → Créer* (Lee et al., 2011), proche de la démarche PRIMM (*Predict, Run, Investigate, Modify, Make* ; Sentance et al., 2019) :
 
-1. **Vivre la règle avant de la coder** : dans « 🎮 Pilote ta tortue », l'élève décide lui-même, tour par tour ; il découvre que la ponte est refusée le jour ou sans énergie. Le programme devient ensuite « écrire à l'avance ce que j'ai fait à la main ».
+1. **Vivre la règle avant de la coder** : dans « 🎮 Pilote ta tortue », l'élève décide, tour par tour, et découvre que la ponte est refusée le jour ou sans énergie. Le programme devient ensuite « écrire à l'avance ce que j'ai fait à la main ».
 2. **Prédire et observer** : dans le tutoriel, un interrupteur True/False montre l'effet d'une condition ; un quiz demande « Devine ce que fait la tortue ».
 3. **Examiner** : la « pensée de la tortue » montre quelles conditions sont vraies à chaque tour.
 4. **Modifier** : les missions « Répare la tortue » donnent un code presque juste, avec une seule erreur à trouver.
@@ -70,7 +70,7 @@ Les exemples travaillés précèdent les problèmes, l'aide s'efface progressive
 
 ### 3.4. Rendre l'exécution visible
 
-Les débutants n'ont pas de « machine notionnelle » : ils ne se représentent pas ce que fait l'ordinateur ligne par ligne (du Boulay, 1986). Lagon Arena la **montre** :
+Les débutant·e·s n'ont pas de « machine notionnelle » : ils et elles ne se représentent pas ce que fait l'ordinateur ligne par ligne (du Boulay, 1986). Lagon Arena la **montre** :
 
 - **« Dans la tête de ta tortue »** : à chaque tour du rejeu, les conditions vraies en vert, les fausses en rouge, l'action exécutée en jaune (dans l'esprit de Python Tutor ; Guo, 2013) ;
 - **la frise** du match place les événements (nid, capture, plastique, épuisement) et permet d'y sauter ;
@@ -90,7 +90,7 @@ Les conseils du rapport ne donnent pas une note : ils donnent **la prochaine lig
 
 ### 3.6. Le contrefactuel : « Et si… ? »
 
-Le moteur est **déterministe** : même graine et mêmes programmes donnent exactement le même match. L'élève peut donc **rejouer le match qu'il vient de perdre avec son code corrigé**, toutes choses égales par ailleurs. C'est une démarche expérimentale (une seule variable change) appliquée au débogage. Le déterminisme est autant un choix pédagogique qu'un choix technique.
+Le moteur est **déterministe** : même graine et mêmes programmes donnent exactement le même match. L'élève peut donc **rejouer le match perdu avec son code corrigé**, toutes choses égales par ailleurs. C'est une démarche expérimentale (une seule variable change) appliquée au débogage. Le déterminisme est autant un choix pédagogique qu'un choix technique.
 
 ### 3.7. Le hasard, maîtrisé
 
@@ -107,9 +107,9 @@ Selon la théorie de l'autodétermination (Ryan et Deci, 2000), la motivation ti
 
 Les garde-fous contre les effets pervers de la compétition : des pseudos, des manches **hors classement**, des tortues d'entraînement 🤖 qui donnent des repères (« battre la Prudente » est un objectif atteignable), et des équipes **équilibrées** automatiquement.
 
-### 3.9. L'enseignant orchestre, la machine gère
+### 3.9. L'enseignant·e orchestre, la machine gère
 
-Une séance réussie dépend de la capacité de l'enseignant à **piloter la classe**, pas seulement de l'outil (Dillenbourg, 2013, parle d'*orchestration*). D'où :
+Une séance réussie dépend de la capacité de l'enseignant·e à **piloter la classe**, pas seulement de l'outil (Dillenbourg, 2013, parle d'*orchestration*). D'où :
 
 - un déroulé de 55 minutes clé en main, piloté par **un bouton par phase** ;
 - un écran projeté qui s'adapte à la phase (code de la salle, chrono géant, ✅ / ⏳ de chaque élève, match animé, podium) ;
@@ -118,11 +118,11 @@ Une séance réussie dépend de la capacité de l'enseignant à **piloter la cla
 
 ### 3.10. Sobriété et respect des élèves
 
-Un pseudo, une couleur, du code et des scores : **aucune donnée personnelle**, pas de compte, pas de traceur. Le site est statique, la base minuscule, l'hébergement gratuit. Une salle disparaît 60 jours après sa dernière utilisation.
+Un pseudo, une couleur, du code et des scores, enregistrés en ligne ; au Panthéon, le pseudo, la classe, l'établissement et la date sont publics. **Aucun champ pour le nom ni pour l'adresse électronique**, pas de compte, pas de traceur. Le site est statique, la base minuscule, l'hébergement gratuit. Une salle disparaît 60 jours après sa dernière utilisation.
 
 ### 3.11. Un ancrage local
 
-Le lagon, les tortues vertes qui viennent pondre **la nuit** sur les plages, les herbiers dont elles se nourrissent, les sacs plastique qu'elles avalent : le thème parle aux élèves de **Mayotte**, où le jeu est né (les élèves fictifs du mode démo portent des noms de communes de l'île). Il ouvre aussi une porte vers l'éducation au développement durable et les SVT, à condition de rappeler que le jeu **simplifie** beaucoup la réalité.
+Le lagon, les tortues vertes qui viennent pondre **la nuit** sur les plages, les herbiers dont elles se nourrissent, les sacs plastique qu'elles avalent : le thème parle aux élèves de **Mayotte**, où le jeu est né (les élèves fictif·ve·s du mode démo portent des noms de lieux de l'île). Il ouvre aussi une porte vers l'éducation au développement durable et les SVT, à condition de rappeler que le jeu **simplifie** beaucoup la réalité.
 
 ## 4. Les points forts, en résumé
 
@@ -131,7 +131,7 @@ Le lagon, les tortues vertes qui viennent pondre **la nuit** sur les plages, les
 3. **L'exécution rendue visible** : la pensée de la tortue, la frise, le rapport qui pointe la ligne.
 4. **Des retours rapides et utiles**, du bac à sable (secondes) au rematch (minutes), avec des conseils qui disent quoi écrire.
 5. **« Et si… ? »** : rejouer le même match avec son code corrigé, grâce au déterminisme.
-6. **Pour tous les niveaux** : du grand débutant (tutoriel, coup de pouce, français) à l'élève à l'aise (expert, équipes, estimation).
+6. **Pour tous les niveaux** : des grand·e·s débutant·e·s (tutoriel, coup de pouce, français) aux élèves à l'aise (expert, équipes, estimation).
 7. **Un moment de classe** : le brawl projeté, le podium, les équipes ; la progression récompensée.
 8. **Sans friction** : rien à installer, pas de compte, gratuit, des pseudos ; une séance prête en une minute, un devoir en trois clics.
 9. **Robuste** : moteur vérifié automatiquement (missions, déterminisme, 3 000 cartes sans blocage, équilibrage) ; les anciennes séances se rejouent à l'identique.
@@ -144,27 +144,27 @@ Ce qui suit est volontairement franc : un outil pédagogique s'améliore en rega
 |---|---|---|---|
 | **Périmètre étroit** : seulement des conditions | ni boucles, ni fonctions, ni listes, ni état : le reste du programme de NSI n'est pas travaillé | c'est un choix assumé (un concept, bien) | une « mémoire » (variables qui survivent d'un tour à l'autre) pour introduire l'état ; des fonctions à écrire soi-même au niveau expert |
 | **Transfert vers le « vrai » Python** | l'élève manipule une API de jeu, sans `print`, `input` ni environnement réel | la syntaxe est du vrai Python | une fiche « de la tortue à Python » ; un module `lagon.py` pour faire tourner sa tortue dans Thonny ou Capytale |
-| **La compétition peut décourager** | un classement public met en scène les derniers | pseudos, bonus de progression, équipes, manches hors classement | n'afficher que le haut du classement au tableau ; mettre en avant la meilleure progression ; objectifs personnels (« bats la Prudente ») |
+| **La compétition peut décourager** | un classement public met en scène les dernier·e·s | pseudos, bonus de progression, équipes, manches hors classement | n'afficher que le haut du classement au tableau ; mettre en avant la meilleure progression ; objectifs personnels (« bats la Prudente ») |
 | **Un seul brawl est bruité** | le rang dépend en partie de la chance | 📊 Estimer montre la moyenne | classer sur plusieurs lagons (calcul instantané en mode léger), n'en projeter qu'un |
 | **Copier sans comprendre** | le coup de pouce montre un programme complet ; les boutons 📋 Copier existent partout | le coup de pouce demande de recopier les lignes en vert | retirer la copie dans le coup de pouce ; après le brawl, demander à l'élève d'**expliquer** un moment de la frise |
-| **Les plus rapides attendent, les plus lents décrochent** | le parcours (≈ 30 min en 4 missions) ne se finit pas au même rythme | niveaux avancés, bac à sable, devoir à la maison | faire faire les missions 1 et 2 **avant** la séance (devoir), les missions 3 et 4 au début du cours ; défis optionnels pendant l'attente |
+| **Les plus rapides attendent, les plus lent·e·s décrochent** | le parcours (≈ 30 min en 4 missions) ne se finit pas au même rythme | niveaux avancés, bac à sable, devoir à la maison | faire faire les missions 1 et 2 **avant** la séance (devoir), les missions 3 et 4 au début du cours ; défis optionnels pendant l'attente |
 | **Accessibilité non auditée** | lagon dessiné (canvas), information portée par les couleurs, lecteurs d'écran non testés | les équipes ont aussi une icône et un nom | audit RGAA de base, navigation au clavier, mode contrasté |
 | **Fracture numérique** | le devoir suppose un ordinateur et une connexion à la maison ; l'éditeur est peu pratique sur téléphone | le bac à sable marche hors salle, n'importe quand | créneaux au CDI ; un éditeur « tactile » fondé sur la boîte à outils |
-| **Dépendances techniques** | le projet Supabase gratuit se met en pause après une semaine sans activité ; les salles sont lisibles par l'API publique (n'importe qui peut lister les codes et rejoindre une salle) | aucune donnée personnelle ; l'enseignant peut retirer un élève (✕) ; ménage automatique des vieilles salles | un code de salle plus long pour les devoirs |
-| **Le Panthéon : triche et modération** | le score est calculé par le navigateur de l'élève : il peut être falsifié ; pseudo et lycée sont publics | programme gardé, recalcul déterministe et validation par l'administrateur (⏳ → ✔), retrait possible | faire calculer le score par le serveur ; signalement par les enseignants |
+| **Dépendances techniques** | le projet Supabase gratuit se met en pause après une semaine sans activité ; les salles sont lisibles par l'API publique (n'importe qui peut lister les codes et rejoindre une salle) | des pseudos, aucun champ pour le nom ; l'enseignant·e peut retirer un·e élève (✕) ; ménage automatique des vieilles salles | un code de salle plus long pour les devoirs |
+| **Le Panthéon : triche et modération** | le score est calculé par le navigateur de l'élève : il peut être falsifié ; pseudo, classe, établissement et date sont publics | programme gardé, recalcul déterministe et validation par l'administration du Panthéon (⏳ → ✔), retrait possible | faire calculer le score par le serveur ; signalement par les enseignant·e·s |
 | **Le Panthéon : 20 lagons toujours les mêmes** | une tortue peut être « réglée » pour ces 20 lagons-là plutôt que pour le jeu en général | les règles d'une tortue sont générales, 20 lagons variés | changer de banc d'essai à chaque saison (nouvelle version, tortues revérifiées) |
 | **Pas d'évaluation mesurée** | les choix s'appuient sur la recherche, mais aucun gain d'apprentissage n'a été mesuré | — | un test court avant / après (prédire le résultat de chaînes `if`/`elif` et d'expressions booléennes), comparé à une séance classique |
-| **Maintenance** | un seul mainteneur ; tests de navigateur hors du dépôt | code commenté en français, documentation, vérificateur automatique | tests de bout en bout et intégration continue dans le dépôt ; ouvrir aux contributions |
+| **Maintenance** | une seule personne pour la maintenance ; tests de navigateur hors du dépôt | code commenté en français, documentation, vérificateur automatique | tests de bout en bout et intégration continue dans le dépôt ; ouvrir aux contributions |
 
 ## 6. Le discours
 
 ### En une phrase
 
-> **Lagon Arena transforme le chapitre des conditions en Python en tournoi de tortues marines : chaque élève écrit le cerveau de sa tortue avec des `if`, toute la classe plonge dans le même lagon projeté au tableau, puis chacun revoit ce que sa tortue a « pensé » pour l'améliorer avant le rematch.**
+> **Lagon Arena transforme le chapitre des conditions en Python en tournoi de tortues marines : chaque élève écrit le cerveau de sa tortue avec des `if`, toute la classe plonge dans le même lagon projeté au tableau, puis chacun·e revoit ce que sa tortue a « pensé » pour l'améliorer avant le rematch.**
 
-### En 30 secondes (à un collègue)
+### En 30 secondes (à un·e collègue)
 
-> « Tu sais comme les élèves s'ennuient sur les `if` / `elif` / `else` ? Avec Lagon Arena, chacun programme une tortue de mer : elle doit manger, éviter les requins et pondre la nuit sur la plage. Ils n'ont que des conditions pour ça. Ensuite, toutes les tortues de la classe nagent en même temps au tableau. Ça crie, ça rit, et surtout, après le match, chacun revoit sa tortue ligne par ligne, comprend pourquoi elle s'est fait manger, corrige… et on fait un rematch. C'est un site gratuit, sans compte, rien à installer : tu crées la salle, ils tapent le code. »
+> « Tu sais comme les élèves s'ennuient sur les `if` / `elif` / `else` ? Avec Lagon Arena, chacun·e programme une tortue de mer : elle doit manger, éviter les requins et pondre la nuit sur la plage. Ils et elles n'ont que des conditions pour ça. Ensuite, toutes les tortues de la classe nagent en même temps au tableau. Ça crie, ça rit, et surtout, après le match, chacun·e revoit sa tortue ligne par ligne, comprend pourquoi elle s'est fait manger, corrige… et on fait un rematch. C'est un site gratuit, sans compte, rien à installer : tu crées la salle, ils et elles tapent le code. »
 
 ### En 2 minutes (réunion d'équipe, inspection, formation)
 
@@ -172,22 +172,22 @@ Ce qui suit est volontairement franc : un outil pédagogique s'améliore en rega
 >
 > **L'idée.** Dans Lagon Arena, le programme de l'élève est le cerveau d'une tortue. À chaque tour, le jeu l'appelle ; la tortue fait la première action qu'elle rencontre. Un match, c'est 180 tours : le même programme affronte des centaines de situations. L'ordre des `elif` devient une question de survie : si la tortue mange avant de regarder les requins, elle se fait manger. La tortue de départ ne pond jamais : sans rien changer, c'est zéro.
 >
-> **La séance.** Un parcours en missions par l'exemple (la première sans code), puis trois manches : huit minutes de programmation, un match projeté où toutes les tortues de la classe nagent ensemble, trois minutes de rapport. Chaque élève revoit le match en suivant sa tortue, avec ce qu'elle « pensait » à chaque tour : les conditions vraies en vert, les fausses en rouge. Il corrige, et peut rejouer exactement le même match pour vérifier. Puis rematch, avec une nouveauté : une invasion de plastique qui oblige à écrire `not`, des nuits courtes qui obligent à anticiper avec `heure()`.
+> **La séance.** Un parcours en missions par l'exemple (la première sans code), puis trois manches : huit minutes de programmation, un match projeté où toutes les tortues de la classe nagent ensemble, trois minutes de rapport. Chaque élève revoit le match en suivant sa tortue, avec ce qu'elle « pensait » à chaque tour : les conditions vraies en vert, les fausses en rouge. On corrige, et on peut rejouer exactement le même match pour vérifier. Puis rematch, avec une nouveauté : une invasion de plastique qui oblige à écrire `not`, des nuits courtes qui obligent à anticiper avec `heure()`.
 >
-> **Pour tous.** Les débutants ont l'autocomplétion en français, un coup de pouce gradué, des messages d'erreur qui proposent la correction. Les plus à l'aise ont des niveaux avancés : lire le lagon pour choisir ses algues, jouer en équipes, estimer statistiquement leur stratégie sur cinquante parties.
+> **Pour tout le monde.** Les débutant·e·s ont l'autocomplétion en français, un coup de pouce gradué, des messages d'erreur qui proposent la correction. Les plus à l'aise ont des niveaux avancés : lire le lagon pour choisir ses algues, jouer en équipes, estimer statistiquement leur stratégie sur cinquante parties.
 >
-> **En pratique.** Un site web gratuit, sans compte ni donnée personnelle, rien à installer. On peut aussi en faire un devoir à la maison. Le code est ouvert sur GitHub.
+> **En pratique.** Un site web gratuit, sans compte, avec des pseudos, rien à installer. On peut aussi en faire un devoir à la maison. Le code est ouvert sur GitHub.
 
 ### Aux élèves, en début de séance
 
-Voir le texte prêt à dire dans le [guide de l'enseignant](GUIDE-ENSEIGNANT.md#ce-quon-peut-dire-aux-élèves-pour-lancer-la-séance-1-minute).
+Voir le texte prêt à dire dans le [guide de l'enseignant·e](GUIDE-ENSEIGNANT.md#ce-quon-peut-dire-aux-élèves-pour-lancer-la-séance-1-minute).
 
-### Les questions qu'on vous posera
+### Les questions qu'on te posera
 
-- **« Et ceux qui n'ont jamais programmé ? »** Le parcours part de zéro, par l'exemple : on pilote d'abord sa tortue à la main, on écrit ses règles en français, on complète le code avec des listes, puis on tape. Il convient dès la Seconde. L'éditeur complète les mots, comprend le français et explique les erreurs. Le coup de pouce donne la prochaine idée. Un élève qui ajoute seulement deux conditions à la tortue de départ (pondre sur la plage la nuit, aller vers la plage la nuit) passe de 0 à près de 4 nids en moyenne dans le bac à sable (mesuré sur 60 lagons) : la première victoire arrive vite.
-- **« C'est un jeu : qu'est-ce qu'ils apprennent vraiment ? »** À écrire, lire et **déboguer** des chaînes de conditions et des expressions booléennes, dans des centaines de situations. Le jeu ne fait que fournir les situations et le retour. Demandez à un élève d'expliquer sa tortue : vous entendrez « le premier vrai gagne ».
-- **« La compétition, ça ne décourage pas les plus faibles ? »** C'est le risque principal. Les pseudos, le bonus de progression, les équipes équilibrées et les manches hors classement le limitent ; à vous de choisir ce que vous projetez.
-- **« Et les données des élèves ? »** Aucune : un pseudo, une couleur, le code de la tortue et les scores. Pas de compte, pas d'e-mail. Les salles sont effacées après 60 jours.
+- **« Et les élèves qui n'ont jamais programmé ? »** Le parcours part de zéro, par l'exemple : on pilote d'abord sa tortue à la main, on écrit ses règles en français, on complète le code avec des listes, puis on tape. Il convient dès la Seconde. L'éditeur complète les mots, comprend le français et explique les erreurs. Le coup de pouce donne la prochaine idée. Un·e élève qui ajoute seulement deux conditions à la tortue de départ (pondre sur la plage la nuit, aller vers la plage la nuit) passe de 0 à près de 4 nids en moyenne dans le bac à sable (mesuré sur 60 lagons) : la première victoire arrive vite.
+- **« C'est un jeu : qu'est-ce qu'ils et elles apprennent vraiment ? »** À écrire, lire et **déboguer** des chaînes de conditions et des expressions booléennes, dans des centaines de situations. Le jeu ne fait que fournir les situations et le retour. Demande à un·e élève d'expliquer sa tortue : tu entendras « le premier vrai gagne ».
+- **« La compétition, ça ne décourage pas les plus faibles ? »** C'est le risque principal. Les pseudos, le bonus de progression, les équipes équilibrées et les manches hors classement le limitent ; à toi de choisir ce que tu projettes.
+- **« Et les données des élèves ? »** Un pseudo, une couleur, le code de la tortue et les scores, enregistrés en ligne ; au Panthéon, le pseudo, la classe, l'établissement et la date sont publics, jamais le programme. Pas de compte, pas d'e-mail. Les séances terminées sont effacées au bout de 7 jours, les salles sans activité au bout de 60 jours.
 - **« Ça marche sur les ordinateurs du lycée ? »** Il faut un navigateur récent (Firefox, Chrome, Edge) et une connexion. Rien à installer.
 
 ## 7. Références
@@ -207,3 +207,7 @@ Voir le texte prêt à dire dans le [guide de l'enseignant](GUIDE-ENSEIGNANT.md#
 - Ryan, R. M., et Deci, E. L. (2000). Self-determination theory and the facilitation of intrinsic motivation, social development, and well-being. *American Psychologist*, 55(1), 68-78.
 - Sentance, S., Waite, J., et Kallia, M. (2019). Teaching computer programming with PRIMM: a sociocultural perspective. *Computer Science Education*, 29(2-3), 136-176.
 - Sweller, J. (1988). Cognitive load during problem solving: effects on learning. *Cognitive Science*, 12(2), 257-285.
+
+---
+
+Conçu par Babash - NSI Tani Malandi, développé avec [Claude Code](https://claude.com/claude-code) · [Code source sur GitHub](https://github.com/babash/lagon-arena) · code [MIT](../LICENSE), documents [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.fr)
