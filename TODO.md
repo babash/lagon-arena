@@ -189,7 +189,7 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
   - (ancienne question) À trancher : où placer la ligne d'insertion. Il faut aussi rester compatible avec les tortues déjà envoyées, et ajouter au vérificateur un contrôle « la tortue de départ ne pond pas » (aujourd'hui, il l'affiche seulement dans l'équilibrage).
 - [x] **« ➕ Ajouter une règle »** dans l'éditeur (bouton **🧩 Mes règles**, `js/regles-panneau.js` et `js/regles-code.js`). L'élève choisit une condition et une action dans la boîte à outils, puis le **rang** de la règle (« avant manger », « tout en haut »). L'éditeur insère un `elif` bien indenté, au bon endroit. On ne peut plus fabriquer un second bloc par erreur.
 - [x] **La vue « Priorités »** (dans 🧩 Mes règles, avec ⬆️ ⬇️ 🗑️ plutôt que glisser : utilisable au clavier et sur téléphone) : chaque règle est une carte numérotée (« 1. si requin proche → fuir »). On les **fait glisser** pour changer l'ordre, et le code se met à jour. C'est l'image directe de « le premier vrai gagne ».
-- [ ] **Pendant la frappe** : si l'élève commence un `if` juste après un bloc `if` / `else` complet, l'éditeur propose tout de suite « Ici, écris plutôt `elif` : sinon cette règle ne sera jamais atteinte ».
+- [x] *(couvert autrement : les tests de la tortue se mettent à jour 0,5 s après chaque frappe et disent « deux blocs à la suite : la ligne 6 n'est jamais atteinte » ; 🧩 Mes règles ajoute les règles au bon endroit)* **Pendant la frappe** : si l'élève commence un `if` juste après un bloc `if` / `else` complet, l'éditeur propose tout de suite « Ici, écris plutôt `elif` : sinon cette règle ne sera jamais atteinte ».
 
 ### 1.4. Un tutoriel qui finit avec une tortue qui pond
 
