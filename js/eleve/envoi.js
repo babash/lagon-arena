@@ -24,14 +24,15 @@ export function majEnvoi() {
   }
   b.disabled = false;
   const envoye = e && e.manche === s.manche;
+  // l'état d'envoi se lit sur le bouton lui-même
   if (envoye && e.code === ed.value) {
-    b.textContent = "📤 Renvoyer";
+    b.textContent = `✅ Envoyée ${jourHeure(e.at)}`; b.title = "Ta tortue est envoyée. Clique pour la renvoyer.";
     box.innerHTML = `<div class="msg ok">✅ Tortue envoyée pour la manche ${s.manche} (${jourHeure(e.at)}). Tu peux encore l'améliorer et la renvoyer ${tempsIllimite() ? "jusqu'au brawl, même depuis chez toi (🏠 Mon code de session)" : "avant la fin du chrono"}.</div>`;
   } else if (envoye) {
-    b.textContent = "📤 Renvoyer"; b.classList.add("pulse");
+    b.textContent = "⚠️ Modifiée : renvoyer"; b.title = "Tu as modifié ta tortue depuis l'envoi"; b.classList.add("pulse");
     box.innerHTML = `<div class="msg warn">⚠️ Tu as modifié ton code depuis l'envoi. Renvoie-la, sinon c'est l'<b>ancienne version</b> qui jouera.</div>`;
   } else {
-    b.textContent = "📤 Envoyer ma tortue"; b.classList.add("pulse");
+    b.textContent = "📤 Envoyer ma tortue"; b.title = ""; b.classList.add("pulse");
     box.innerHTML = `<div class="msg warn">⏳ Pas encore envoyée. Si tu n'envoies rien, c'est ta tortue précédente (ou la tortue de départ) qui jouera.</div>`;
   }
 }

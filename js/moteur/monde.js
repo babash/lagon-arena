@@ -34,6 +34,7 @@ export function creerMonde({ joueurs, graine, twist, ticks, scenario, version, l
       id: j.id, nom: j.nom, couleur: j.couleur, equipe: j.equipe || 0, x: sp[0], y: sp[1], sx: sp[0], sy: sp[1], dir: 1,
       energie: e0, nids: 0, bloquee: 0, immunite: 0, mange: false, pousseePar: null,
       compiled: c.ok ? c.compiled : null, compileError: c.ok ? null : c.error,
+      pilote: typeof j.pilote === "function" ? j.pilote : null,   // (tutoriel « Pilote ta tortue » : l'élève choisit l'action à la main)
       stats: { captures: [], plastiques: [], epuisee: [], refus: {}, rienAManger: 0, pasFaim: 0, immobile: 0, erreurs: 0, actions: {}, pontes: [], repas: 0, energieMax: e0,
         pousses: [], poussee: [], victimes: 0, dons: 0, recus: 0 },
     };

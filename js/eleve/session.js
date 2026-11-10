@@ -25,16 +25,15 @@ export async function montrerCodeSession() {
       <p>En attendant, sur l'autre ordinateur, demande à ton enseignant de <b>débloquer ton pseudo</b> (🔓).</p>`, true);
     return;
   }
-  const lien = lienSite(`index.html?salle=${encodeURIComponent(SALLE)}&pseudo=${encodeURIComponent(PSEUDO)}#code=${code}`);
+  const lien = lienSite(`index.html#code=${code}`);   // (le code suffit : la salle et le pseudo sont retrouvés par la base)
   overlay(`<h2>🏠 Continuer chez toi (ou sur un autre ordinateur)</h2>
     <ol class="etapes-code">
       <li>Va sur <b>${esc(sansProtocole(lienSite("index.html")))}</b></li>
-      <li>Salle <b class="gros-code">${esc(SALLE)}</b> · pseudo <b>${esc(PSEUDO)}</b></li>
-      <li>Clique sur « 🏠 Tu reviens depuis un autre ordinateur ? » et tape ton <b>code de session</b> :</li>
+      <li>Clique sur « 🏠 <b>J'ai un code de session</b> » et tape ce code. <b>C'est tout</b> : ta salle (<b>${esc(SALLE)}</b>) et ton pseudo (<b>${esc(PSEUDO)}</b>) sont retrouvés tout seuls.</li>
     </ol>
     <div class="code-perso">${codeLisible(code)}</div>
     <p>✍️ <b>Note-le dans ton cahier.</b> Ne le donne à personne : avec ce code, on peut envoyer une tortue à ta place.</p>
-    <p class="petit">Ou garde ce lien personnel (il remplit tout seul le code) : <button class="btn small ghost" id="copier-lien">📋 Copier mon lien</button></p>
+    <p class="petit">Ou garde ce lien personnel (il t'ouvre directement ta partie) : <button class="btn small ghost" id="copier-lien">📋 Copier mon lien</button></p>
     <p class="petit muted">Sur l'autre ordinateur, tu retrouves ta dernière tortue envoyée et tes points. Pendant une <b>manche à temps illimité</b>, tu peux continuer à la programmer et la renvoyer jusqu'au brawl. Pense à l'envoyer avant de quitter un ordinateur : c'est elle que tu retrouveras sur l'autre.</p>`, true);
   $("#copier-lien").addEventListener("click", () => copier(lien).then(() => toast("Lien copié !"), () => toast(lien)));
 }

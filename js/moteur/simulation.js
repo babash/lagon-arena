@@ -2,9 +2,10 @@
 //  Lagon Arena — moteur : la SIMULATION d'une partie (déterministe)
 //  Même graine + mêmes codes  =>  exactement le même match, sur tout navigateur.
 //
-//  simulate({ joueurs:[{id, nom, couleur, code, equipe}], graine, twist, ticks, scenario, version, leger, lagon })
+//  simulate({ joueurs:[{id, nom, couleur, code, equipe, pilote}], graine, twist, ticks, scenario, version, leger, lagon })
 //   • lagon   : réglages fins d'un lagon personnalisé (requins, plastique, nuit, corail, algues…), voir regles.js ;
 //   • version : 1 = carte classique, 2 = carte aléatoire tirée de la graine (par défaut, hors scénario) ;
+//   • pilote  : (tutoriel) fonction tick => action, à la place du programme (la tortue est pilotée à la main) ;
 //   • leger   : sans images ni « pensées » (pour estimer une moyenne sur beaucoup de parties) ;
 //   • scenario (tutoriels) : { energie, requins:[[x,y]], plastiques:[[x,y]], heureDepart, ticks,
 //       spawn:[x,y] (1re tortue), spawns:{id:[x,y]}, herbes:[[x,y,portions]], repousse:false,
@@ -57,7 +58,8 @@ function jouerTortue(m, t, tour) {
   }
   const sensors = capteurs(m, t, tour);
   if (!m.leger) { rec.capteurs = {}; for (const k of Object.keys(SENSORS)) rec.capteurs[k] = sensors[k](); }   // pour « Dans la tête de ta tortue »
-  const tr = runTurn(t.compiled, sensors);
+  // tortue pilotée à la main (tutoriel) : l'action choisie par l'élève, sinon le programme
+  const tr = t.pilote ? { action: t.pilote(tour.tick) || null, conds: [], actionLine: null, extra: [], error: null } : runTurn(t.compiled, sensors);
   rec.conds = tr.conds; rec.action = tr.action; rec.ligne = tr.actionLine;
   if (tr.extra.length) rec.extra = tr.extra;
   if (tr.error) { rec.erreur = tr.error; t.stats.erreurs++; }

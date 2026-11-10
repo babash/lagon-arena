@@ -17,9 +17,14 @@ export const STARTER = `def tour():
 `;
 // Le code que reçoit chaque élève au début de la séance : sa tortue mange, mais ne pond jamais.
 // C'est aussi la tortue qui joue si un élève n'envoie rien.
+// Elle montre déjà la bonne FORME : une seule chaîne de règles, et les commentaires disent où
+// ajouter les autres, dans quel ordre. (Seuls les commentaires ont changé : elle joue exactement
+// comme avant, et les anciennes manches se rejouent à l'identique.)
 export const CODE_DEPART = `def tour():
-    # Elle sait manger, mais ne pond jamais !
-    # Améliore-la avec if / elif / else.
+    # Ta tortue fait UNE action par tour : la 1re règle vraie, de haut en bas.
+    # Elle sait manger... mais ne pond jamais ! Ajoute tes règles AU-DESSUS
+    # de « manger », dans cet ordre :  1. 🦈 danger  2. 🥚 pondre  3. 🌙 rentrer la nuit
+    # (la 1re règle commence par if, les suivantes par elif : bouton 🧩 Mes règles)
     if algue_ici():
         manger()
     else:

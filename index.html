@@ -11,101 +11,120 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<header class="hero">
-  <img src="img/tortue.svg" alt="" width="88" height="88">
-  <h1>Lagon Arena</h1>
-  <p>Programme ta tortue avec des <b>conditions Python</b>, ponds un maximum de nids… et survis aux requins !</p>
-  <div id="compteurs" class="compteurs cache" aria-live="polite"></div>
-  <p id="mode" class="petit" style="margin-top:8px"></p>
-  <div class="profils" role="tablist" aria-label="Qui es-tu ?">
-    <button type="button" role="tab" class="profil" data-profil="eleve" aria-selected="true">🐢 <span class="long">Je suis </span>élève</button>
-    <button type="button" role="tab" class="profil" data-profil="prof" aria-selected="false">👩‍🏫 <span class="long">Je suis </span>enseignant·e</button>
+<header class="hero hero-accueil">
+  <div class="hero-grille">
+    <div class="hero-texte">
+      <img src="img/tortue.svg" alt="" width="72" height="72" class="hero-logo">
+      <h1>Lagon Arena</h1>
+      <p>Écris les règles de ta tortue de mer en <b>Python</b>, puis plonge avec toute ta classe dans le même lagon. Le but : <b>pondre le plus de nids</b>… sans te faire croquer par les requins !</p>
+      <div id="compteurs" class="compteurs cache" aria-live="polite"></div>
+    </div>
+    <div class="profils" role="tablist" aria-label="Qui es-tu ?">
+      <button type="button" role="tab" class="profil" data-profil="eleve" aria-selected="true">🐢 <span class="long">Je suis </span>élève</button>
+      <button type="button" role="tab" class="profil" data-profil="prof" aria-selected="false">👩‍🏫 <span class="long">Je suis </span>enseignant·e</button>
+    </div>
   </div>
-  <svg class="vague" viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0 30 C 240 0, 480 60, 720 30 S 1200 0, 1440 30 V 60 H 0 Z" fill="#f2f7fa"/></svg>
+  <p id="mode" class="petit etat-base"></p>
+  <svg class="vague" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 C 240 0, 480 60, 720 30 S 1200 0, 1440 30 V 60 H 0 Z" fill="#f2f7fa"/></svg>
 </header>
 
 <!-- ================= ÉLÈVE ================= -->
 <div class="vue" id="vue-eleve">
 <div id="invitation" class="invitation cache"></div>
-<main class="choix">
-  <section class="card">
-    <div class="ico">🐢</div>
-    <h2>Rejoindre la partie</h2>
-    <form id="rejoindre" class="form-rejoindre">
-      <label class="champ">Code de la salle (affiché au tableau)
+<main class="accueil-eleve">
+  <!-- 1. entrer dans la partie (en classe, c'est le plus fréquent) -->
+  <section class="card acces" aria-labelledby="titre-acces">
+    <h2 id="titre-acces">🔑 Entrer dans la partie</h2>
+    <div id="reprise-rapide"></div>
+    <div class="acces-onglets" role="tablist" aria-label="Comment entres-tu ?">
+      <button type="button" role="tab" id="o-classe" data-acces="classe" aria-selected="true" aria-controls="rejoindre">🆕 Première fois dans la salle</button>
+      <button type="button" role="tab" id="o-code" data-acces="code" aria-selected="false" aria-controls="reprendre">🏠 J'ai un code de session</button>
+    </div>
+    <form id="rejoindre" class="form-rejoindre" role="tabpanel" aria-labelledby="o-classe">
+      <label class="champ">Code de la salle <span class="petit muted">(affiché au tableau)</span>
         <input type="text" id="salle" maxlength="4" placeholder="ABCD" autocomplete="off" class="input-code" required>
       </label>
       <label class="champ"><span>Ton pseudo <span class="petit muted">(pas ton vrai nom)</span></span>
         <input type="text" id="pseudo" maxlength="14" placeholder="ex. Tortue_Zen" autocomplete="off" required>
       </label>
       <div class="champ">Couleur de ta tortue <div class="palette" id="palette"></div></div>
-      <details class="reprise" id="reprise">
-        <summary>🏠 Tu reviens depuis un autre ordinateur (à la maison…) ?</summary>
-        <label class="champ"><span>Ton <b>code de session</b> <span class="petit muted">(dans ta page élève : bouton 🏠 Mon code de session)</span></span>
-          <input type="text" id="codeperso" maxlength="12" placeholder="ex. K7PQ-2XMA" autocomplete="off" class="input-code" spellcheck="false">
-        </label>
-        <p class="petit muted">Avec la même salle, le même pseudo et ton code de session, tu retrouves ta tortue et tes points.</p>
-      </details>
       <button class="btn big vert" type="submit">Plonger dans le lagon 🌊</button>
-      <div id="erreur" class="msg err cache"></div>
+      <div id="erreur" class="msg err cache" role="alert"></div>
+    </form>
+    <form id="reprendre" class="form-rejoindre cache" role="tabpanel" aria-labelledby="o-code">
+      <label class="champ"><span>Ton <b>code de session</b> <span class="petit muted">(8 caractères, noté dans ton cahier)</span></span>
+        <input type="text" id="codeperso" maxlength="12" placeholder="K7PQ-2XMA" autocomplete="off" class="input-code" spellcheck="false" required>
+      </label>
+      <p class="petit muted">Rien d'autre à taper : ta salle, ton pseudo, ta tortue et tes points sont retrouvés tout seuls.</p>
+      <div id="reprise-secours" class="cache">
+        <label class="champ">Code de la salle <input type="text" id="salle2" maxlength="4" placeholder="ABCD" autocomplete="off" class="input-code"></label>
+        <label class="champ">Ton pseudo <input type="text" id="pseudo2" maxlength="14" autocomplete="off"></label>
+      </div>
+      <button class="btn big vert" type="submit">Reprendre ma partie 🌊</button>
+      <div id="erreur2" class="msg err cache" role="alert"></div>
     </form>
   </section>
 
-  <section class="card">
-    <div class="ico">📘</div>
-    <h2>Première fois ? Le tutoriel</h2>
-    <p>Pas besoin de savoir programmer : des exemples à manipuler, puis tes premiers <code>if</code>, pas à pas. <b>15 minutes</b>, et tu sais tout.</p>
-    <ul class="petit liste-tuto">
-      <li>🎮 le jeu et le lagon</li>
-      <li>❓ les questions et ❗ les ordres de ta tortue</li>
-      <li>✍️ <code>if</code>, <code>else</code>, <code>elif</code>, <code>and</code></li>
-      <li>🔧 4 tortues à réparer</li>
-    </ul>
-    <a class="btn big" href="tuto.html" id="lien-tuto">Commencer le tutoriel →</a>
+  <!-- 2. le parcours : 4 missions pour apprendre -->
+  <section class="parcours" aria-labelledby="titre-parcours">
+    <div class="parcours-tete">
+      <h2 id="titre-parcours">🗺️ Ton parcours d'apprenti·e</h2>
+      <p>4 missions courtes, dans l'ordre. Pas besoin de savoir programmer : on commence <b>sans code</b>.</p>
+      <div class="barre-parcours" id="barre-parcours" aria-hidden="true"><div></div></div>
+    </div>
+    <ol class="missions" id="missions"></ol>
+    <div class="apres-missions">
+      <a class="mini" href="eleve.html?libre=1"><span class="ico">🧪</span><span><b>Bac à sable</b><br>Entraîne ta tortue contre les tortues d'entraînement, quand tu veux.</span></a>
+      <a class="mini" href="tuto-avance.html"><span class="ico">🚀</span><span><b>Missions avancées</b><br>🥈 intermédiaire · 🥇 expert · 👥 en équipe.</span></a>
+      <a class="mini" href="pantheon.html"><span class="ico">🏛️</span><span><b>Le Panthéon</b><br>Les meilleures tortues de tous les temps. Et la tienne ?</span></a>
+    </div>
+  </section>
+
+  <!-- 3. les règles, toujours à portée de main -->
+  <section class="regles-accueil" aria-labelledby="titre-regles">
+    <h2 id="titre-regles">📜 Les règles en 1 minute</h2>
+    <div id="regles-accueil"></div>
   </section>
 </main>
-<div class="choix-bas">
-  <a class="mini" href="eleve.html?libre=1"><span class="ico">🧪</span><span><b>Bac à sable</b><br>Entraîne-toi seul, n'importe quand, contre les tortues d'entraînement.</span></a>
-  <a class="mini" href="tuto-avance.html"><span class="ico">🚀</span><span><b>Tutoriel avancé</b><br>🥈 intermédiaire (pousser…), 🥇 expert (choisir ses algues), 👥 équipe.</span></a>
-  <a class="mini" href="pantheon.html"><span class="ico">🏛️</span><span><b>Le Panthéon</b><br>Les 100 meilleures tortues de tous les temps. Et la tienne ?</span></a>
-</div>
 </div>
 
 <!-- ================= ENSEIGNANT ================= -->
 <div class="vue cache" id="vue-prof">
-<main class="choix choix-prof">
-  <section class="card">
-    <h2>🌊 Le chapitre des conditions, en tournoi de tortues</h2>
-    <p>Vos élèves écrivent le cerveau d'une tortue de mer avec des <code>if</code> / <code>elif</code> / <code>else</code>. Toutes les tortues de la classe plongent <b>en même temps</b> dans le même lagon, projeté au tableau. Après le match, chacun revoit ce que sa tortue a « pensé », la corrige… et c'est le rematch.</p>
-    <img class="apercu" src="docs/img/brawl.webp" alt="Le brawl projeté : toutes les tortues de la classe dans le même lagon" loading="lazy">
-    <ol class="etapes-prof">
-      <li><b>Créez une salle</b> : un code de 4 lettres s'affiche au tableau.</li>
-      <li>Les élèves font le <b>tutoriel</b> (15 min), puis tapent le code ici.</li>
-      <li>Vous lancez les manches : <b>programmation → brawl → rapport → rematch</b>.</li>
-    </ol>
-    <p class="petit muted">Gratuit, sans compte, rien à installer. Des pseudos, aucune donnée personnelle.</p>
-  </section>
-
+<main class="accueil-prof">
   <section class="card actions-prof">
     <h2>👩‍🏫 Espace enseignant</h2>
     <div id="mes-salles"></div>
-    <a class="btn big corail" href="prof.html">➕ Créer une salle (séance en classe)</a>
-    <a class="btn big" href="prof.html">📚 Créer un devoir à la maison</a>
-    <a class="btn ghost" href="prof.html?demo">🧪 Essayer seul, en mode démo</a>
-    <hr>
-    <h3>📖 Pour préparer</h3>
+    <div class="actions-prof-boutons">
+      <a class="btn big corail" href="prof.html">➕ Créer une salle <small>(séance en classe)</small></a>
+      <a class="btn big" href="prof.html">📚 Créer un devoir <small>(à la maison)</small></a>
+      <a class="btn ghost" href="prof.html?demo">🧪 Essayer seul, en mode démo</a>
+    </div>
+    <p class="petit muted">Gratuit, sans compte, rien à installer. Des pseudos, aucune donnée personnelle.</p>
+  </section>
+  <section class="card">
+    <h2>🌊 Les conditions, en tournoi de tortues</h2>
+    <p>Vos élèves écrivent le cerveau d'une tortue de mer avec des <code>if</code> / <code>elif</code> / <code>else</code>. Toutes les tortues de la classe plongent <b>en même temps</b> dans le même lagon, projeté au tableau. Après le match, chacun revoit ce que sa tortue a « pensé », la corrige… et c'est le rematch.</p>
+    <img class="apercu" src="docs/img/brawl.webp" alt="Le brawl projeté : toutes les tortues de la classe dans le même lagon" loading="lazy">
+    <ol class="etapes-prof">
+      <li><b>Les élèves suivent le parcours</b> : 4 missions courtes (environ 30 min), la 1<sup>re</sup> sans code. Adapté dès la <b>Seconde</b> (SNT).</li>
+      <li><b>Créez une salle</b> : un code de 4 lettres s'affiche au tableau.</li>
+      <li>Vous lancez les manches : <b>programmation → brawl → rapport → rematch</b>.</li>
+    </ol>
+  </section>
+  <section class="card">
+    <h2>📖 Pour préparer</h2>
     <ul class="liens-prof">
       <li><a href="https://github.com/babash/lagon-arena/blob/main/docs/GUIDE-ENSEIGNANT.md" target="_blank" rel="noopener">Guide de l'enseignant</a> : déroulé de 55 min, quoi dire aux élèves, devoir</li>
       <li><a href="https://github.com/babash/lagon-arena/blob/main/docs/REGLES.md" target="_blank" rel="noopener">Règles du jeu</a> et toutes les primitives</li>
       <li><a href="https://github.com/babash/lagon-arena/blob/main/docs/PEDAGOGIE.md" target="_blank" rel="noopener">Pédagogie</a> : pourquoi ça marche, limites, argumentaire</li>
-      <li><a href="tuto.html">Le tutoriel des élèves</a> · <a href="pantheon.html">Le Panthéon</a></li>
+      <li><a href="tuto.html">Le parcours des élèves</a> · <a href="pantheon.html">Le Panthéon</a></li>
     </ul>
   </section>
 </main>
 </div>
 
 <footer class="pied">
-  <p>🐢 <b>Lagon Arena</b> : jeu libre et gratuit pour l'enseignement NSI (1<sup>re</sup>) · aucune donnée personnelle, des pseudos seulement.</p>
+  <p>🐢 <b>Lagon Arena</b> : jeu libre et gratuit pour apprendre les conditions en Python (SNT, NSI) · aucune donnée personnelle, des pseudos seulement.</p>
   <p>
     <a href="https://github.com/babash/lagon-arena" target="_blank" rel="noopener"><svg class="gh" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> Code source sur GitHub</a>
     · Développé avec <a href="https://claude.com/claude-code" target="_blank" rel="noopener">Claude Code</a>

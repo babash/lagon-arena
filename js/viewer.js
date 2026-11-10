@@ -16,29 +16,41 @@ export class MatchViewer {
    * @param opts { sim, focus (id de la tortue suivie), code (son code), vitesse, autoplay,
    *               pensee (afficher le code et les capteurs), noms }
    */
-  constructor(container, { sim, focus = null, code = null, vitesse = 2.4, autoplay = true, pensee = true, noms = true, marqueurs = null, controles: avecControles = true, zoom = 1 } = {}) {
+  constructor(container, { sim, focus = null, code = null, vitesse = 2.4, autoplay = true, pensee = true, noms = true, marqueurs = null, controles: avecControles = true, zoom = 1, onLigne = null } = {}) {
     this.container = container; this.sim = sim; this.focus = focus; this.code = code;
     container.innerHTML = "";
+    // le lagon à gauche, « Dans la tête de ta tortue » à droite quand la place le permet (sinon l'un sous l'autre)
+    const avecPensee = pensee && focus;
+    const duo = el("div", { class: "vue-duo" + (avecPensee ? " avec-pensee" : "") }), g = el("div", { class: "vue-g" }), d = el("div", { class: "vue-d" });
+    duo.append(g); if (avecPensee) duo.append(d);
+    container.classList.add("vue-conteneur");
+    container.append(duo);
     const box = el("div", { class: "lagon-box" });
     const canvas = el("canvas");
     this.hud = el("div", { class: "hud" });
     box.append(canvas, this.hud);
-    container.append(box);
+    g.append(box);
     this.lagon = new Lagon(canvas, { noms });
     const rp = focus ? rapport(sim, focus) : null;
     this.player = new Player(this.lagon, sim, { vitesse, focus, onTick: (t) => this.onTick(t) });
     this.player.zoom = zoom;
     this.ctrl = avecControles ? controles(this.player, marqueurs || (rp ? rp.marqueurs : [])) : null;
-    if (this.ctrl) container.append(this.ctrl);
-    if (pensee && focus) {
-      const p = el("div", { class: "pensee" });
+    if (this.ctrl) g.append(this.ctrl);
+    if (avecPensee) {
+      const p = el("div", { class: "pensee" + (onLigne ? " cliquable" : "") });
       const cv = el("div"); this.capt = el("div", { class: "capteurs" });
       p.append(cv, this.capt);
-      container.append(el("h3", { class: "titre-pensee" }, "🧠 Dans la tête de ta tortue"),
-        el("p", { class: "petit muted", style: "margin:0 0 6px" }, "Les lignes vertes sont des conditions vraies (True), les rouges sont fausses (False), la ligne jaune est l'action exécutée."),
+      d.append(el("h3", { class: "titre-pensee" }, "🧠 Dans la tête de ta tortue"),
+        el("p", { class: "petit muted", style: "margin:0 0 6px" }, "Les lignes vertes sont des conditions vraies (True), les rouges sont fausses (False), la ligne jaune est l'action exécutée." + (onLigne ? " ✏️ Clique sur une ligne pour aller la corriger." : "")),
         p);
       this.cv = new CodeView(cv);
       this.cv.setCode(code || "");
+      // un clic sur une ligne de la pensée ramène à cette ligne dans l'éditeur
+      if (onLigne) cv.addEventListener("click", (e) => {
+        const l = e.target.closest(".l"); if (!l) return;
+        const n = parseInt((l.querySelector(".n") || {}).textContent, 10);
+        if (n) onLigne(n);
+      });
     }
     this.onTick(0);
     if (autoplay) this.player.play();

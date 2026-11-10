@@ -1,5 +1,5 @@
 // =====================================================================
-//  Lagon Arena — élève : l'ÉDITEUR (vérification en direct, coup de pouce, mode avancé, rappels)
+//  Lagon Arena — élève : l'ÉDITEUR (vérification en direct, coup de pouce, mode avancé, aide-mémoire)
 // =====================================================================
 import { check } from "../interp.js";
 import { CodeEditor, boiteOutils } from "../editor.js";
@@ -7,7 +7,8 @@ import { CODE_DEPART } from "../engine.js";
 import { coupDePouceHTML } from "../pouce.js";
 import { bilanHTML, brancherLiens, lignesEnCause } from "../bilan.js";
 import { diagnostiquer } from "../moteur/diagnostic.js";
-import { RAPPELS, estAvance, setAvance, estEquipe } from "../primitives.js";
+import { estAvance, setAvance, estEquipe } from "../primitives.js";
+import { aideMemoireHTML } from "../regles-vue.js";
 import { $, el, esc, toast, store, activerCopie, CLE_TORTUE_TUTO } from "../common.js";
 import { cleCode } from "./etat.js";
 
@@ -85,7 +86,5 @@ $("#pouce-btn").addEventListener("click", () => {
   $("#pouce-fermer").addEventListener("click", () => pouce.classList.add("cache"));
 });
 
-// un rappel différent toutes les 15 secondes
-let iRappel = Math.floor(Math.random() * RAPPELS.length);
-const rappel = () => { $("#rappel").innerHTML = "🔁 <b>Rappel</b> · " + RAPPELS[iRappel % RAPPELS.length]; iRappel++; };
-rappel(); setInterval(rappel, 15000);
+// l'aide-mémoire des règles, toujours le même et toujours visible (le détail : onglet 📜 Règles)
+$("#rappel").innerHTML = aideMemoireHTML({ lien: "regles" });

@@ -378,6 +378,20 @@ begin
     where t.salle = p_salle and t.pseudo = p_pseudo order by t.manche desc limit 1;
 end $$;
 
+-- l'élève revient avec son seul CODE DE SESSION (8 caractères) : on retrouve sa salle et son pseudo.
+-- Le code est secret (comme un mot de passe) : sans lui, on ne peut rien retrouver.
+create index if not exists joueurs_secret_jeton on public.joueurs_secret (jeton);
+create or replace function public.retrouver_session(p_jeton text)
+returns table (salle text, pseudo text, couleur text)
+language plpgsql security definer set search_path = public as $$
+begin
+  if coalesce(p_jeton, '') !~ '^perso-[A-Z0-9]{8}-lagon$' then raise exception 'Code de session incorrect.'; end if;
+  return query select j.salle, j.pseudo, j.couleur
+    from joueurs_secret s join joueurs j on j.salle = s.salle and j.pseudo = s.pseudo
+    join salles sa on sa.code = s.salle
+    where s.jeton = p_jeton order by sa.maj desc nulls last, j.rejoint_le desc limit 1;
+end $$;
+
 -- qui a verrouillé sa tortue (sans montrer le code)
 create or replace function public.etat_depots(p_salle text, p_manche int)
 returns table (pseudo text, depose_le timestamptz)
@@ -538,7 +552,7 @@ grant execute on function public.heure_serveur(), public.creer_salle(text), publ
   public.retirer_joueur(text, text, text), public.liberer_pseudo(text, text, text), public.definir_config(text, text, jsonb),
   public.rejoindre(text, text, text, text),
   public.deposer_tortue(text, text, text, int, text), public.etat_depots(text, int),
-  public.changer_jeton(text, text, text, text), public.ma_tortue(text, text, text), public.codes_session(text, text),
+  public.changer_jeton(text, text, text, text), public.ma_tortue(text, text, text), public.codes_session(text, text), public.retrouver_session(text),
   public.enregistrer_scores(text, text, int, jsonb),
   public.statistiques(),
   public.proposer_pantheon(text, text, text, numeric, int, text, text, text), public.pantheon_top(int, text),

@@ -1,6 +1,6 @@
 // =====================================================================
-//  Lagon Arena — l'AIDE de l'écran élève, en deux onglets
-//   📜 Règles   : l'essentiel en 5 lignes, puis toutes les règles (sections dépliables) ;
+//  Lagon Arena — l'AIDE de l'écran élève, en deux onglets principaux
+//   📜 Règles   : les 6 cartes des règles, le modèle (français / Python), puis le détail (sections dépliables) ;
 //   💡 Conseils : l'essentiel en 5 lignes, puis des conseils par niveau, pour déboguer, etc.
 //  Les primitives sont rangées par catégories et suivent ce qui est proposé à l'élève
 //  (mode avancé, manche en équipes) : comme la boîte à outils.
@@ -8,6 +8,7 @@
 import { P, TICKS, TWISTS, TWIST_ORDER, POINTS_RANG, BONUS_PROGRESSION } from "./engine.js";
 import { CAPTEURS, ACTIONS_INFO, MOTS, parCategorie, ORDRE_QUESTIONS, ORDRE_ORDRES, visible } from "./primitives.js";
 import { colorer } from "./editor.js";
+import { reglesCartesHTML, modeleHTML } from "./regles-vue.js";
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const badge = (p) => (p.equipe ? ' <span class="badge-eq" title="manche en équipes">👥</span>' : p.avance ? ' <span class="badge-av" title="primitive avancée">🚀</span>' : "");
@@ -21,21 +22,10 @@ const nuit = (t) => `${t.nuit[0]} h – ${t.nuit[1]} h`;
 function regles() {
   const C = CAPTEURS.filter((c) => visible(c)), A = ACTIONS_INFO.filter((a) => visible(a));
   const caches = CAPTEURS.length + ACTIONS_INFO.length - C.length - A.length;
-  return `<div class="essentiel"><h3>⭐ L'essentiel</h3><ol>
-    <li>À chaque tour, le jeu lance ta fonction <code>tour()</code> : ta tortue fait <b>un seul ordre</b>, le premier qu'elle rencontre.</li>
-    <li>Python lit de <b>haut en bas</b> et fait seulement le <b>premier <code>if</code> vrai</b> : l'ordre des <code>elif</code> compte !</li>
-    <li><b>1 point</b> = <code>pondre()</code> <b>sur la plage</b>, <b>la nuit</b>, avec <b>${P.energiePonte} ⚡ ou plus</b>.</li>
-    <li>🦈 Attrapée par un requin : <b>−1 nid</b> et retour au départ. Refuges : la <b>plage</b>, et les <b>algues</b> (sauf quand tu manges).</li>
-    <li>⚡ L'énergie baisse avec le temps : mange des algues (+${P.gainAlgue}), jamais de plastique (−${P.pertePlastique}). À 0, ta tortue est épuisée.</li>
-  </ol></div>
-  <h3>✍️ Le modèle à suivre</h3>
-  <pre class="modele"><span class="tok-kw">def</span> tour():
-    <span class="tok-kw">if</span> <i>question</i>:          <span class="tok-com"># si…</span>
-        <i>ordre</i>()
-    <span class="tok-kw">elif</span> <i>autre question</i>:  <span class="tok-com"># sinon, si…</span>
-        <i>ordre</i>()
-    <span class="tok-kw">else</span>:                 <span class="tok-com"># sinon</span>
-        <i>ordre</i>()</pre>
+  return `${reglesCartesHTML()}
+  <h3 class="aide-h3">✍️ Le modèle à suivre</h3>
+  ${modeleHTML()}
+  <h3 class="aide-h3">🔎 Tout le détail</h3>
   ${section("❓ Les questions (capteurs) : réponse True / False ou un nombre", tables(C, ORDRE_QUESTIONS) +
     (caches ? `<p class="petit muted">🚀 ${caches} autres primitives existent : active « Primitives avancées » sous l'éditeur, ou fais le <a href="tuto-avance.html">tutoriel avancé</a>.</p>` : ""), true)}
   ${section("❗ Les ordres (actions) : un seul par tour", tables(A, ORDRE_ORDRES), true)}
@@ -148,20 +138,15 @@ function conseils() {
     <li>Prête ? Propose-la au <a href="pantheon.html">🏛️ Panthéon</a>.</li></ul>`)}`;
 }
 
-// ------------------------------------------------------------------ l'aide dans la page
-export function brancherAide(box) {
-  let onglet = "regles";
+// ------------------------------------------------------------------ les deux onglets de la page élève
+function brancher(box, titre, contenu) {
   const dessiner = (garder = false) => {
     const ouverts = garder ? [...box.querySelectorAll("details[open] > summary")].map((s) => s.textContent) : null;
-    box.innerHTML = `<div class="aide-tete"><h2>❓ Aide</h2>
-      <div class="aide-onglets" role="tablist">
-        <button type="button" role="tab" data-aide="regles" aria-selected="${onglet === "regles"}">📜 Règles</button>
-        <button type="button" role="tab" data-aide="conseils" aria-selected="${onglet === "conseils"}">💡 Conseils</button>
-      </div></div>
-      <div class="aide-page">${onglet === "regles" ? regles() : conseils()}</div>`;
+    box.innerHTML = `<div class="aide-tete"><h2>${titre}</h2></div><div class="aide-page">${contenu()}</div>`;
     if (ouverts) for (const d of box.querySelectorAll("details")) d.open = ouverts.includes(d.querySelector("summary").textContent);
-    box.querySelectorAll("[data-aide]").forEach((b) => b.addEventListener("click", () => { onglet = b.dataset.aide; dessiner(); }));
   };
   dessiner();
   document.addEventListener("lagon:avance", () => dessiner(true));   // mode avancé, manche en équipes : les primitives proposées changent
 }
+export const brancherRegles = (box) => brancher(box, "📜 Les règles du jeu", regles);
+export const brancherConseils = (box) => brancher(box, "💡 Conseils", conseils);

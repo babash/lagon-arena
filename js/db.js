@@ -78,6 +78,11 @@ class Supabase {
   changerJeton(code, pseudo, ancien, nouveau) { return this.rpc("changer_jeton", { p_salle: code, p_pseudo: pseudo, p_ancien: ancien, p_nouveau: nouveau }); }
   async maTortue(code, pseudo, jeton) { const r = await this.rpc("ma_tortue", { p_salle: code, p_pseudo: pseudo, p_jeton: jeton }); return (r && r[0]) || null; }
   codesSession(code, secret) { return this.rpc("codes_session", { p_code: code, p_secret: secret }); }
+  // avec le seul code de session : la salle et le pseudo (null si la base n'est pas encore à jour)
+  async retrouverSession(jeton) {
+    try { const r = await this.rpc("retrouver_session", { p_jeton: jeton }); return (r && r[0]) || false; }
+    catch (err) { if (/pas prête/.test(err.message)) return null; throw err; }
+  }
   tortues(code) { return this.get("tortues", `salle=eq.${encodeURIComponent(code)}&select=pseudo,manche,code`); }
   enregistrerScores(code, secret, manche, scores) { return this.rpc("enregistrer_scores", { p_code: code, p_secret: secret, p_manche: manche, p_scores: scores }); }
   scores(code) { return this.get("scores", `salle=eq.${encodeURIComponent(code)}&select=*&order=manche,rang`); }
@@ -199,6 +204,13 @@ class Demo {
     const s = this.load(); this.verifProf(s, code, secret);
     return Object.entries(s.jetons[code] || {}).map(([pseudo, j]) => ({ pseudo, code: /^perso-[A-Z0-9]{8}-lagon$/.test(j || "") ? j.slice(6, 14) : null }))
       .sort((a, b) => a.pseudo.localeCompare(b.pseudo));
+  }
+  async retrouverSession(jeton) {
+    await this.pause();
+    const s = this.load();
+    for (const [salle, js] of Object.entries(s.jetons || {})) for (const [pseudo, j] of Object.entries(js || {}))
+      if (j === jeton && s.salles[salle]) { const x = (s.joueurs[salle] || []).find((y) => y.pseudo === pseudo); return { salle, pseudo, couleur: x ? x.couleur : null }; }
+    return false;
   }
   async maTortue(code, pseudo, jeton) {
     await this.pause();

@@ -9,6 +9,8 @@ import { MatchViewer, rapportHTML, tableauMatch } from "../viewer.js";
 import { estAvance, estEquipe } from "../primitives.js";
 import { $, el, esc, toast, store } from "../common.js";
 import { ed, verifier } from "./editeur.js";
+import { onglet } from "./ui.js";
+import { bilanHTML, brancherLiens } from "../bilan.js";
 import { S, LIBRE, SALLE, PSEUDO, couleur, configActuelle, configProchaine } from "./etat.js";
 
 const BOT_COUL = ["#c9d6df", "#9fb3c2", "#e0e6eb", "#b3c4d1", "#d6dee5"];
@@ -41,20 +43,28 @@ function joueursSB() {
   return joueurs;
 }
 
-export function tester(memeLagon = false) {
+// un clic sur une ligne de la pensée (ou un lien « ligne 5 ») : retour à l'éditeur, sur cette ligne
+const allerALaLigne = (n) => { onglet("prog"); ed.marquer([n]); ed.allerA(n); };
+brancherLiens($("#sb-bilan"), { marquer: (l) => ed.marquer(l), allerA: (n) => allerALaLigne(n) });
+
+export function tester(memeLagon = false, { basculer = true } = {}) {
   const c = verifier();
-  if (!c.ok) { toast("Corrige d'abord l'erreur de ton code (en rouge).", "err"); return; }
+  if (!c.ok) { if (basculer) { onglet("prog"); toast("Corrige d'abord l'erreur de ton code (en rouge).", "err"); } return; }
+  if (basculer) onglet("test");
+  $("#sb-bilan").innerHTML = bilanHTML(ed.value, { compact: true });
   if (!memeLagon || graineSB == null) graineSB = 1 + Math.floor(Math.random() * 2e9);
   $("#autre").disabled = false;
   const sim = simulate({ joueurs: joueursSB(), graine: graineSB, twist: twistActuel(), lagon: lagonActuel() });
   if (viewerSB) viewerSB.destroy();
-  viewerSB = new MatchViewer($("#sb-vue"), { sim, focus: "moi", code: ed.value, vitesse: 5 });
+  viewerSB = new MatchViewer($("#sb-vue"), { sim, focus: "moi", code: ed.value, vitesse: 5, onLigne: allerALaLigne });
   const r = sim.resultats.find((x) => x.id === "moi");
   $("#sb-res").innerHTML = `<div class="sep"></div><h3>Résultat : ${r.nids} nid${r.nids > 1 ? "s" : ""} · ${r.rang}<sup>${r.rang > 1 ? "e" : "re"}</sup> sur ${sim.resultats.length}</h3>` +
     rapportHTML(sim, "moi") + `<details><summary>Classement du test</summary>${tableauMatch(sim, "moi", (id) => id.startsWith("Bot-"))}</details>`;
 }
-$("#tester").addEventListener("click", () => tester());
-$("#autre").addEventListener("click", () => tester(true));
+$("#tester").addEventListener("click", () => tester());     // (onglet ✍️ Programmer : on bascule vers 🧪 Tester)
+$("#tester2").addEventListener("click", () => tester());
+$("#autre").addEventListener("click", () => tester(true));  // (on reste sur 🧪 Tester)
+$("#vers-code").addEventListener("click", () => { onglet("prog"); ed.focus ? ed.focus() : ed.ta.focus(); });
 
 // ---------------------------------------------------------------------
 //  Estimation : toujours les mêmes lagons (graines fixes), pour comparer deux versions de son code

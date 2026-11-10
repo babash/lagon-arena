@@ -15,7 +15,10 @@ import { CodeView, CodeEditor, boiteOutils } from "./editor.js";
 import { MatchViewer, tableauMatch } from "./viewer.js";
 import { CAPTEURS as TOUS_CAPTEURS, ACTIONS_INFO as TOUTES_ACTIONS } from "./primitives.js";
 import { $, el, esc, store, toast, lienPartie, CLE_TORTUE_TUTO } from "./common.js";
-import { bascule, vf, capt, act, exemple, phrase, exercice, quiz, etapeMission, demarrer, fait, suivant } from "./tutokit.js";
+import { bascule, vf, capt, act, exemple, phrase, exercice, quiz, etapeMission, demarrer, fait, suivant, trous, regleFr } from "./tutokit.js";
+import { etapePilote } from "./tuto-pilote.js";
+import { MISSIONS_TUTO, CLE_TUTO } from "./parcours.js";
+import { reglesCartesHTML } from "./regles-vue.js";
 import { TESTS, situation, unTour, expliquerSituation, diagnostiquer, enTexteRiche } from "./moteur/diagnostic.js";
 import { bilanHTML, brancherLiens, lignesEnCause, riche } from "./bilan.js";
 import { coupDePouceHTML } from "./pouce.js";
@@ -40,7 +43,7 @@ const ETAPES = [];
 
 // ---------- 1. Le jeu ----------
 ETAPES.push({
-  court: "1", titre: "Le jeu",
+  court: "1", titre: "Le jeu", mission: 1,
   rendre(box) {
     box.innerHTML = `<div class="etape"><div class="texte">
       <h2>🐢 Le jeu</h2>
@@ -62,7 +65,7 @@ ETAPES.push({
 
 // ---------- 2. Le lagon ----------
 ETAPES.push({
-  court: "2", titre: "Le lagon",
+  court: "2", titre: "Le lagon", mission: 1,
   rendre(box) {
     const L = [["tortue", "Ta tortue"], ["herbier", "Algues = <b>nourriture</b> (elles se vident et repoussent ailleurs)"], ["plage", "Plage = on y <b>pond</b> (et pas de requin)"], ["nid", "Nid = <b>1 point</b>"],
       ["requin", "Requin = <b>danger</b> (−1 nid)"], ["sac", "Sac plastique = <b>poison</b>"], ["corail", "Corail = <b>mur</b>"], ["nuit", "Nuit = <b>l'heure de pondre</b>"]];
@@ -77,9 +80,12 @@ ETAPES.push({
   },
 });
 
+// ---------- 3. Pilote ta tortue (à la main, sans code) ----------
+ETAPES.push(etapePilote);
+
 // ---------- 3. Les questions (capteurs) ----------
 ETAPES.push({
-  court: "3", titre: "Les questions", cle: "capteurs",
+  court: "1", titre: "Les questions", cle: "capteurs", mission: 2,
   rendre(box) {
     box.innerHTML = `<div class="etape"><div class="texte">
       <h2>❓ Ta tortue se pose des questions</h2>
@@ -122,7 +128,7 @@ ETAPES.push({
 
 // ---------- 4. Les ordres (actions) ----------
 ETAPES.push({
-  court: "4", titre: "Les ordres", cle: "actions",
+  court: "2", titre: "Les ordres", cle: "actions", mission: 2,
   rendre(box) {
     box.innerHTML = `<div class="etape"><div class="texte">
       <h2>❗ Ta tortue obéit à des ordres</h2>
@@ -142,9 +148,58 @@ ETAPES.push({
   },
 });
 
+// ---------- Si… alors… : la règle en français (deux listes), avant tout code ----------
+ETAPES.push({
+  court: "3", titre: "Si… alors…", cle: "sialors", mission: 2,
+  rendre(box) {
+    box.innerHTML = `<div class="etape"><div class="texte">
+      <h2>🗣️ Si… alors…</h2>
+      <p>Ta tortue obéit à des <b>règles</b>. Une règle, c'est :</p>
+      <div class="formule"><span class="f-q">❓ une question</span><b>→</b><span class="f-a">❗ un ordre</span></div>
+      <p class="phrase-fr">« <b>Si</b> un requin est proche, <b>alors</b> fuis. »</p>
+      <p>Si la réponse est <b>oui</b> (<span class="b-true">True</span>), la tortue obéit. Si c'est <b>non</b> (<span class="b-false">False</span>), elle passe à la règle suivante.</p>
+      <p class="muted">👉 Choisis dans les listes les 3 règles d'une bonne tortue. Le code Python s'écrit tout seul en dessous.</p>
+    </div><div class="card" id="exo"></div></div>`;
+    regleFr($("#exo", box), { cle: "sialors", taches: [
+      { texte: "1. 🦈 Pour <b>ne pas se faire attraper</b> :", q: "requin_proche()", a: "fuir", bravo: "Si un requin est proche → fuir.", conseilQ: "Quelle question parle du danger ?", conseilA: "Face à un requin, que faut-il faire ?" },
+      { texte: "2. 🥚 Pour <b>pondre</b> :", q: "sur_plage() and est_la_nuit()", a: "pondre", bravo: "Sur la plage ET la nuit → pondre.", conseilQ: "Pour pondre, il faut DEUX choses à la fois : la plage et la nuit.", conseilA: "Quel ordre fait un nid ?" },
+      { texte: "3. 🌿 Pour <b>reprendre des forces</b> :", q: "algue_ici()", a: "manger", bravo: "Des algues ici → manger.", conseilQ: "Où trouve-t-on à manger ?", conseilA: "Sur les algues, que faire ?" },
+    ] });
+  },
+});
+
+// ---------- De la règle au code : compléter (sans clavier) ----------
+ETAPES.push({
+  court: "1", titre: "Complète le code", cle: "trous", mission: 3,
+  rendre(box) {
+    box.innerHTML = `<div class="etape"><div class="texte">
+      <h2>🧩 De la règle au code</h2>
+      <p>La même règle, en français puis en Python :</p>
+      <div class="traduction pas-copie">
+        <div class="tr-fr">« <b>Si</b> un requin est proche, <b>alors</b> fuis. »</div>
+        <div class="tr-fleche" aria-hidden="true">⬇️</div>
+        <pre class="modele"><span class="tok-kw">if</span> <span class="tok-sens">requin_proche</span>():
+    <span class="tok-act">fuir</span>()</pre>
+      </div>
+      <ul class="points">
+        <li><code>if</code> veut dire <b>si</b>.</li>
+        <li>Les parenthèses <code>()</code> : on <b>pose</b> la question, on <b>donne</b> l'ordre.</li>
+        <li>Les <b>deux-points</b> <code>:</code> terminent la ligne du <code>if</code>.</li>
+        <li>L'ordre est <b>décalé de 4 espaces</b> : il est « dans » le <code>if</code>.</li>
+      </ul>
+    </div><div class="card" id="exo"></div></div>`;
+    trous($("#exo", box), {
+      cle: "trous", consigne: "Complète pour écrire : « <b>Si</b> il y a des algues ici, <b>alors</b> mange. »",
+      morceaux: ["if ", { id: "q", label: "la question", choix: ["requin_proche()", "algue_ici()", "sur_plage()", "est_la_nuit()"] }, ":\n    ", { id: "a", label: "l'ordre", choix: ["fuir()", "manger()", "pondre()", "aller_vers_plage()"] }],
+      cas: [{ texte: "🌿 sur des algues", sit: { algue_ici: true }, attendu: "manger" }, { texte: "🌊 pas d'algues", sit: { algue_ici: false }, pas: "manger" }],
+      appris: "Tu as écrit ta première règle en Python ! À l'étape suivante, tu l'écris toi-même, au clavier.",
+    });
+  },
+});
+
 // ---------- 5. Mon premier if ----------
 ETAPES.push({
-  court: "5", titre: "Mon premier if", cle: "if",
+  court: "2", titre: "Mon premier if", cle: "if", mission: 3,
   rendre(box) {
     box.innerHTML = `<div class="etape"><div class="texte">
       <h2>✍️ Ton premier <code>if</code></h2>
@@ -177,7 +232,7 @@ ETAPES.push({
 
 // ---------- 6. else ----------
 ETAPES.push({
-  court: "6", titre: "else (sinon)", cle: "else",
+  court: "3", titre: "else (sinon)", cle: "else", mission: 3,
   rendre(box) {
     box.innerHTML = `<div class="etape"><div class="texte">
       <h2>↔️ <code>else</code> = sinon</h2>
@@ -204,7 +259,7 @@ ETAPES.push({
 
 // ---------- 7. and ----------
 ETAPES.push({
-  court: "7", titre: "and (et)", cle: "and",
+  court: "4", titre: "and (et)", cle: "and", mission: 3,
   rendre(box) {
     box.innerHTML = `<div class="etape"><div class="texte">
       <h2>🤝 <code>and</code> = et</h2>
@@ -244,7 +299,7 @@ ETAPES.push({
 
 // ---------- 8. elif ----------
 ETAPES.push({
-  court: "8", titre: "elif", cle: "elif",
+  court: "5", titre: "elif", cle: "elif", mission: 3,
   rendre(box) {
     const code = "if requin_proche():\n    fuir()\nelif algue_ici():\n    manger()\nelse:\n    aller_vers_algue()";
     box.innerHTML = `<div class="etape"><div class="texte">
@@ -270,7 +325,7 @@ ETAPES.push({
 const DEUX_BLOCS = "if algue_ici():\n    manger()\nelse:\n    aller_vers_algue()\nif sur_plage() and est_la_nuit():\n    pondre()\nelse:\n    aller_vers_plage()";
 const UNE_CHAINE = "def tour():\n    if sur_plage() and est_la_nuit():\n        pondre()\n    elif est_la_nuit():\n        aller_vers_plage()\n    elif algue_ici():\n        manger()\n    else:\n        aller_vers_algue()\n";
 ETAPES.push({
-  court: "9", titre: "Une seule chaîne", cle: "chaine",
+  court: "1", titre: "Une seule chaîne", cle: "chaine", mission: 4,
   rendre(box) {
     box.innerHTML = `<div class="etape"><div class="texte">
       <h2>🔗 Une seule chaîne</h2>
@@ -311,7 +366,7 @@ const ORDRE_DEPART = ["manger", "rentrer", "pondre", "requin"];
 const TESTS_ORDRE = ["ponte", "rentrer", "rentrer_algues", "manger", "chercher", "requin_algues"].map((id) => TESTS.find((t) => t.id === id));
 const codeOrdre = (ordre) => "def tour():\n" + ordre.map((id, i) => `    ${i ? "elif" : "if"} ${REGLES[id].cond}:\n        ${REGLES[id].act}\n`).join("") + "    else:\n        aller_vers_algue()\n";
 ETAPES.push({
-  court: "10", titre: "L'ordre des priorités", cle: "ordre",
+  court: "2", titre: "L'ordre des priorités", cle: "ordre", mission: 4,
   rendre(box) {
     const CLE = "lagon:tuto2:ordre";
     let ordre = store.get(CLE);
@@ -363,9 +418,11 @@ ETAPES.push({
 
 // ---------- 11. Énergie et dangers ----------
 ETAPES.push({
-  court: "11", titre: "Énergie et dangers",
+  court: "4", titre: "Les règles", cle: "regles", mission: 1,
   rendre(box) {
-    box.innerHTML = `<div class="etape"><div class="card">
+    box.innerHTML = `<h2 class="titre-etape">📜 Les règles en 1 minute</h2>
+    <p class="chapo">Tout le jeu tient en 6 cartes. Lis-les, puis essaie l'énergie à droite (ou en dessous).</p>
+    <div class="etape etape-regles"><div>${reglesCartesHTML()}</div><div class="card">
       <h3>⚡ L'énergie : essaie !</h3>
       <div class="jauge" id="jauge"><div></div><span></span></div>
       <p id="nids" class="bigscore" style="margin:10px 0"></p>
@@ -376,14 +433,7 @@ ETAPES.push({
         <button class="btn corail small" data-a="plastique">🛍️ manger un sac</button>
       </div>
       <div id="log" class="msg info">Clique sur les boutons.</div>
-    </div><div class="texte">
-      <h2>⚠️ À retenir</h2>
-      <div class="regle"><span>⚡</span><div>L'énergie <b>baisse</b> toute seule. À <b>0</b> : épuisée, retour au départ.</div></div>
-      <div class="regle"><span>🦈</span><div>Attrapée par un requin = retour au départ et <b>−1 nid</b>. <b>Refuges</b> : la <b>plage</b> 🏖️ et les <b>algues</b> 🌿 (sauf quand tu manges).</div></div>
-      <div class="regle"><span>🛍️</span><div>Sac plastique = <b>−${P.pertePlastique} ⚡</b>. <code>not plastique_ici()</code> = « <b>pas</b> de plastique ».</div></div>
-      <div class="regle"><span>🌿</span><div>Une touffe d'algues <b>se vide</b> quand on la mange : une nouvelle <b>pousse ailleurs</b>.</div></div>
-      <div class="regle"><span>☀️</span><div>Le jour, <b>sur la plage</b>, le soleil fatigue : l'énergie baisse plus vite.</div></div>
-      <div class="regle"><span>🕐</span><div>Un match = <b>3 jours</b>. Nuit de 19 h à 6 h.</div></div>
+      <div id="vf" class="quiz-vf"></div>
     </div></div>`;
     let e = P.energieDepart, n = 0;
     const maj = (msg, type = "info") => {
@@ -401,19 +451,28 @@ ETAPES.push({
       if (e <= 0) { e = 5; maj("😵 <b>Épuisée !</b> Retour au départ, bloquée 5 tours.", "err"); }
     }));
     maj();
+    const VF = [[true, "Vrai"], [false, "Faux"]];
+    const questions = [
+      { texte: "🏖️☀️ On peut pondre <b>le jour</b>, sur la plage.", bon: false, pourquoi: "On ne pond que <b>la nuit</b> (de 19 h à 6 h)." },
+      { texte: "🌿 Manger des algues donne de l'énergie.", bon: true, pourquoi: `+${P.gainAlgue} ⚡ à chaque bouchée.` },
+      { texte: "🏖️🦈 Sur la plage, un requin peut t'attraper.", bon: false, pourquoi: "La plage est un <b>refuge</b> : jamais de requin." },
+      { texte: "🧠 À chaque tour, ta tortue peut faire <b>deux</b> actions.", bon: false, pourquoi: "<b>Une seule</b> action par tour : la première règle vraie." },
+    ].map((q) => ({ ...q, options: VF }));
+    questions.cle = "regles";
+    quiz($("#vf", box), "✔️ Vrai ou faux ?", questions);
   },
 });
 
 // ---------- 12 et 13. Missions : réparer une tortue dans le lagon ----------
 const MB = MISSIONS_PONTE[0], MR = MISSIONS.find((m) => m.id === 2);
 ETAPES.push(etapeMission({
-  court: "M1", cle: "mB", titre: "🔧 " + MB.titre, notion: MB.notion,
+  court: "3", mission: 4, cle: "mB", titre: "🔧 " + MB.titre, notion: MB.notion,
   probleme: "😟 " + MB.histoire, objectif: MB.objectif, code: MB.code, indice: MB.indice, solution: MB.solution,
   appris: "L'ordre des règles, c'est l'ordre des priorités : <b>pondre</b>, puis <b>rentrer la nuit</b>, puis <b>manger</b>.",
   scenario: MB.scenario, graine: GRAINE_MISSION, reussi: MB.reussi, bilan: MB.bilan, avance: false, test: MB.test,
 }));
 ETAPES.push(etapeMission({
-  court: "M2", cle: "m2", titre: "🔧 Gare au requin", notion: MR.notion,
+  court: "4", mission: 4, cle: "m2", titre: "🔧 Gare au requin", notion: MR.notion,
   probleme: "😟 Elle mange même quand un requin arrive.", objectif: MR.objectif, code: MR.code, indice: MR.indice,
   solution: "def tour():\n    if requin_proche():\n        fuir()\n    elif algue_ici():\n        manger()\n    else:\n        aller_vers_algue()\n",
   appris: "<b>L'ordre compte</b> : le danger se teste <b>en premier</b>.",
@@ -422,7 +481,7 @@ ETAPES.push(etapeMission({
 
 // ---------- 14. Construis ta tortue (avec ses tests en direct, jusqu'au 🟢) ----------
 ETAPES.push({
-  court: "🐢", titre: "Construis ta tortue", cle: "construis",
+  court: "🐢", titre: "Construis ta tortue", cle: "construis", mission: 4,
   rendre(box) {
     const CLE = "lagon:tuto2:construis";
     box.innerHTML = `<div class="etape"><div>
@@ -499,7 +558,7 @@ ETAPES.push({
 });
 
 ETAPES.push({
-  court: "🏆", titre: "C'est parti !",
+  court: "🏆", titre: "C'est parti !", mission: 4,
   rendre(box) {
     const pts = POINTS_RANG.slice(0, 5).map((p, i) => `<td><b>${i + 1}<sup>${i ? "e" : "er"}</sup></b><br>${p} pts</td>`).join("");
     const tt = store.get(CLE_TORTUE_TUTO);
@@ -531,4 +590,6 @@ ETAPES.push({
 });
 
 
-demarrer(ETAPES, "lagon:tuto2");
+// les étapes, rangées par mission (l'ordre d'écriture est gardé à l'intérieur de chaque mission)
+ETAPES.sort((a, b) => a.mission - b.mission);
+demarrer(ETAPES, CLE_TUTO, MISSIONS_TUTO);

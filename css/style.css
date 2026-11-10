@@ -184,8 +184,6 @@ input[type=text]:focus, select:focus { outline: none; border-color: var(--lagon)
 .bilan .remarques li.orange { box-shadow: inset 3px 0 0 var(--or); }
 .lien-ligne { font: inherit; font-weight: 800; color: var(--ocean-700); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px; }
 .lien-ligne:hover, .lien-ligne:focus-visible { color: var(--lagon); }
-#prog-grid.reduite #statut .bilan { font-size: .82rem; padding: 6px 8px; }
-#prog-grid.reduite #statut .bilan .cles, #prog-grid.reduite #statut .bilan-cause { display: none; }
 
 /* ---------- vue « pensée » ---------- */
 .pensee { display: grid; grid-template-columns: 1fr 200px; gap: 12px; }
@@ -258,6 +256,204 @@ table.scores td.num, table.scores th.num { text-align: right; font-variant-numer
 .overlay .boite { background: #fff; border-radius: 20px; padding: 26px 30px; max-width: 560px; text-align: center; box-shadow: var(--ombre); }
 .overlay .boite h2 { font-size: 2rem; }
 .overlay .emoji { font-size: 4rem; line-height: 1; }
+
+/* =====================================================================
+   Accueil en missions, règles en cartes, tutoriel en missions (novembre 2026)
+   ===================================================================== */
+/* --- l'en-tête de l'accueil, plus court : on voit tout de suite « Entrer dans la partie » --- */
+.hero-accueil { padding: 26px 18px 74px; }
+.hero-grille { max-width: 1060px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.hero-texte { display: flex; flex-direction: column; align-items: center; }
+.hero-accueil h1 { margin: 4px 0 6px; }
+.hero-accueil .hero-logo { filter: drop-shadow(0 6px 10px rgba(0,0,0,.25)); animation: flotte 4s ease-in-out infinite; }
+@keyframes flotte { 50% { transform: translateY(-6px) rotate(-3deg); } }
+@media (prefers-reduced-motion: reduce) { .hero-accueil .hero-logo { animation: none; } }
+.hero-accueil p { font-size: 1.12rem; }
+.etat-base { margin: 10px 0 0; opacity: .85; }
+.accueil-eleve, .accueil-prof { max-width: 1060px; margin: -52px auto 30px; padding: 0 16px; position: relative; display: grid; gap: 22px; }
+.accueil-prof { grid-template-columns: minmax(280px, 1fr) minmax(300px, 1.3fr); align-items: start; }
+.accueil-prof .card + .card { margin-top: 0; }
+.accueil-prof .actions-prof { grid-row: span 2; }
+.accueil-prof .apercu { width: 100%; border-radius: 10px; box-shadow: var(--ombre); }
+.actions-prof-boutons { display: flex; flex-direction: column; gap: 10px; margin: 8px 0; }
+.actions-prof-boutons .btn { text-align: center; }
+.actions-prof-boutons small { font-weight: 600; opacity: .85; font-size: .8em; }
+@media (max-width: 760px) { .accueil-prof { grid-template-columns: 1fr; } .accueil-prof .actions-prof { grid-row: auto; } }
+
+/* --- entrer dans la partie --- */
+.acces { max-width: 620px; width: 100%; justify-self: center; border-top: 6px solid var(--algue); }
+.acces h2 { margin-bottom: 10px; }
+.acces-onglets { display: flex; gap: 6px; background: var(--fond); border-radius: 12px; padding: 4px; margin-bottom: 14px; }
+.acces-onglets button { flex: 1; font: inherit; font-weight: 800; border: 0; background: transparent; padding: 10px 8px; border-radius: 9px; cursor: pointer; color: var(--ocean-700); }
+.acces-onglets button[aria-selected="true"] { background: var(--blanc); color: var(--ocean-800); box-shadow: 0 2px 6px rgba(6,38,61,.14); }
+.acces-onglets button:focus-visible { outline: 3px solid var(--or); outline-offset: 1px; }
+.acces .form-rejoindre .btn.big { align-self: stretch; text-align: center; }
+.reprise-rapide { display: flex; align-items: center; gap: 12px; padding: 10px 14px; margin-bottom: 12px; border-radius: 12px; background: var(--algue-pale); color: #1d5d32; text-decoration: none; box-shadow: inset 0 0 0 2px #b9e2c5; }
+.reprise-rapide:hover { background: #d4efdc; }
+.reprise-rapide .rr-ic { width: 38px; height: 38px; border-radius: 50%; background: var(--algue); color: #fff; display: grid; place-items: center; font-size: 1.1rem; flex: none; }
+.lien-bouton { font: inherit; font-weight: 800; background: none; border: 0; padding: 0; color: var(--ocean-700); text-decoration: underline; cursor: pointer; }
+.invitation-carte { border: 3px solid var(--or); }
+
+/* --- le parcours en missions --- */
+.parcours-tete { text-align: center; max-width: 720px; margin: 6px auto 12px; }
+.parcours-tete h2 { font-size: 1.7rem; color: var(--ocean-800); }
+.parcours-tete p { margin: 0 0 10px; }
+.barre-parcours { height: 10px; border-radius: 5px; background: var(--gris-clair); overflow: hidden; max-width: 420px; margin: 0 auto; }
+.barre-parcours div { height: 100%; width: 0; background: linear-gradient(90deg, var(--lagon), var(--algue)); transition: width .6s; }
+.missions { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; counter-reset: m; }
+.mission { position: relative; }
+.mission-lien { height: 100%; display: flex; flex-direction: column; gap: 8px; padding: 16px 16px 14px; background: var(--blanc); border-radius: var(--rayon); box-shadow: var(--ombre); text-decoration: none; color: var(--encre); border: 3px solid transparent; transition: transform .15s, border-color .15s; }
+.mission-lien:hover { transform: translateY(-3px); border-color: var(--lagon-light); }
+.mission-lien:focus-visible { outline: 3px solid var(--or); outline-offset: 2px; }
+.mission.ici .mission-lien { border-color: var(--algue); box-shadow: 0 10px 26px rgba(58,166,91,.25); }
+.mission-num { position: absolute; top: -10px; left: 14px; min-width: 30px; height: 30px; padding: 0 8px; border-radius: 15px; display: grid; place-items: center; font-family: var(--titre); font-weight: 800; background: var(--ocean-800); color: #fff; }
+.m-finie .mission-num { background: var(--algue); }
+.mission-ic { font-size: 2.3rem; line-height: 1; margin-top: 6px; }
+.mission-corps { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.mission-sur { font-size: .8rem; font-weight: 800; color: var(--gris); text-transform: uppercase; letter-spacing: .04em; }
+.mission-corps b { font-family: var(--titre); font-size: 1.2rem; color: var(--ocean-800); line-height: 1.15; }
+.mission-txt { font-size: .92rem; color: #33475b; }
+.mission-pied { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.mission-etat { font-size: .85rem; font-weight: 800; color: var(--gris); }
+.m-finie .mission-etat { color: var(--vrai); }
+.ici .mission-etat { color: var(--algue); }
+.m-partie .mission-lien { background: linear-gradient(160deg, #fff8e1, #fff); }
+.m-partie .mission-num { background: var(--or); color: var(--encre); }
+@media (max-width: 560px) {
+  .mission-lien { display: grid; grid-template-columns: 44px 1fr; gap: 4px 10px; padding: 16px 12px 12px; }
+  .mission-ic { font-size: 1.9rem; margin-top: 4px; }
+  .mission-pied { grid-column: 2; }
+  .hero-accueil { padding-top: 16px; }
+  .hero-accueil p { font-size: 1rem; }
+  .hero-accueil .hero-logo { width: 56px; height: 56px; }
+}
+.apres-missions { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 18px; }
+
+/* --- les règles en cartes (accueil, tutoriel, page élève) --- */
+.regles-accueil h2 { text-align: center; font-size: 1.7rem; color: var(--ocean-800); }
+.regles-titre { color: var(--ocean-800); }
+.regles-cartes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 900px) { .regles-cartes { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .regles-cartes { grid-template-columns: 1fr; } }
+.etape .regles-cartes { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 560px) { .etape .regles-cartes { grid-template-columns: 1fr; } }
+.regle-carte { background: var(--blanc); border-radius: var(--rayon); box-shadow: 0 3px 12px rgba(6,38,61,.09); padding: 12px 14px; border-top: 5px solid var(--rc, var(--lagon)); }
+.regle-carte header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.regle-carte h3 { margin: 0; font-size: 1.15rem; color: var(--ocean-800); }
+.rc-num { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: .78rem; font-weight: 900; background: var(--rc, var(--lagon)); color: #fff; flex: none; }
+.rc-ic { font-size: 1.7rem; line-height: 1; }
+.regle-carte ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+.regle-carte li { display: grid; grid-template-columns: 26px 1fr; gap: 6px; align-items: start; line-height: 1.3; }
+.rc-li-ic { font-size: 1.15rem; text-align: center; }
+.rc-pied { margin: 8px 0 0; font-size: .85rem; color: var(--gris); font-weight: 700; }
+.rc-or { --rc: #e0a800; } .rc-vert { --rc: var(--algue); } .rc-bleu { --rc: var(--lagon); }
+.rc-corail { --rc: var(--corail-fonce); } .rc-nuit { --rc: #3b4b8c; } .rc-violet { --rc: #7b4bd1; }
+.aide-memoire { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 10px; margin-top: 10px; border-radius: 12px; background: var(--lagon-pale); font-size: .9rem; }
+.am-titre { font-family: var(--titre); color: var(--ocean-800); margin-right: 2px; }
+.am-pastille { background: var(--blanc); border-radius: 999px; padding: 3px 10px; font-weight: 700; white-space: nowrap; box-shadow: 0 1px 3px rgba(6,38,61,.1); }
+.am-lien { margin-left: auto; }
+@media (max-width: 560px) { .am-pastille { white-space: normal; } .am-lien { margin-left: 0; } }
+.modele-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: stretch; }
+.modele-duo h4 { margin: 0 0 6px; }
+.md-fr { background: #fffaf0; border-radius: 10px; padding: 10px 14px; }
+.md-fr ol { margin: 0; padding-left: 20px; line-height: 1.8; }
+.modele-duo pre { margin: 0; }
+@media (max-width: 640px) { .modele-duo { grid-template-columns: 1fr; } }
+
+/* --- le tutoriel, rangé en missions --- */
+.tuto-nav.par-mission { gap: 10px; align-items: stretch; }
+.nav-mission { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 8px; border-radius: 12px; background: rgba(255,255,255,.6); box-shadow: inset 0 0 0 2px var(--gris-clair); }
+.nav-mission.ici { background: #fff; box-shadow: inset 0 0 0 2px var(--lagon); }
+.nav-mission.finie { box-shadow: inset 0 0 0 2px #b9e2c5; }
+.tuto-nav .nav-m-titre { background: none; }
+.nav-m-titre { font: inherit; font-size: .8rem; font-weight: 800; border: 0; background: none; cursor: pointer; color: var(--ocean-800); display: flex; gap: 4px; align-items: center; width: auto !important; height: auto !important; border-radius: 6px !important; padding: 0 4px !important; }
+.nav-m-titre .nm-nom { font-weight: 600; color: var(--gris); }
+.nav-m-etapes { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+.nav-m-etapes button { width: 30px !important; height: 30px !important; font-size: .85rem; }
+@media (max-width: 720px) { .nav-m-titre .nm-nom { display: none; } }
+.debut-mission { display: flex; gap: 14px; align-items: center; background: linear-gradient(90deg, var(--ocean-800), var(--ocean-700)); color: #fff; border-radius: var(--rayon); padding: 12px 18px; margin-bottom: 16px; }
+.debut-mission .dm-ic { font-size: 2.4rem; }
+.debut-mission b { font-family: var(--titre); font-size: 1.3rem; }
+.titre-etape { font-size: 1.9rem; color: var(--ocean-800); }
+.chapo { font-size: 1.08rem; margin-top: 0; }
+.etape-regles { grid-template-columns: minmax(320px, 1.4fr) minmax(280px, 1fr); }
+@media (max-width: 980px) { .etape-regles { grid-template-columns: 1fr; } }
+.quiz-vf { margin-top: 14px; }
+.formule { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 1.15rem; margin: 8px 0; }
+.formule span { padding: 6px 14px; border-radius: 999px; font-weight: 800; }
+.f-q { background: var(--lagon-pale); color: var(--ocean-800); } .f-a { background: var(--act-bg); color: #6b4c00; }
+.traduction { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.tr-fr { background: #fffaf0; border-radius: 10px; padding: 8px 14px; font-size: 1.1rem; }
+.tr-fleche { font-size: 1.4rem; padding-left: 20px; }
+.traduction pre { margin: 0; }
+/* pilote ta tortue */
+.etape-pilote { grid-template-areas: "tete vue" "jeu vue"; align-items: start; }
+.p-tete { grid-area: tete; } .p-vue { grid-area: vue; } .p-jeu { grid-area: jeu; }
+@media (max-width: 980px) { .etape-pilote { grid-template-areas: "tete" "vue" "jeu"; } }
+@media (max-width: 560px) { .grille-ordres .btn { padding: 8px 10px; } }
+.pilote-tableau { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0; }
+@media (max-width: 560px) { .pilote-tableau { grid-template-columns: 1fr; } }
+.pilote-tableau h4 { margin: 0 0 6px; color: var(--ocean-800); }
+table.voit { border-collapse: collapse; width: 100%; font-size: .95rem; }
+table.voit td { padding: 3px 6px; border-bottom: 1px solid var(--gris-clair); }
+table.voit td:first-child { width: 26px; text-align: center; }
+table.voit tr.alerte { background: var(--faux-bg); font-weight: 800; }
+.grille-ordres { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.grille-ordres .btn { display: flex; align-items: center; gap: 8px; justify-content: flex-start; background: var(--ocean-800); }
+.grille-ordres .btn code { background: rgba(255,255,255,.14); color: #fff; }
+.grille-ordres .btn .ic { font-size: 1.15rem; }
+/* compléter le code / la règle en français */
+.code-trous { font-family: var(--mono); background: #0f2236; color: #e6f1ff; border-radius: 10px; padding: 12px 14px; line-height: 2; font-size: 1rem; overflow-x: auto; }
+.code-trous .tok-kw { color: #ff9ad5; }
+.code-trous .indent { color: #3d5a78; }
+.code-trous select.trou { font: inherit; font-size: .95rem; background: #fff8d6; color: var(--encre); border: 2px dashed var(--or); border-radius: 6px; padding: 2px 4px; max-width: 100%; }
+.regles-fr { display: grid; gap: 12px; }
+.regle-fr { background: var(--fond); border-radius: 12px; padding: 10px 12px; }
+.rf-tache { margin: 0 0 6px; font-weight: 700; }
+.rf-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.rf-ligne select { font: inherit; padding: 6px 8px; border-radius: 8px; border: 2px solid var(--gris-clair); max-width: 100%; min-width: 0; }
+.rf-trad pre { margin: 4px 0; }
+
+/* --- page élève : 6 onglets, « côte à côte », Tester en grand --- */
+.tabs { align-items: center; }
+.tabs .spacer { flex: 1; }
+.cote-option { display: none; align-items: center; gap: 6px; font-weight: 700; font-size: .9rem; color: var(--ocean-700); cursor: pointer; }
+@media (min-width: 1100px) { .cote-option { display: inline-flex; } }
+.espace.duo { display: grid; grid-template-columns: minmax(420px, 1fr) minmax(0, 1.25fr); gap: 18px; align-items: start; }
+.espace.duo > section { min-width: 0; }
+.espace.duo #t-test .card + .card { margin-top: 16px; }
+.test-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.test-tete h2 { margin: 0; }
+.test-tete .row { flex-wrap: wrap; min-width: 0; max-width: 100%; }
+.test-tete select { max-width: 100%; min-width: 0; }
+#sb-bilan .bilan { margin-top: 6px; }
+.espace.duo #sb-bilan { display: none; }   /* (côte à côte : le bilan est déjà sous le code) */
+.vue-conteneur { container-type: inline-size; }
+@container (min-width: 860px) {
+  .vue-duo.avec-pensee { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, 1fr); gap: 16px; align-items: start; }
+  .vue-duo.avec-pensee .titre-pensee { margin-top: 0; }
+}
+@container (min-width: 860px) and (max-width: 1200px) { .vue-duo.avec-pensee .pensee { grid-template-columns: minmax(0, 1fr); } }
+.pensee.cliquable .l { cursor: pointer; border-radius: 4px; }
+.pensee.cliquable .l:hover { outline: 2px solid var(--or); }
+.btn.ghost.on { background: var(--lagon-pale); box-shadow: inset 0 0 0 2px var(--lagon); }
+/* 🧩 Mes règles */
+.mes-regles { margin-top: 10px; padding: 12px; border-radius: 12px; background: #fbfdff; box-shadow: inset 0 0 0 2px var(--gris-clair); }
+.mes-regles h3 { margin: 0 0 8px; }
+.mes-regles h3 small { font-size: .8rem; font-weight: 600; }
+.mr-liste { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 6px; }
+.mr-txt { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+.mr-code { background: #0f2236; color: #e6f1ff; white-space: pre-wrap; word-break: break-word; }
+.mr-ajout { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-top: 8px; border-top: 1px dashed var(--gris-clair); }
+.mr-ajout select, .mr-ajout input { font: inherit; padding: 5px 8px; border-radius: 8px; border: 2px solid var(--gris-clair); max-width: 100%; min-width: 0; }
+.mr-ajout label { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; max-width: 100%; }
+.mr-ajout input { font-family: var(--mono); }
+.aide-h3 { margin: 18px 0 8px; color: var(--ocean-800); }
+
+/* --- téléphone : les tableaux larges ne débordent plus de la page --- */
+table.prims td { overflow-wrap: anywhere; }
+table.prims code { overflow-wrap: anywhere; white-space: normal; }
+@media (max-width: 560px) { table.pantheon-table { display: block; overflow-x: auto; max-width: 100%; } }
 
 /* ---------- accueil ---------- */
 .hero { text-align: center; color: #fff; padding: 46px 18px 90px; background: radial-gradient(ellipse at 50% 120%, #1fc3d3 0%, var(--ocean-700) 45%, var(--ocean-950) 100%); position: relative; overflow: hidden; }
@@ -570,6 +766,7 @@ pre.modele i { color: #9fe3b5; }
 .curseur { display: inline-flex; gap: 8px; align-items: center; font-weight: 800; }
 .curseur b { min-width: 1.6em; text-align: center; background: var(--ocean-800); color: #fff; border-radius: 8px; padding: 0 6px; }
 .curseur input { width: 140px; }
+@media (max-width: 560px) { .curseur { flex-wrap: wrap; max-width: 100%; } .curseur input { width: 110px; } }
 details.aide-avancee { margin-top: 14px; background: #f4efff; border-radius: 12px; padding: 8px 14px; }
 details.aide-avancee summary { color: #4b2a9e; }
 .codeview[data-copie] { padding-top: 32px; }
@@ -663,13 +860,6 @@ span.eq-nom { cursor: default; }
 
 /* ---------- élève : panneau « Ta tortue » réduit (le lagon prend toute la place) ---------- */
 .titre-tortue { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-#prog-grid.reduite { grid-template-columns: 200px minmax(0, 1fr); }
-#prog-grid.reduite .carte-tortue > :not(.titre-tortue):not(.actions-tortue):not(#statut) { display: none; }
-#prog-grid.reduite .titre-tortue { font-size: 1.15rem; }
-#prog-grid.reduite .actions-tortue { flex-direction: column; align-items: stretch; }
-#prog-grid.reduite .actions-tortue .spacer, #prog-grid.reduite #reinit { display: none; }
-#prog-grid.reduite #statut .msg { font-size: .8rem; padding: 6px 8px; }
-@media (max-width: 980px) { #prog-grid.reduite { grid-template-columns: 1fr; } }
 .invitation { max-width: 1100px; margin: 0 auto 6px; padding: 0 16px; }
 .invitation .card { border: 3px solid var(--or, #ffc93c); }
 .invitation h2 { margin-top: 0; }

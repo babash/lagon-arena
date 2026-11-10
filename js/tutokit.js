@@ -15,42 +15,76 @@ import { riche, brancherLiens } from "./bilan.js";
 // ---------------------------------------------------------------------
 //  Progression (étoiles) et navigation
 // ---------------------------------------------------------------------
-let ETAPES = [], prog = { faits: [] }, cleProg = "", courant = 0, nettoyer = null, prefixeCode = "";
+let ETAPES = [], prog = { faits: [] }, cleProg = "", courant = 0, nettoyer = null, prefixeCode = "", MISSIONS = null;
 export const fait = (cle) => { if (!prog.faits.includes(cle)) { prog.faits.push(cle); store.set(cleProg, prog); majNav(); } };
 export const suivant = () => aller(courant + 1);
+// une mission est terminée quand on la quitte par « Suivant » (ou quand on finit sa dernière étape)
+export const missionFinie = (n) => { prog.missions ||= []; if (!prog.missions.includes(n)) { prog.missions.push(n); store.set(cleProg, prog); majNav(); } };
+const mDe = (i) => ETAPES[i] && ETAPES[i].mission;
 
+function bouton(e, i) {
+  const ok = e.cle && prog.faits.includes(e.cle);
+  const b = el("button", { type: "button", title: e.titre, "aria-label": `Étape ${e.court} : ${e.titre}`, class: (i === courant ? "on " : "") + (ok ? "fait " : "") + (e.court.length > 1 ? "m" : "") }, ok ? "✓" : e.court);
+  if (i === courant) b.setAttribute("aria-current", "step");
+  b.addEventListener("click", () => aller(i));
+  return b;
+}
 function majNav() {
   const nav = $("#nav"); nav.innerHTML = "";
-  ETAPES.forEach((e, i) => {
-    const ok = e.cle && prog.faits.includes(e.cle);
-    const b = el("button", { title: e.titre, class: (i === courant ? "on " : "") + (ok ? "fait " : "") + (e.court.length > 1 ? "m" : "") }, ok ? "✓" : e.court);
-    b.addEventListener("click", () => aller(i));
-    nav.append(b);
-  });
+  if (MISSIONS) {   // les étapes rangées par mission : « 🌊 Mission 1 · Comprendre le jeu  ① ② ③ ④ »
+    nav.classList.add("par-mission");
+    for (const M of MISSIONS) {
+      const idx = ETAPES.map((e, i) => (e.mission === M.n ? i : -1)).filter((i) => i >= 0);
+      if (!idx.length) continue;
+      const fini = (prog.missions || []).includes(M.n), ici = mDe(courant) === M.n;
+      const g = el("div", { class: "nav-mission" + (ici ? " ici" : "") + (fini ? " finie" : "") });
+      const t = el("button", { type: "button", class: "nav-m-titre", title: M.titre }, el("span", { class: "nm-ic" }, fini ? "✅" : M.icone), el("span", { class: "nm-txt" }, `Mission ${M.n}`), el("span", { class: "nm-nom" }, M.court || M.titre));
+      t.addEventListener("click", () => aller(idx[0]));
+      const pts = el("div", { class: "nav-m-etapes" });
+      idx.forEach((i) => pts.append(bouton(ETAPES[i], i)));
+      g.append(t, pts); nav.append(g);
+    }
+  } else ETAPES.forEach((e, i) => nav.append(bouton(e, i)));
   const nbEx = ETAPES.filter((e) => e.cle).length, nbFaits = ETAPES.filter((e) => e.cle && prog.faits.includes(e.cle)).length;
-  $("#progression").textContent = `Étape ${courant + 1} / ${ETAPES.length} · ⭐ ${nbFaits} / ${nbEx}`;
+  const m = mDe(courant), M = MISSIONS && MISSIONS.find((x) => x.n === m);
+  if (M) {
+    const idx = ETAPES.map((e, i) => (e.mission === m ? i : -1)).filter((i) => i >= 0);
+    $("#progression").textContent = `${M.icone} Mission ${m} · étape ${idx.indexOf(courant) + 1} / ${idx.length} · ⭐ ${nbFaits} / ${nbEx}`;
+  } else $("#progression").textContent = `Étape ${courant + 1} / ${ETAPES.length} · ⭐ ${nbFaits} / ${nbEx}`;
   $("#prec").disabled = courant === 0;
-  $("#suiv").classList.toggle("cache", courant === ETAPES.length - 1);
+  const suiv = $("#suiv"), apres = MISSIONS && mDe(courant + 1) !== m && MISSIONS.find((x) => x.n === mDe(courant + 1));
+  suiv.classList.toggle("cache", courant === ETAPES.length - 1);
+  suiv.textContent = apres ? `Mission ${apres.n} : ${apres.icone} ${apres.court || apres.titre} →` : "Suivant →";
 }
 export function aller(i) {
   i = Math.max(0, Math.min(ETAPES.length - 1, i));
+  if (MISSIONS && i === courant + 1 && mDe(i) !== mDe(courant) && mDe(courant)) missionFinie(mDe(courant));
   if (nettoyer) { try { nettoyer(); } catch { /* rien */ } nettoyer = null; }
   document.querySelectorAll("ul.ac").forEach((p) => p.remove());   // popups d'autocomplétion des éditeurs précédents
   courant = i;
   const box = $("#etape"); box.innerHTML = "";
-  nettoyer = ETAPES[i].rendre(box) || null;
+  if (MISSIONS && mDe(i) && mDe(i - 1) !== mDe(i)) {   // première étape d'une mission : son titre
+    const M = MISSIONS.find((x) => x.n === mDe(i));
+    box.append(el("div", { class: "debut-mission", html: `<span class="dm-ic">${M.icone}</span><div><b>Mission ${M.n} · ${esc(M.titre)}</b><br><span>${M.texte} <i>(${M.duree})</i></span></div>` }));
+  }
+  const zone = el("div"); box.append(zone);
+  nettoyer = ETAPES[i].rendre(zone) || null;
   majNav();
-  history.replaceState(null, "", "#" + (i + 1));
+  history.replaceState(null, "", location.pathname + location.search.replace(/[?&]mission=\d+/, "").replace(/^&/, "?") + "#" + (i + 1));
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
-export function demarrer(etapes, cle) {
-  ETAPES = etapes; cleProg = cle; prefixeCode = cle + ":";
+
+// missions : [{ n, icone, titre, court, texte, duree }] ; les étapes ont un champ « mission » (facultatif)
+export function demarrer(etapes, cle, missions = null) {
+  ETAPES = etapes; cleProg = cle; prefixeCode = cle + ":"; MISSIONS = missions;
   prog = store.get(cle, { faits: [] });
   activerCopie();
   $("#prec").addEventListener("click", () => aller(courant - 1));
   $("#suiv").addEventListener("click", () => aller(courant + 1));
-  const h = parseInt(location.hash.slice(1), 10);
-  aller(Number.isFinite(h) ? h - 1 : 0);
+  const h = parseInt(location.hash.slice(1), 10), m = Number(new URLSearchParams(location.search).get("mission"));
+  if (Number.isFinite(h)) aller(h - 1);
+  else if (m && ETAPES.some((e) => e.mission === m)) aller(ETAPES.findIndex((e) => e.mission === m));
+  else aller(0);
 }
 
 // ---------------------------------------------------------------------
@@ -156,6 +190,68 @@ export function exercice(box, { cle, consigne, depart = "def tour():\n    ", cas
   return ed;
 }
 
+// ---------------------------------------------------------------------
+//  Pour commencer en douceur (Seconde, grands débutants) : pas de clavier, des listes à choisir
+// ---------------------------------------------------------------------
+// le code à compléter : les trous sont des listes déroulantes.
+//  morceaux : ["if ", { id: "q", choix: ["requin_proche()", …] }, ":\n    ", { id: "a", choix: [...] }]
+//  (le code est écrit SANS « def tour(): », qu'on ajoute en coulisse)
+export function trous(box, { cle, consigne, morceaux, cas, appris = "" }) {
+  const cleRep = prefixeCode + "trous-" + cle, rep = store.get(cleRep, {});
+  const html = morceaux.map((m) => typeof m === "string" ? esc(m).replace(/\b(if|elif|else|and|not)\b/g, '<span class="tok-kw">$1</span>').replace(/\n/g, "<br>").replace(/ {4}/g, "<span class=\"indent\">····</span>")
+    : `<select class="trou" data-id="${m.id}" aria-label="${esc(m.label || "à choisir")}"><option value="">· · ·</option>${m.choix.map((c) => `<option${rep[m.id] === c ? " selected" : ""}>${esc(c)}</option>`).join("")}</select>`).join("");
+  box.innerHTML = `<div class="exo trous-exo"><h3>🧩 Complète le code</h3><div class="consigne">${consigne}</div>
+    <div class="code-trous"><span class="tok-kw">def</span> tour():<br><span class="indent">····</span>${html.replace(/<br>/g, "<br><span class=\"indent\">····</span>")}</div>
+    <p class="petit muted">Choisis dans les listes, puis vérifie. Pas besoin de taper au clavier.</p>
+    <div class="row"><button class="btn vert verif">✔ Vérifier</button></div><div class="res"></div></div>`;
+  const val = () => { const r = {}; box.querySelectorAll("select.trou").forEach((x) => (r[x.dataset.id] = x.value)); return r; };
+  box.querySelectorAll("select.trou").forEach((x) => x.addEventListener("change", () => store.set(cleRep, val())));
+  box.querySelector(".verif").addEventListener("click", () => {
+    const r = val(), res = box.querySelector(".res");
+    if (Object.values(r).some((v) => !v)) { res.innerHTML = `<div class="msg warn">Il reste un trou : choisis dans chaque liste.</div>`; return; }
+    const code = morceaux.map((m) => (typeof m === "string" ? m : r[m.id])).join("");
+    const c = check("def tour():\n" + code.split("\n").map((l) => "    " + l).join("\n"));
+    if (!c.ok) { res.innerHTML = `<div class="msg err">🐞 ${esc(c.error.message)}</div>`; return; }
+    const lignes = cas.map((k) => { const t = unTour(c.compiled, k.sit); const ok = k.attendu ? t.action === k.attendu : t.action !== k.pas; return { ok, k, t }; });
+    const tout = lignes.every((l) => l.ok);
+    res.innerHTML = `<table class="cas"><tr><th>Situation</th><th>Attendu</th><th>Ta tortue</th><th></th></tr>${lignes.map(({ ok, k, t }) =>
+      `<tr class="${ok ? "ok" : "ko"}"><td>${k.texte}</td><td>${k.attendu ? act(k.attendu) : "pas " + act(k.pas)}</td><td>${t.action ? act(t.action) : "rien"}</td><td>${ok ? "✅" : "❌"}</td></tr>`).join("")}</table>` +
+      (tout ? `<div class="msg ok bravo">🎉 <b>Bravo !</b></div>${appris ? `<div class="appris">🎓 ${appris}</div>` : ""}` : `<div class="msg err">Presque ! Lis la question de chaque ligne ❌ : que doit faire la tortue dans cette situation ?</div>` + explication(c.compiled, lignes.find((l) => !l.ok).k));
+    if (tout) { fait(cle); const b = el("button", { class: "btn big pulse", style: "margin-top:8px" }, "Continuer →"); b.addEventListener("click", suivant); res.append(b); }
+  });
+}
+
+// une règle EN FRANÇAIS, avec deux listes : « Si [question] → [ordre] » ; la traduction en Python s'affiche dessous
+export const QUESTIONS_FR = [
+  ["requin_proche()", "🦈 un requin est proche"], ["algue_ici()", "🌿 il y a des algues ici"], ["sur_plage()", "🏖️ je suis sur la plage"],
+  ["est_la_nuit()", "🌙 il fait nuit"], ["sur_plage() and est_la_nuit()", "🏖️ je suis sur la plage ET 🌙 il fait nuit"],
+];
+export const ORDRES_FR = [["fuir", "💨 fuir"], ["manger", "😋 manger"], ["pondre", "🥚 pondre"], ["aller_vers_plage", "➡️🏖️ aller vers la plage"], ["aller_vers_algue", "➡️🌿 aller vers les algues"]];
+export function regleFr(box, { cle, taches }) {
+  box.innerHTML = `<div class="exo regles-fr">${taches.map((t, i) => `<div class="regle-fr" data-i="${i}">
+      <p class="rf-tache">${t.texte}</p>
+      <div class="rf-ligne"><b>Si</b> <select class="rf-q" aria-label="la question"><option value="">· · · choisis la question</option>${QUESTIONS_FR.map(([v, f]) => `<option value="${esc(v)}">${f}</option>`).join("")}</select>
+        <b>→</b> <select class="rf-a" aria-label="l'ordre"><option value="">· · · choisis l'ordre</option>${ORDRES_FR.map(([v, f]) => `<option value="${v}">${f}</option>`).join("")}</select></div>
+      <div class="rf-py" aria-live="polite"></div></div>`).join("")}<div class="res"></div></div>`;
+  const ok = new Set();
+  box.querySelectorAll(".regle-fr").forEach((d) => {
+    const t = taches[d.dataset.i], q = d.querySelector(".rf-q"), a = d.querySelector(".rf-a"), py = d.querySelector(".rf-py");
+    const maj = () => {
+      if (!q.value || !a.value) { py.innerHTML = ""; return; }
+      const bon = q.value === t.q && a.value === t.a;
+      const code = `<span class="tok-kw">if</span> ${q.value.replace(/(\w+)\(\)/g, '<span class="tok-sens">$1</span>()').replace(/ and /g, ' <span class="tok-kw">and</span> ')}:<br>    <span class="tok-act">${a.value}</span>()`;
+      py.innerHTML = `<div class="rf-trad pas-copie"><span class="petit muted">🐍 En Python :</span><pre class="modele">${code}</pre></div><div class="msg ${bon ? "ok" : "err"}">${bon ? "✅ " + (t.bravo || "Oui !") : "❌ " + (q.value !== t.q ? (t.conseilQ || "Ce n'est pas la bonne question.") : (t.conseilA || "Ce n'est pas le bon ordre."))}</div>`;
+      bon ? ok.add(t) : ok.delete(t);
+      if (ok.size === taches.length) {
+        fait(cle);
+        const res = box.querySelector(".res");
+        if (!res.innerHTML) { res.innerHTML = `<div class="msg ok bravo">🎉 <b>Tu sais écrire des règles !</b> Une règle = <b>une question</b> + <b>un ordre</b>. En Python, « Si » s'écrit <code>if</code>, et l'ordre se décale de 4 espaces.</div>`; const b = el("button", { class: "btn big pulse", style: "margin-top:8px" }, "Continuer →"); b.addEventListener("click", suivant); res.append(b); }
+      }
+    };
+    q.addEventListener("change", maj); a.addEventListener("change", maj);
+  });
+}
+
 // pourquoi la tortue ne fait pas ce qu'on attend dans ce cas : quelle ligne agit, et pourquoi (tests de la tortue)
 function explication(compiled, k) {
   if (!k || !(k.attendu || k.pas)) return "";
@@ -201,7 +297,7 @@ export function quiz(box, titre, questions, rendreQuestion = null, fin = null) {
 //        test : le test de la tortue qui explique l'échec (« rentrer_algues »…) }
 export function etapeMission(M) {
   return {
-    court: M.court, titre: M.titre, cle: M.cle,
+    court: M.court, titre: M.titre, cle: M.cle, mission: M.mission,
     rendre(box) {
       box.innerHTML = `<div class="etape"><div>
         <div class="mission-head"><h2 style="margin:0">${M.titre}</h2><span class="notion">${esc(M.notion)}</span></div>
