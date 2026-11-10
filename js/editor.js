@@ -417,6 +417,10 @@ export class CodeView {
 }
 
 // tableau des capteurs vus par la tortue à un tour donné
+// ce que veut dire l'effet, pour les débutants (une touffe a plusieurs bouchées ; rassasiée, elle ne mange pas)
+const EN_CLAIR = (e) => /plus faim/.test(e || "") ? "💡 Elle a déjà le maximum d'énergie : elle ne mange rien, l'algue reste là. Mais c'est sa 1<sup>re</sup> règle vraie, alors elle ne fait rien d'autre ce tour-ci."
+  : /mange une algue/.test(e || "") ? "💡 Une touffe d'algues contient plusieurs bouchées : elle rétrécit petit à petit, puis repousse ailleurs."
+  : /rien à manger/.test(e || "") ? "💡 Pas d'algue sur cette case : il faut d'abord aller vers les algues." : "";
 export function capteursHTML(rec, tick, code = "") {
   if (!rec) return "";
   if (rec.bloquee) return `<h4>Tour ${tick}</h4><p><b>💫 Bloquée</b> : la tortue vient d'être attrapée ou épuisée, elle attend.</p>`;
@@ -429,6 +433,7 @@ export function capteursHTML(rec, tick, code = "") {
   const mal = /refusé|plastique|ATTRAPÉE|ÉPUISÉE|rien|aucune|plus faim|il faudrait/.test(rec.effet || "");
   return `<h4>Tour ${tick} : ce que voit la tortue</h4><table>${rows}</table>` +
     `<div class="effet ${mal ? "mal" : ""}">${rec.action ? "→ " + esc(rec.action) + "()" : "→ aucune action"}${rec.effet ? " : " + esc(rec.effet) : ""}</div>` +
+    (EN_CLAIR(rec.effet) ? `<div class="petit muted">${EN_CLAIR(rec.effet)}</div>` : "") +
     (rec.erreur ? `<div class="effet mal">${esc(rec.erreur)}</div>` : "") +
     (rec.extra ? `<div class="petit muted">Les autres actions du même tour sont ignorées (une seule action par tour).</div>` : "");
 }

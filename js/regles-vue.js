@@ -14,7 +14,7 @@ export const CARTES_REGLES = [
     lignes: [["🏖️", "être <b>sur la plage</b>"], ["🌙", "<b>la nuit</b>"], ["⚡", `avoir <b>${P.energiePonte} d'énergie</b> ou plus`]],
     pied: `Les trois à la fois ! Pondre coûte ${P.coutPonte} ⚡.` },
   { cle: "energie", ic: "⚡", titre: "L'énergie", couleur: "bleu",
-    lignes: [["⏳", `Elle baisse toute seule : <b>−1</b> tous les ${P.perteEnergie} tours.`], ["🌿", `Manger des algues : <b>+${P.gainAlgue}</b>.`], ["🛍️", `Avaler un sac plastique : <b>−${P.pertePlastique}</b>.`], ["😵", "À <b>0</b> : épuisée, retour au départ."]] },
+    lignes: [["⏳", `Elle baisse toute seule : <b>−1</b> tous les ${P.perteEnergie} tours.`], ["🌿", `Manger des algues : <b>+${P.gainAlgue}</b> par bouchée (une touffe a plusieurs bouchées).`], ["🍽️", `À <b>${P.energieMax}</b> (le maximum), elle n'a plus faim : <code>manger()</code> ne fait rien.`], ["🛍️", `Avaler un sac plastique : <b>−${P.pertePlastique}</b>.`], ["😵", "À <b>0</b> : épuisée, retour au départ."]] },
   { cle: "requins", ic: "🦈", titre: "Les requins", couleur: "corail",
     lignes: [["💥", "Attrapée : <b>−1 nid</b> et retour au départ."], ["🛡️", "À l'abri <b>sur la plage</b> et <b>dans les algues</b>… sauf pendant que tu manges."]] },
   { cle: "temps", ic: "🕐", titre: "Le temps", couleur: "nuit",

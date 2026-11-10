@@ -407,6 +407,9 @@ table.voit tr.alerte { background: var(--faux-bg); font-weight: 800; }
 .code-trous .tok-kw { color: #ff9ad5; }
 .code-trous .indent { color: #3d5a78; }
 .code-trous select.trou { font: inherit; font-size: .95rem; background: #fff8d6; color: var(--encre); border: 2px dashed var(--or); border-radius: 6px; padding: 2px 4px; max-width: 100%; }
+.ordre-cible { margin: 6px 0 8px; padding-left: 22px; line-height: 1.7; }
+.forme-cible { display: inline-block; margin: 2px 0 6px; }
+.forme-cible pre { margin: 2px 0 0; padding: 8px 12px; }
 .regles-fr { display: grid; gap: 12px; }
 .regle-fr { background: var(--fond); border-radius: 12px; padding: 10px 12px; }
 .rf-tache { margin: 0 0 6px; font-weight: 700; }

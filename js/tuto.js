@@ -339,7 +339,20 @@ ETAPES.push({
     exemple($("#ex", box), DEUX_BLOCS, ["algue_ici", "sur_plage", "est_la_nuit"], { algue_ici: false, sur_plage: true, est_la_nuit: true }, phrase);
     exercice($("#exo", box), {
       cle: "chaine",
-      consigne: "Répare cette tortue : fais-en <b>une seule chaîne</b> <code>if</code> / <code>elif</code> / <code>else</code>, pour qu'elle ponde la nuit sur la plage.",
+      consigne: `Réécris cette tortue en <b>une seule chaîne</b>, avec ces <b>4 règles, dans cet ordre</b> :
+        <ol class="ordre-cible"><li>🥚 <b>Si</b> elle est sur la plage <b>et</b> qu'il fait nuit → <code>pondre()</code></li>
+        <li>🌙 <b>Sinon, si</b> il fait nuit → <code>aller_vers_plage()</code></li>
+        <li>🌿 <b>Sinon, si</b> il y a des algues ici → <code>manger()</code></li>
+        <li>🌊 <b>Sinon</b> → <code>aller_vers_algue()</code></li></ol>
+        <div class="forme-cible pas-copie"><span class="petit muted">La forme à obtenir :</span><pre class="modele"><span class="tok-kw">if</span> … :
+    …
+<span class="tok-kw">elif</span> … :
+    …
+<span class="tok-kw">elif</span> … :
+    …
+<span class="tok-kw">else</span>:
+    …</pre></div>
+        <p class="petit muted">👉 Un seul <code>if</code> (en haut), des <code>elif</code>, un seul <code>else</code> (tout en bas). Les lignes de code existent déjà : il faut surtout les <b>remettre dans l'ordre</b> et changer les mots-clés.</p>`,
       depart: "def tour():\n" + DEUX_BLOCS.split("\n").map((l) => "    " + l).join("\n") + "\n",
       cas: [
         { texte: "🌙 nuit, 🏖️ sur la plage", sit: { sur_plage: true, est_la_nuit: true, heure: 22 }, attendu: "pondre" },

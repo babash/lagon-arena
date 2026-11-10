@@ -81,7 +81,7 @@ export const MISSIONS = [
 export const MISSIONS_PONTE = [
   {
     id: "B", titre: "Elle mange au lieu de pondre", notion: "l'ordre des règles",
-    histoire: "Il fait nuit, la plage est à 3 cases… et cette tortue mange, mange, mange sans jamais y aller.",
+    histoire: "Il fait nuit, la plage est à 3 cases… et cette tortue reste plantée sur ses algues. À chaque tour, sa 1re règle vraie est « manger » : elle mange une bouchée au 1er tour (+3 ⚡, elle est alors à 10), puis elle n'a plus faim, donc elle ne mange même plus et l'algue ne bouge pas… mais elle ne fait rien d'autre, et ne va jamais pondre !",
     objectif: "Pondre au moins 1 nid cette nuit (20 tours).",
     code: `def tour():
     if algue_ici():

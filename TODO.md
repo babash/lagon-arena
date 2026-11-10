@@ -231,6 +231,9 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 - [x] **L'accueil refait** : « 🔑 Entrer dans la partie » d'abord (première fois : salle + pseudo ; ou « 🏠 J'ai un code de session »), « ▶ Reprendre ma partie » en un clic sur le même navigateur, le **parcours** avec sa progression (✅ / ⏳ / 👉), les missions avancées, le bac à sable, le Panthéon, puis les règles en 1 minute.
 - [x] **Le code de session suffit** : `retrouver_session(jeton)` retrouve la salle et le pseudo. Le lien personnel `index.html#code=…` ouvre directement la partie. Repli si la base n'est pas à jour : on demande aussi la salle et le pseudo.
 - [x] Moteur : une tortue peut être « pilotée » (option `pilote` de `simulate`, pour le tutoriel) ; l'empreinte des anciennes parties est inchangée.
+- [x] Retours d'élèves (10 novembre, sur l'ancienne version) :
+  - « Pourquoi l'algue n'est pas mangée et ne disparaît pas ? » : une touffe a plusieurs bouchées, et une tortue à 10 d'énergie n'a plus faim (`manger()` ne fait rien). C'est maintenant dit dans la mission « elle mange au lieu de pondre », sous chaque action dans « Dans la tête de ta tortue », dans la carte ⚡ des règles, et dans « Pilote ta tortue » (touffes de 3 bouchées qu'on voit rétrécir, « il en reste 2 »).
+  - « Une seule chaîne » : pas clair avant l'indice. La consigne donne maintenant les 4 règles dans l'ordre (en français) et la forme à obtenir (`if` / `elif` / `elif` / `else`).
 - [ ] À observer en classe : combien d'élèves de Seconde finissent la mission 4, et en combien de temps.
 
 ## 2. Séparer « Programmer », « Tester », « Aide » et « Conseils »

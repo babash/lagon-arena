@@ -13,7 +13,7 @@ import { fait, suivant, vf } from "./tutokit.js";
 
 // le petit lagon de la mission : les algues à 2 cases, la plage à 3 cases des algues, la nuit dans 5 tours
 const DUREE = 30;
-const SCENARIO = { energie: 4, requins: [[11, 1]], plastiques: [], spawn: [6, 6], heureDepart: 17, herbes: [[4, 6, 40], [4, 7, 40]], repousse: false };
+const SCENARIO = { energie: 4, requins: [[11, 1]], plastiques: [], spawn: [6, 6], heureDepart: 17, herbes: [[4, 6, 3], [4, 7, 3]], repousse: false };   // (3 bouchées par touffe : on la voit rétrécir)
 const ORDRES = ["manger", "pondre", "aller_vers_algue", "aller_vers_plage", "fuir"];
 const VOIT = [
   ["algue_ici", "🌿", "Des algues ici ?"], ["sur_plage", "🏖️", "Sur la plage ?"],
@@ -79,13 +79,20 @@ export const etapePilote = {
         const refus = /refus|ne peut|pas sur une plage|il fait jour|pas assez/i.test(der.effet || "");
         j.className = "msg " + (refus ? "warn" : /ATTRAP|épuisée|ÉPUISÉE/.test(der.effet || "") ? "err" : "info");
         j.innerHTML = `Tour ${n} : <code>${esc(choix[n - 1])}()</code> → ${esc(EFFET_SIMPLE(der.effet, choix[n - 1]))}.` +
-          (refus ? explRefus(der.effet) : "") + (c.requin_proche && !c.sur_plage ? `<br>🦈 <b>Attention, un requin est proche !</b> Sur la plage ou dans les algues, tu es à l'abri.` : "");
+          (refus ? explRefus(der.effet) : "") + bouchees(der.effet, i, n) + (c.requin_proche && !c.sur_plage ? `<br>🦈 <b>Attention, un requin est proche !</b> Sur la plage ou dans les algues, tu es à l'abri.` : "");
       }
       $("#tours", box).textContent = `Tour ${n} / ${DUREE}`;
       $("#annuler", box).disabled = n === 0 || reussi;
       box.querySelectorAll(".ordre").forEach((b) => (b.disabled = reussi || n >= DUREE));
       if (nids >= 1 && !reussi) gagne();
       else if (n >= DUREE && !reussi) $("#fin", box).innerHTML = `<div class="msg err">⏰ <b>Le temps est écoulé</b> : pas de nid cette fois. Clique sur <b>↺ Recommencer</b>, et lis l'indice 💡.</div>`;
+    };
+    // après une bouchée : ce qu'il reste dans la touffe (elle disparaît quand elle est finie)
+    const bouchees = (e, i, n) => {
+      if (/plus faim/.test(e || "")) return `<br>🍽️ Elle a déjà ${P.energieMax} d'énergie : elle <b>n'a plus faim</b>, elle ne mange rien.`;
+      if (!/mange une algue/.test(e || "")) return "";
+      const [x, y] = sim.frames[n].tortues[i], h = (sim.frames[n].herbes || []).find((a) => a[0] === x && a[1] === y);
+      return h && h[2] > 0 ? `<br>🌿 Une bouchée de moins : il en reste <b>${h[2]}</b> dans cette touffe.` : "<br>🌿 C'était la dernière bouchée : la touffe disparaît (elle repoussera ailleurs).";
     };
     const explRefus = (e) => {
       if (/jour/.test(e)) return "<br>☀️ On ne pond que <b>la nuit</b> (de 19 h à 6 h). Attends la nuit… ou va manger en attendant.";
