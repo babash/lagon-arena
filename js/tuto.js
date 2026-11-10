@@ -19,6 +19,7 @@ import { bascule, vf, capt, act, exemple, phrase, exercice, quiz, etapeMission, 
 import { etapePilote } from "./tuto-pilote.js";
 import { MISSIONS_TUTO, CLE_TUTO } from "./parcours.js";
 import { reglesCartesHTML } from "./regles-vue.js";
+import { panneauRegles } from "./regles-panneau.js";
 import { TESTS, situation, unTour, expliquerSituation, diagnostiquer, enTexteRiche } from "./moteur/diagnostic.js";
 import { bilanHTML, brancherLiens, lignesEnCause, riche } from "./bilan.js";
 import { coupDePouceHTML } from "./pouce.js";
@@ -489,6 +490,8 @@ ETAPES.push({
       <p>Voici la <b>tortue de départ</b> de la partie : elle mange… mais <b>ne pond jamais</b>. Complète-la jusqu'au <b>🟢</b>.</p>
       <div class="objectif">🎯 Une seule chaîne, dans l'ordre : 🦈 danger → 🥚 pondre → 🌙 rentrer la nuit → 🌿 manger → ➡️ sinon, chercher à manger.</div>
       <div id="ed" style="margin-top:10px"></div><div id="boite"></div>
+      <div class="row" style="margin-top:6px"><button type="button" class="btn ghost small" id="mr-btn">🧩 Ajouter une règle sans taper</button></div>
+      <div id="mr" class="cache"></div>
       <div id="statut" class="editor-status" aria-live="polite"></div>
     </div><div>
       <div class="card">
@@ -509,7 +512,11 @@ ETAPES.push({
     brancherLiens($("#statut", box), ed);
     let minu = null, viewer = null, vert = false;
     const fin = $("#fin", box);
+    // 🧩 sans clavier : on choisit la question, l'ordre et le rang ; le code s'écrit tout seul
+    const mr = panneauRegles($("#mr", box), { lire: () => ed.value, ecrire: (c) => { ed.value = c; store.set(CLE, c); maj(); } });
+    $("#mr-btn", box).addEventListener("click", () => { $("#mr", box).classList.toggle("cache"); $("#mr-btn", box).classList.toggle("on"); mr.dessiner(); });
     function maj() {
+      mr.dessiner();
       const d = diagnostiquer(ed.value), st = $("#statut", box);
       if (!d.ok) { ed.setErreur(d.erreur.line); st.innerHTML = `<div class="msg err">🐞 <b>Ligne ${d.erreur.line}</b> : ${esc(d.erreur.message)}</div>`; return; }
       st.innerHTML = bilanHTML(d, { ouvert: true });
