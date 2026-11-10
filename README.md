@@ -2,11 +2,13 @@
 
 **Le chapitre des conditions en Python, transformé en tournoi de tortues marines.** Pour la 1re NSI, et dès la Seconde (SNT).
 
-> Vos élèves écrivent le cerveau d'une tortue de mer avec des `if`, des `elif` et des `else`. Elle doit manger, échapper aux requins et pondre la nuit sur la plage. Puis **toutes les tortues de la classe plongent en même temps dans le même lagon**, projeté au tableau. Après le match, chacun revoit ce que sa tortue a « pensé » tour par tour, comprend pourquoi elle s'est fait manger, la corrige… et c'est le rematch.
+> Tes élèves écrivent le cerveau d'une tortue de mer avec des `if`, des `elif` et des `else`. Elle doit manger, échapper aux requins et pondre la nuit sur la plage. Puis **toutes les tortues de la classe plongent en même temps dans le même lagon**, projeté au tableau. Après le match, chacun·e revoit ce que sa tortue a « pensé » tour par tour, comprend pourquoi elle s'est fait manger, la corrige… et c'est le rematch.
 
 ## 👉 [Essayer maintenant : babash.github.io/lagon-arena](https://babash.github.io/lagon-arena/index.html)
 
-**Gratuit · sans compte · rien à installer · des pseudos, aucune donnée personnelle**
+**Gratuit · sans compte · rien à installer · des pseudos, enregistrés en ligne ; le Panthéon affiche le pseudo, la classe, l'établissement et la date**
+
+Lagon Arena fait partie des [Ressources NSI et SNT](https://babash.github.io/Babash-NSI-SNT/), rubrique [NSI Première](https://babash.github.io/Babash-NSI-SNT/nsi-premiere/).
 
 ![Le brawl projeté : toutes les tortues de la classe dans le même lagon, classement en direct](docs/img/brawl.webp)
 
@@ -14,16 +16,16 @@
 
 ## Une séance en trois étapes
 
-1. **Vous** ouvrez l'[espace enseignant](https://babash.github.io/lagon-arena/prof.html) et cliquez sur **Créer une salle** : un code de 4 lettres s'affiche au tableau. C'est lui qui identifie la classe ; vous pouvez y ajouter le nom de votre établissement, si vous le souhaitez.
+1. **Tu** ouvres l'[espace enseignant](https://babash.github.io/lagon-arena/prof.html) et cliques sur **Créer une salle** : un code de 4 lettres s'affiche au tableau. C'est lui qui identifie la classe ; tu peux y ajouter le nom de ton établissement, si tu le souhaites.
 2. **Les élèves** vont sur [le site](https://babash.github.io/lagon-arena/index.html), suivent leur **parcours en 4 missions** (environ 30 minutes, aucun prérequis : la première se joue sans code), puis tapent le code et un pseudo.
-3. **Vous lancez les manches** : 8 minutes de programmation, le **brawl** projeté (1 minute), 3 minutes de rapport… puis un rematch avec une nouveauté (invasion de plastique, nuits courtes, requins affamés).
+3. **Tu lances les manches** : 8 minutes de programmation, le **brawl** projeté (1 minute), 3 minutes de rapport… puis un rematch avec une nouveauté (invasion de plastique, nuits courtes, requins affamés).
 
 | | |
 |---|---|
 | ![Le tutoriel](docs/img/tutoriel.webp) **Le parcours en 4 missions** : piloter sa tortue à la main pour découvrir les règles, écrire ses règles en français, compléter le code avec des listes, puis l'écrire. L'élève repart avec une tortue qui pond. | ![L'écran élève](docs/img/eleve.webp) **L'écran élève** : ✍️ Programmer (un éditeur qui complète les mots, même en français, et 🧩 Mes règles pour ajouter une règle sans taper), 🧪 Tester (le lagon et la « pensée » côte à côte), 📜 Règles, 💡 Conseils. |
 | ![Les résultats de l'élève](docs/img/eleve-resultats.webp) **Après le brawl** : le match rejoué en suivant sa tortue, ce qu'elle pensait, des conseils qui disent quoi écrire. | ![Les résultats projetés](docs/img/prof-resultats.webp) **Au tableau** : podium, résultats du match, classement de la séance. |
 
-Vous voulez d'abord découvrir seul ? Ouvrez l'[espace enseignant en mode démo](https://babash.github.io/lagon-arena/prof.html?demo) et ajoutez des élèves fictifs.
+Tu veux d'abord découvrir le jeu seul·e ? Ouvre l'[espace enseignant en mode démo](https://babash.github.io/lagon-arena/prof.html?demo) et ajoute des élèves fictif·ve·s.
 
 ## Ce que les élèves écrivent
 
@@ -47,33 +49,42 @@ La tortue fournie au départ sait manger… mais **ne pond jamais** : sans rien 
 
 | Usage | Comment |
 |---|---|
-| **Une séance en classe** (≈ 55 min, jusqu'à 30 élèves) | Tutoriel, puis trois manches : programmation, brawl projeté, rapport, rematch. Le déroulé est [prêt à l'emploi](docs/GUIDE-ENSEIGNANT.md#2-le-déroulé-conseillé-dune-séance--55-min). |
-| **Un devoir à la maison** | **📚 Créer un devoir** : choisissez la nouveauté, lancez, envoyez le lien aux élèves. Ils programment de chez eux ; vous lancez le brawl quand vous voulez. |
-| **Une manche sur plusieurs cours** | ♾️ Temps illimité : chaque élève reprend sa tortue sur n'importe quel ordinateur avec son seul **code de session** (8 caractères) : pas besoin de retaper la salle ni le pseudo. |
+| **Une séance en classe** (≈ 55 min, jusqu'à 30 élèves) | Les missions du parcours, puis trois manches : programmation, brawl projeté, rapport, rematch. Le déroulé est [prêt à l'emploi](docs/GUIDE-ENSEIGNANT.md#2-le-déroulé-conseillé-dune-séance--55-min). |
+| **Un devoir à la maison** | **📚 Créer un devoir** : choisis la nouveauté, lance, envoie le lien aux élèves. Ils et elles programment à la maison ; tu lances le brawl quand tu veux. |
+| **Une manche sur plusieurs cours** | ♾️ Temps illimité : chaque élève reprend sa tortue sur n'importe quel ordinateur avec son seul **code de session** (8 caractères), sans retaper la salle ni le pseudo. |
 | **En équipes** | 2 à 6 équipes, équilibrées d'après le classement : seul le rang de l'équipe compte, et l'entraide devient une stratégie. |
-| **Un lagon sur mesure** | La nouveauté de manche (calme, plastique, tempête…), puis, si vous voulez, le détail : nombre de requins, leur vitesse, le plastique, les heures de nuit, le corail, les algues. |
+| **Un lagon sur mesure** | La nouveauté de manche (calme, plastique, tempête…), puis, si tu veux, le détail : nombre de requins, leur vitesse, le plastique, les heures de nuit, le corail, les algues. |
 | **Pour les élèves les plus à l'aise** | Des [missions avancées](https://babash.github.io/lagon-arena/tuto-avance.html) en trois niveaux : 🥈 intermédiaire, 🥇 expert (choisir ses algues), 👥 équipe. |
-| **Pour s'entraîner seul** | Le [bac à sable](https://babash.github.io/lagon-arena/eleve.html?libre=1), contre 5 tortues d'entraînement, avec une estimation sur 50 parties. |
+| **Pour s'entraîner seul·e** | Le [bac à sable](https://babash.github.io/lagon-arena/eleve.html?libre=1), contre 5 tortues d'entraînement, avec une estimation sur 50 parties. |
 | **Le Panthéon** | Les [100 meilleures tortues de tous les temps](https://babash.github.io/lagon-arena/pantheon.html), toutes jugées sur les mêmes 20 lagons, affichées avec le pseudo, la classe et la date ; classement par établissement. Le programme des tortues reste secret. |
 
 ## Pourquoi ça marche
 
 - **Un seul concept, et il est nécessaire** : chaque construction (`if`, ordre des `elif`, `and`, `not`, comparaisons) a une raison d'être dans le lagon.
-- **Pour tous les niveaux** : du grand débutant de Seconde (parcours en missions qui commence sans code, règles en 6 cartes, coup de pouce, erreurs expliquées en français) à l'élève expert.
+- **Pour tous les niveaux** : des grand·e·s débutant·e·s de Seconde (un parcours en missions qui commence sans code, les règles en 6 cartes, 🧩 Mes règles, le coup de pouce, les erreurs expliquées en français) aux élèves expert·e·s.
 - **L'exécution rendue visible** : « Dans la tête de ta tortue », les conditions vraies s'affichent en vert, les fausses en rouge, à chaque tour.
 - **Des retours rapides et utiles** : au bout de quelques secondes dans le bac à sable, de quelques minutes avec le rapport, puis à chaque manche avec le rematch. Et **« Et si… ? »** rejoue exactement le même match avec le code corrigé.
 - **Un vrai moment de classe**, qui récompense aussi la **progression** et la **coopération**.
 
-Les principes, les limites (franchement) et un argumentaire pour présenter le jeu à vos collègues : **[docs/PEDAGOGIE.md](docs/PEDAGOGIE.md)**.
+Les principes, les limites (franchement) et un argumentaire pour présenter le jeu à tes collègues : **[docs/PEDAGOGIE.md](docs/PEDAGOGIE.md)**.
+
+## Données des élèves
+
+- **Enregistré en ligne** (Supabase) : pour chaque salle, son code et, si tu le renseignes, ton établissement ; pour chaque élève, un pseudo, une couleur, les programmes envoyés et les scores ; au Panthéon, le pseudo, la classe (le code de la salle), la date, l'établissement, la moyenne et le programme. Aucun champ pour le nom ni pour l'adresse électronique.
+- **Visible par les autres** : les pseudos et les scores ; les programmes des tortues, seulement après le brawl de la manche ; au Panthéon, le pseudo, la classe, l'établissement, la date et la moyenne, jamais le programme.
+- **Sur l'appareil** : le stockage du navigateur, un jour pour ce qui est à l'élève (codes de session, programme en cours, tutoriels), 60 jours pour ce qui est à toi (tes salles, tes réglages).
+- **Pour effacer** : tu peux retirer un·e élève de ta salle ; les séances terminées depuis 7 jours et les salles sans activité depuis 60 jours sont effacées automatiquement ; l'administration du Panthéon peut retirer une tortue.
+
+Le détail : [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (§ 7, la base de données) et [docs/GUIDE-ENSEIGNANT.md](docs/GUIDE-ENSEIGNANT.md) (§ 6, le Panthéon).
 
 ## Pour aller plus loin
 
 | Document | Contenu |
 |---|---|
-| [Guide de l'enseignant](docs/GUIDE-ENSEIGNANT.md) | Le déroulé d'une séance, quoi dire aux élèves, préparer les manches, le devoir, les tutoriels, des conseils pratiques |
+| [Guide de l'enseignant·e](docs/GUIDE-ENSEIGNANT.md) | Le déroulé d'une séance, quoi dire aux élèves, préparer les manches, le devoir, les tutoriels, des conseils pratiques |
 | [Règles du jeu](docs/REGLES.md) | Toutes les règles détaillées, les nouveautés de manche, les points, les équipes, **toutes les primitives** |
 | [Pédagogie](docs/PEDAGOGIE.md) | Principes de conception, points forts, limites et pistes, pitch en 1 phrase / 30 s / 2 min, questions fréquentes |
-| [Architecture](docs/ARCHITECTURE.md) | Pour les curieux et les contributeurs : le moteur, le code, la vérification automatique |
+| [Architecture](docs/ARCHITECTURE.md) | Pour les curieux·ses et les contributeur·rice·s : le moteur, le code, la vérification automatique |
 
 ## Feuille de route
 
@@ -81,16 +92,19 @@ Les chantiers en cours (téléphones, rendu graphique, erreurs de logique, galer
 
 Autres pistes :
 
-- **défier les champions** du Panthéon (top 1 à top 100) sans révéler leur programme : il faudra faire jouer ces matchs par le serveur ;
+- **défier les meilleures tortues** du Panthéon (top 1 à top 100) sans révéler leur programme : il faudra faire jouer ces matchs par le serveur ;
 - **classer une manche sur plusieurs lagons** pour réduire la part de chance d'un seul brawl ;
 - une fiche **« de la tortue à Python »** pour réinvestir les conditions hors du jeu ;
 - des **tests de bout en bout** dans le dépôt, et un audit d'**accessibilité**.
 
 ## Contact
 
-Conçu pour les classes de NSI de l'académie de Mayotte, développé avec [Claude Code](https://claude.com/claude-code).
-Une question, une idée, un bug ? [victor.connes@ac-mayotte.fr](mailto:victor.connes@ac-mayotte.fr) ou les [issues GitHub](https://github.com/babash/lagon-arena/issues).
+Conçu par Babash - NSI Tani Malandi pour les classes de NSI de l'académie de Mayotte, développé avec [Claude Code](https://claude.com/claude-code).
+Une question, une idée, un bug ? [victor.connes@ac-mayotte.fr](mailto:victor.connes@ac-mayotte.fr) ou les [issues GitHub](https://github.com/babash/lagon-arena/issues). Toutes les ressources sont sur le site [Ressources NSI et SNT](https://babash.github.io/Babash-NSI-SNT/).
 
 ## Licence
 
-Lagon Arena (code, textes, images) est sous licence [**CC BY-SA 4.0**](https://creativecommons.org/licenses/by-sa/4.0/deed.fr) : vous pouvez l'utiliser, le copier, l'adapter et le partager, y compris pour vos classes, à condition de **citer l'auteur** et de **partager vos modifications sous la même licence**. Texte complet : [LICENSE](LICENSE).
+- **Le code** (les fichiers `.html`, `.css`, `.js` et `.mjs`, et le script `supabase.sql`) est sous licence [MIT](LICENSE).
+- **Les documents** (les textes, les images et les guides de `docs/`) sont sous licence [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.fr).
+
+Tu peux les réutiliser et les modifier, y compris pour tes classes, en mentionnant Babash - NSI Tani Malandi et la licence ; un document modifié se partage sous la même licence. Si tu utilises l'IA pour les modifier, merci de le préciser.
