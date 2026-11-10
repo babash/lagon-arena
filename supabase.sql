@@ -530,7 +530,8 @@ create or replace function public.nouveau_jeton_pantheon() returns text
 language plpgsql set search_path = public as $$
 declare a text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; c text := '';
 begin
-  for i in 1..8 loop c := c || substr(a, 1 + floor(random() * length(a))::int, 1); end loop;
+  -- (tirage sûr : les octets d'un UUID aléatoire, pas random())
+  for i in 1..8 loop c := c || substr(a, 1 + get_byte(decode(md5(gen_random_uuid()::text), 'hex'), 0) % length(a), 1); end loop;
   return 'pantheon-' || c || '-lagon';
 end $$;
 

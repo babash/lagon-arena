@@ -70,7 +70,8 @@ export async function pantheonAuto({ manche, sm, tortues }) {
   try { res = await db.pantheonClasse(S.code, S.secret, manche, entrees); }
   catch (e) {
     etat.cle = null;   // on pourra réessayer en revenant sur les résultats
-    return afficher(`<p class="petit msg warn">🏛️ ${/pas prête/.test(e.message) ? "Panthéon automatique indisponible : relancez <b>supabase.sql</b> dans Supabase." : esc(e.message)}</p>`);
+    // (base pas encore à jour : une ligne discrète, ce n'est pas une erreur à montrer à la classe)
+    return afficher(/pas prête/.test(e.message) ? `<p class="petit muted">🏛️ Panthéon automatique : bientôt disponible (la base de données doit être mise à jour).</p>` : `<p class="petit msg warn">🏛️ ${esc(e.message)}</p>`);
   }
   const lignes = res.filter((x) => x.statut !== "inconnue");
   memoriserSalle(S.code, S.secret, { pantheonAuto: { ...((mesSalles()[S.code] || {}).pantheonAuto || {}), [manche]: lignes } });
