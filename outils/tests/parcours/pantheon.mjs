@@ -12,6 +12,17 @@ export default {
     const el = await t.page(ctx1, "eleve");
     await el.goto(t.url("eleve.html?libre=1"));
     await t.attendre(() => el.$(".bilan-verdict"), "le bac à sable est prêt");
+    // avec une vraie base, on retire d'abord les tortues laissées par un passage précédent de ce test
+    // (sinon « même programme déjà au Panthéon ») : c'est l'administrateur qui retire, avec LAGON_ADMIN
+    if (t.mode === "base") {
+      const n = await t.db(el, async (db, secret) => {
+        const l = await db.pantheonAdmin(secret);
+        const restes = l.filter((x) => ["Maki_Rapide", "Tricheur", "Copieur", "Moya"].includes(x.pseudo));
+        for (const x of restes) await db.pantheonRetirer(secret, x.id);
+        return restes.length;
+      }, process.env.LAGON_ADMIN || "secret-admin-123");
+      t.ok(n >= 0, `restes d'un passage précédent retirés (${n})`);
+    }
 
     // 1. une copie de la tortue d'entraînement « Bulle » : refusée
     await t.ecrireCode(el, "def tour():\n    # ma super tortue\n    if algue_ici():\n        manger()\n    else:\n        aller_vers_algue()\n");
