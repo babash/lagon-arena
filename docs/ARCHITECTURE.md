@@ -87,6 +87,7 @@ js/prof/              ← main.js, etat.js (état partagé S, piloter), accueil.
                         (ce qui est projeté), preparer.js (préparer la manche), liens.js, demo.js
 supabase.sql          ← tables, règles de sécurité (RLS) et fonctions ; relançable sans risque
 outils/verifier.mjs   ← vérification du moteur (node, sans navigateur)
+outils/tests/         ← les tests dans le navigateur (Playwright) : tout.mjs, parcours/, captures.mjs
 ```
 
 Les écrans `eleve/` et `prof/` suivent le même schéma : un état partagé `S` dans `etat.js`, des modules qui ne s'importent pas en boucle, et des **crochets** (`quandModifie`, `quandPilotee`) pour prévenir les autres modules d'un changement.
@@ -183,7 +184,43 @@ node outils/verifier.mjs
 
 Sans navigateur, il vérifie les missions des tutoriels, les tests de la tortue (les 6 tortues types vues en classe ont le bon verdict et la bonne explication, aucune fausse alerte sur les bonnes tortues, le rapport ne conseille jamais d'ajouter un `pondre()` déjà écrit), le déterminisme (y compris les anciennes manches et le mode léger), les capteurs experts sur des lagons construits à la main, 3 000 cartes aléatoires et 400 parties, les lagons personnalisés (réglages appliqués, valeurs extrêmes sans blocage, partie normale inchangée), le banc d'essai du Panthéon et le refus des copies, la catégorie de chaque primitive, et affiche l'équilibrage des tortues d'entraînement.
 
-Les parcours dans le navigateur (créer une salle, faire jouer des élèves, manches longues, équipes, devoir…) ont été testés avec Playwright pendant le développement, contre une copie locale de la base (PostgreSQL + PostgREST). Ces scripts ne sont pas encore dans le dépôt (voir la feuille de route du README).
+### Les tests (`outils/tests/`)
+
+Les parcours dans le navigateur (Playwright + Chromium) : chacun joue un vrai usage du site et **s'arrête au premier problème**, y compris une erreur JavaScript dans une page.
+
+```bash
+node outils/tests/tout.mjs                 # tous les parcours, en mode démo (≈ 3 min 30)
+node outils/tests/tout.mjs session tuto    # seulement ceux-là
+LAGON_DB=http://localhost:3300 node outils/tests/tout.mjs    # + les parcours « base »
+node outils/tests/captures.mjs             # captures aux 5 tailles d'écran, comparées à la référence
+node outils/tests/captures.mjs --reference # … et cette série devient la référence
+```
+
+- `tout.mjs` démarre un petit serveur statique (Node, sans dépendance) sur un port libre (8770 et +), lance chaque parcours, puis affiche un résumé ✔ / ✘ ; le code de sortie vaut 1 si un parcours échoue.
+- **Mode démo** (par défaut) : `js/config.js` est remplacé, pour les pages de test, par une configuration **sans base** : les tests ne touchent jamais la vraie base. Dans ce mode, la « base » vit dans le navigateur (`lagon-demo-v1`) : un « autre ordinateur » reçoit une copie de celle de la page de départ (`t.autreOrdinateur`).
+- **Mode base** (`LAGON_DB`) : les parcours marqués `modes: ["demo", "base"]` sont rejoués contre une base **locale** (PostgreSQL + PostgREST avec `supabase.sql`), jamais celle des élèves. Pour l'administration du Panthéon : `LAGON_ADMIN` (mot de passe administrateur de la base locale).
+- `lib.mjs` : les outils communs (pages prêtes, `ok`, `egal`, `contient`, `attendre`, `sansDebordement`…) et les gestes d'une séance (`creerSalle`, `rejoindre`, `lancerManche`, `envoyer`, `brawl`).
+- `parcours/*.mjs` : un fichier par parcours (`export default { nom, titre, ordre, modes, delai, lancer(t) }`).
+
+| Parcours | Ce qu'il vérifie |
+|---|---|
+| `accueil` | entrer (salle + pseudo, ou code de session), salle inconnue, 4 missions et leur progression, les 6 cartes des règles, la vue enseignant mémorisée, le lien d'invitation, les compteurs (base) |
+| `tutoriel` | les 4 missions (navigation, `?mission=`), 🎮 Pilote ta tortue (refus expliqué, un nid), vrai / faux des règles, Si… alors…, Complète le code, Mon premier if, une mission dans le lagon, Construis ta tortue avec 🧩 jusqu'au 🟢, « Emporter » jusque dans l'éditeur |
+| `tuto-avance` | les 3 niveaux, toutes les étapes, les exercices réussis avec une bonne solution, le quiz expert, la progression |
+| `bac` | les onglets du bac à sable, l'aide-mémoire, le bilan 🔴 → 🟢, ▶ Tester → 🧪 Tester, « Rejouer ce lagon », un clic sur la pensée ramène à la ligne, la nouveauté, l'estimation, le coup de pouce, « côte à côte », le mode avancé, ↺ |
+| `mesregles` | 🧩 : ajouter au bon rang (et une question écrite à la main), monter, descendre, supprimer, toujours une seule chaîne, l'alerte « deux blocs » |
+| `regles` | 📜 Règles (6 cartes, modèle, détail) et 💡 Conseils ; les mêmes cartes à l'accueil et dans le tutoriel |
+| `seance` | une séance : 3 élèves, pseudo déjà pris, 2 manches, état d'envoi sur le bouton, compteur d'envois, brawl, résultats et classement chez l'élève, « Et si… ? », fin de séance |
+| `equipes` | 3 équipes, bascule et glisser-déposer, carte d'équipe et primitives d'équipe chez l'élève, retardataire, score des équipes, manche ×2 réglée à la main |
+| `session` | manche longue, code de session montré tout de suite, entrée par le SEUL code, mauvais code, la dernière tortue revient, lien `#code=`, « Reprendre ma partie », codes de session chez l'enseignant |
+| `devoir` | lien et message pour les élèves, invitation, code de session, envoi, brawl plus tard |
+| `lagon` | lagon personnalisé : réglages, résumé, bac à sable de l'élève, brawl, match rejoué identique (et différent sans) |
+| `etablissement` | établissement à la création, prérempli, modifiable, repris au Panthéon par l'élève de la salle |
+| `pantheon` | copie refusée, banc d'essai, entrée hors classe et de classe, même programme refusé, page publique, filtre, retrouver avec son code, administration |
+| `stockage` | 1 jour pour l'élève, 60 jours pour l'enseignant, ménage au chargement, autres sites intacts |
+| `telephone` | à 390 px, aucune page ne déborde : accueil, toutes les étapes des tutoriels, tous les onglets élève, Panthéon, enseignant |
+
+Pour ajouter un parcours : copier un fichier de `parcours/`, changer `nom` et `titre`, et vérifier ce qu'un utilisateur verrait (textes, boutons) plutôt que des détails internes.
 
 ## 9. Recettes
 

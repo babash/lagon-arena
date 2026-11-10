@@ -1,1 +1,10 @@
-{ "name": "lagon-arena", "private": true, "type": "module" }
+{
+  "name": "lagon-arena",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "verifier": "node outils/verifier.mjs",
+    "test": "node outils/tests/tout.mjs",
+    "captures": "node outils/tests/captures.mjs"
+  }
+}
