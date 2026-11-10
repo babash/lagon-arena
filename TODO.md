@@ -270,31 +270,31 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 
 ### 3.1. Dans les résultats
 
-- [ ] Dans l'écran des résultats de la manche, **un clic sur un élève** ouvre sa fiche :
+- [x] Dans l'écran des résultats de la manche, **un clic sur un élève** ouvre sa fiche (`js/prof/fiche.js`) :
   - son **code** (en couleur), tel qu'il a joué ;
   - ses nids, ses captures, ses épuisements ;
   - le **diagnostic** du chantier 1 (« ne pond jamais : deux blocs à la suite ») ;
   - **« ▶ Revoir le match en suivant cette tortue »**, avec sa pensée.
-- [ ] Un résumé de la classe : « 🥚 18 tortues sur 25 ont pondu. Les 7 autres : 4 ont deux blocs à la suite, 2 mangent la nuit, 1 n'a pas de `pondre()` ». Un clic sur une cause liste les élèves concernés.
-- [ ] **Attention au projecteur** : tant que le chantier 6 (écran projeté et pupitre séparés) n'est pas fait, la fiche s'ouvre avec un avertissement « visible au tableau », et un bouton pour la masquer d'un coup.
-- [ ] L'export CSV peut inclure les codes (case à cocher).
+- [x] Un résumé de la classe : « 🥚 18 tortues sur 25 ont pondu. Les 7 autres : 4 ont deux blocs à la suite, 2 mangent la nuit, 1 n'a pas de `pondre()` ». Un clic sur une cause liste les élèves concernés.
+- [x] **Attention au projecteur** : tant que le chantier 6 (écran projeté et pupitre séparés) n'est pas fait, la fiche s'ouvre avec un avertissement « visible au tableau », et un bouton pour la masquer d'un coup.
+- [x] L'export CSV peut inclure les codes (case à cocher).
 
 ### 3.2. Pendant la programmation
 
-- [ ] **L'état de chaque élève**, d'après sa **dernière tortue envoyée**, dans la liste des élèves :
+- [x] **L'état de chaque élève**, d'après sa **dernière tortue envoyée**, dans la liste des élèves (avec aussi 🟠 « pond, mais pas souvent » ; une icône pâle si la tortue date d'une manche précédente) :
   - 🟢 elle pond ;
   - 🔴 elle ne pond pas (avec la cause) ;
   - 🐞 erreur de syntaxe ;
   - ⏳ rien envoyé.
 
-  Plus un compteur en tête : « 🥚 12 / 25 tortues pondent ».
-- [ ] **Voir le code envoyé** par un élève pendant la manche, pour l'aider. Il reste invisible pour les autres élèves.
-- [ ] **(Option)** L'état du **brouillon** en cours, avant envoi. Seul l'état est envoyé (🟢 / 🔴 / 🐞), jamais le code. Pratique pour repérer un élève bloqué qui n'ose pas envoyer.
+  Plus un compteur en tête : « 🥚 12 tortues sur 25 pondent » ; un clic ouvre le résumé des causes (🩺 Les tortues de la classe).
+- [x] **Voir le code envoyé** par un élève pendant la manche, pour l'aider (un clic sur son pseudo). Il reste invisible pour les autres élèves.
+- [ ] **(Option, pas encore faite)** L'état du **brouillon** en cours, avant envoi. Seul l'état est envoyé (🟢 / 🔴 / 🐞), jamais le code. Pratique pour repérer un élève bloqué qui n'ose pas envoyer.
 - [ ] La progression du tutoriel de chaque élève (⭐ 6 / 10), s'il l'a fait après avoir rejoint la salle (voir le chantier 10).
 
 ### Côté base
 
-- [ ] `codes_manche(code, secret, manche)` (enseignant) : les codes envoyés **même pendant la programmation**. Le public ne voit toujours rien avant le brawl.
+- [x] `codes_manche(code, secret, manche)` (enseignant) : la dernière tortue de chaque élève (manche ≤ `manche`), **même pendant la programmation**. Le public ne voit toujours rien avant le brawl. Sans cette fonction (base pas à jour), la liste montre ✅ / ⏳ comme avant, et les fiches s'ouvrent après le brawl avec les codes publics.
 - [ ] Pour l'option du brouillon : une petite table `etats` (salle, pseudo, état, date), écrite par l'élève avec son jeton, et lue par l'enseignant.
 
 **C'est fini quand** l'enseignant voit, pendant la manche, qui ne pond pas et pourquoi. Après le brawl, il ouvre en un clic le code et le rejeu de n'importe quel élève.
@@ -305,36 +305,36 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 
 *Les meilleures tortues de chaque manche entrent d'elles-mêmes au Panthéon.*
 
-- [ ] **À la fin de chaque manche**, quand l'enseignant passe aux résultats, son navigateur :
+- [x] **À la fin de chaque manche**, quand l'enseignant passe aux résultats, son navigateur (`js/prof/pantheon-auto.js`) :
   1. prend la ou les meilleures tortues d'élèves de la manche (réglage : la 1re, ou les 3 premières) ;
-  2. écarte celles qui n'ont pondu aucun nid, et les copies des tutoriels ou des tortues d'entraînement ;
-  3. leur fait passer le banc d'essai (20 parties, en arrière-plan : chantier 9) ;
-  4. les inscrit au Panthéon.
+  2. écarte celles qui n'ont pondu aucun nid, et les copies des tutoriels, des tortues d'entraînement et du coup de pouce ;
+  3. leur fait passer le banc d'essai (20 parties, par petits paquets : la page reste utilisable ; un vrai calcul en arrière-plan reste au chantier 9) ;
+  4. les inscrit au Panthéon. Chaque manche n'est traitée qu'une fois (notée avec la salle).
 - [x] **Ce qu'affiche le Panthéon : le pseudo, la classe et la date.** La classe, c'est le **code de la salle** (ou du devoir). Le trio pseudo + classe + date est unique : deux élèves de classes différentes peuvent avoir le même pseudo. Fait pour les tortues proposées depuis une salle (la classe est prouvée par le jeton de session) ; les entrées automatiques suivront la même règle.
 - [x] **L'établissement est facultatif** : l'enseignant peut le renseigner **en créant la salle ou le devoir** (un champ de plus, vide par défaut, prérempli avec le dernier utilisé), puis le changer dans les réglages de la salle. Il s'affiche sous le code de la salle et il est proposé à l'élève qui inscrit sa tortue au Panthéon. Il est gardé avec la salle.
   - [x] Affiché à côté de la classe au Panthéon, et filtre par établissement. Pour une tortue venue d'une salle, c'est l'établissement de la salle qui compte (l'élève ne le tape pas).
-- [ ] **Réglages enseignant** (gardés 60 jours) :
+- [x] **Réglages enseignant** (gardés 60 jours, dans ⚙️ Réglages) :
   - « 🏛️ Envoyer les meilleures tortues au Panthéon » : oui par défaut ;
   - 1 ou 3 tortues par manche.
-- [ ] **L'élève le voit** dans ses résultats : « 🏛️ Ta tortue entre au Panthéon à la 12e place ! », avec **son code Panthéon** pour l'améliorer plus tard. Il le retrouve avec son code de session, sans rien noter.
-- [ ] **Au tableau**, dans les résultats : « 🏛️ Maki_Rapide entre au Panthéon (12e) ».
-- [ ] **Doublons** :
+- [x] **L'élève le voit** dans ses résultats : « 🏛️ Ta tortue entre au Panthéon à la 12e place ! », avec **son code Panthéon** pour l'améliorer plus tard. Il le retrouve avec son code de session, sans rien noter (le formulaire « 🏛️ Proposer au Panthéon » le reprend tout seul).
+- [x] **Au tableau**, dans les résultats : « 🏛️ Maki_Rapide entre au Panthéon (12e) ».
+- [x] **Doublons** (réglés par la base) :
   - même programme déjà au Panthéon : on ne l'ajoute pas ;
   - même élève (même salle, même pseudo) avec une meilleure tortue : on la remplace ;
   - même élève avec une tortue moins bonne : on garde l'ancienne.
 - [x] **Pseudos en double entre classes (décidé)** : on n'exige plus qu'un pseudo soit unique dans tout le Panthéon. Chaque ligne affiche « Moya · classe K7PQ · 4 nov. 2026 » (et l'établissement s'il a été renseigné), ce qui suffit à distinguer deux Moya.
   - Les propositions faites à la main depuis le bac à sable (sans salle) affichent « hors classe » à la place du code.
   - Les entrées déjà au Panthéon gardent leur lycée, affiché comme établissement.
-- [ ] Les entrées automatiques restent ⏳ jusqu'à la vérification de l'administrateur, comme les autres.
+- [x] Les entrées automatiques restent ⏳ jusqu'à la vérification de l'administrateur, comme les autres (l'administrateur voit « entrée automatique (manche 2) »).
 
 ### Côté base
 
 - [x] `salles.etablissement` (texte facultatif), rempli par `creer_salle(établissement)` ; `definir_etablissement(code, secret, établissement)` pour le changer.
-- [ ] `pantheon_classe(code, secret, entrées)` : l'inscription par l'enseignant (avec le secret de la salle).
+- [x] `pantheon_classe(code, secret, manche, entrées)` : l'inscription par l'enseignant (avec le secret de la salle) ; le code doit être une tortue vraiment envoyée par l'élève ; un code Panthéon est tiré au hasard pour chaque nouvelle entrée.
 - [x] Les entrées gardent leur origine : salle (la classe, `pantheon.salle`), pseudo, date, établissement.
-- [ ] … et la manche (pour les entrées automatiques).
+- [x] … et la manche (`pantheon.manche`, pour les entrées automatiques).
 - [x] L'index unique `pantheon_pseudo` est supprimé (pseudo + classe + date suffisent à distinguer deux tortues) ; `pantheon_lycees` sert de liste des établissements.
-- [ ] `mon_entree_pantheon(salle, pseudo, jeton)` : l'élève retrouve son code Panthéon avec son jeton de session.
+- [x] `mon_entree_pantheon(salle, pseudo, jeton)` : l'élève retrouve son code Panthéon avec son jeton de session.
 
 **C'est fini quand**, après chaque manche, la meilleure tortue apparaît au Panthéon sans que personne n'ait rien fait, et que l'élève concerné le voit avec son code.
 

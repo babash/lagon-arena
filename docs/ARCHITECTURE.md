@@ -30,11 +30,15 @@ Pour qui veut comprendre, relire, corriger ou faire évoluer le code. Pour **uti
  calculerScores → enregistrer_scores ▶ scores (nids, rang, points,
                                         nouveauté + version de carte)
  piloter_salle(resultats)    ───────▶                         ──────▶  résultats, rapport, « Et si… ? »
+ banc d'essai (meilleure tortue)
+   → pantheon_classe          ───────▶  pantheon (classe, manche) ◀──── mon_entree_pantheon(jeton)
 ```
 
 - La **graine d'une manche** est dérivée de la graine de la salle et du numéro de manche (`graineManche` dans `js/moteur/hasard.js`).
 - Les élèves ne font pas confiance à l'écran projeté : ils **recalculent** le match chez eux pour le revoir en suivant leur tortue, et pour le « Et si… ? » (même graine, leur nouveau code).
 - Le **bac à sable** et l'**estimation** (📊 Estimer) tournent entièrement dans le navigateur de l'élève, sans la base.
+- **Pendant la programmation**, l'enseignant lit la dernière tortue de chaque élève avec `codes_manche` (protégé par le secret de la salle) : son navigateur fait passer les **tests de la tortue** (`js/moteur/diagnostic.js`) à chacune et affiche 🟢 🟠 🔴 🐞 ⏳ dans la liste des élèves. Les codes ne sont rechargés que si un élève a envoyé une tortue (signature des dépôts).
+- **Le Panthéon automatique** (`js/prof/pantheon-auto.js`) : quand les résultats d'une manche s'affichent, le navigateur de l'enseignant prend la meilleure tortue d'élève (ou les 3 meilleures, réglage), écarte celles sans nid et les copies (`codeConnu` de `js/pantheon.js`, plus la mission « elle mange au lieu de pondre » et le coup de pouce), lui fait passer le banc d'essai par paquets (la page reste fluide), puis l'inscrit avec `pantheon_classe`. La manche traitée est notée avec la salle (`lagon:prof`) : pas de second banc d'essai si la page est rechargée.
 
 ## 3. Arborescence
 
@@ -90,7 +94,9 @@ js/eleve/             ← main.js, etat.js (état partagé S), ui.js (6 onglets,
                         mesregles.js (🧩), bac.js (onglet 🧪 Tester, estimation), envoi.js, session.js (code de session), manche.js (suivre la salle),
                         resultats.js, pantheon.js (proposer sa tortue au Panthéon)
 js/prof/              ← main.js, etat.js (état partagé S, piloter), accueil.js, salle.js, scenes.js
-                        (ce qui est projeté), preparer.js (préparer la manche), liens.js, demo.js
+                        (ce qui est projeté), preparer.js (préparer la manche), liens.js, demo.js,
+                        fiche.js (état des tortues, fiche d'un élève, résumé de la classe),
+                        pantheon-auto.js (le Panthéon automatique en fin de manche)
 supabase.sql          ← tables, règles de sécurité (RLS) et fonctions ; relançable sans risque
 outils/verifier.mjs   ← vérification du moteur (node, sans navigateur)
 ```
@@ -150,7 +156,7 @@ Un mini-Python écrit pour l'occasion, en trois temps : découpage en mots (*tok
 | `tortues` | code envoyé par manche | **seulement après le brawl** de la manche (politique RLS) |
 | `scores` | nids, rang, points, bonus, nouveauté (+ version), duel, équipe, lagon personnalisé | publique |
 | `compteurs` | compteurs de l'accueil (parties, participants, salles), gardés à part pour que le ménage ne les fasse pas baisser | personne (fonction `statistiques`) |
-| `pantheon` | pseudo, classe (`salle` : le code de la salle, vide = hors classe), date d'entrée, établissement (colonne `lycee`), moyenne, version du banc, **programme**, empreinte du programme, jeton (code Panthéon), vérifié | personne (fonctions ci-dessous) |
+| `pantheon` | pseudo, classe (`salle` : le code de la salle, vide = hors classe), date d'entrée, établissement (colonne `lycee`), `manche` (entrées automatiques ; vide = proposée par l'élève), moyenne, version du banc, **programme**, empreinte du programme, jeton (code Panthéon), vérifié | personne (fonctions ci-dessous) |
 | `admin_secret` | le mot de passe de l'administrateur du Panthéon | personne |
 
 | Fonction | Qui | Rôle |
@@ -162,15 +168,18 @@ Un mini-Python écrit pour l'occasion, en trois temps : découpage en mots (*tok
 | `enregistrer_scores(code, secret, manche, scores)` | enseignant | enregistre les scores calculés par son navigateur |
 | `retirer_joueur`, `liberer_pseudo` | enseignant | retirer un élève, débloquer un pseudo |
 | `codes_session(code, secret)` | enseignant | la liste des codes de session des élèves |
+| `codes_manche(code, secret, manche)` | enseignant | la dernière tortue envoyée par chaque élève (manche ≤ `manche`), **même pendant la programmation** : pour l'état de chaque élève et sa fiche. Le public ne voit toujours rien avant le brawl |
+| `pantheon_classe(code, secret, manche, entrées)` | enseignant | le Panthéon automatique : au plus 3 tortues `{pseudo, code, moyenne, banc}` ; le code doit être une tortue vraiment envoyée par l'élève dans la salle. Même programme déjà au Panthéon → rien (`deja` ou `copie`) ; même élève (même salle, même pseudo) → remplacée si meilleure (`ameliore`, sinon `moins_bien`) ; sinon `nouveau`, avec un code Panthéon tiré au hasard. Renvoie le statut et le rang de chacune |
 | `rejoindre(salle, pseudo, jeton, couleur)` | élève | rejoindre (ou revenir avec le même jeton) |
 | `deposer_tortue(salle, pseudo, jeton, manche, code)` | élève | envoyer sa tortue pour la manche en cours |
 | `changer_jeton`, `ma_tortue` | élève | passer à un code de session ; retrouver sa dernière tortue |
+| `mon_entree_pantheon(salle, pseudo, jeton)` | élève | sa tortue de la classe au Panthéon (rang, moyenne, manche) **et son code Panthéon**, retrouvé grâce à son jeton de session (pour l'améliorer plus tard avec « 🏛️ Proposer au Panthéon ») |
 | `etat_depots(salle, manche)` | tous | qui a envoyé (sans le code) |
 | `heure_serveur()` | tous | pour synchroniser les chronos |
 | `statistiques()` | tous | les chiffres de l'accueil (et lance le ménage, au plus une fois par heure) |
 | `proposer_pantheon(pseudo, établissement, code, moyenne, banc, jeton, salle, jeton de session)` | élève | entrer au Panthéon, ou améliorer sa tortue (gardée si elle fait mieux). Avec la salle et le jeton de session, la tortue est rattachée à la classe, avec l'établissement de la salle ; plus d'unicité des pseudos (pseudo + classe + date suffisent à distinguer deux tortues) |
 | `pantheon_top(limite, établissement)`, `pantheon_lycees()`, `ma_tortue_pantheon(jeton)` | tous | le classement **sans les programmes** : pseudo, classe, date, établissement, moyenne |
-| `pantheon_admin`, `pantheon_valider`, `pantheon_retirer` | administrateur | lire les programmes, corriger un score recalculé, retirer une tortue |
+| `pantheon_admin`, `pantheon_valider`, `pantheon_retirer` | administrateur | lire les programmes (et la manche des entrées automatiques), corriger un score recalculé, retirer une tortue |
 
 **Le code de session** d'un élève (8 caractères, sans lettres ambiguës) *est* son jeton : `jeton = "perso-" + CODE + "-lagon"`. Le retaper sur un autre ordinateur suffit donc à reprendre son pseudo, sans compte.
 

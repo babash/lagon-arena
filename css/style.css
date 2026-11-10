@@ -973,3 +973,43 @@ a.compteur:hover { background: rgba(255,255,255,.22); }
 /* Panthéon : la classe et la date sous le pseudo (« classe K7PQ · 6 nov. 2026 ») ; en classe, le résumé du formulaire */
 .scores .origine { font-size: .8rem; color: var(--gris); font-weight: 600; }
 .pt-classe { background: var(--fond); border-radius: 10px; padding: 8px 12px; margin: 6px 0 10px; text-align: left; }
+
+/* ===== enseignant (chantiers 3-4) ===== */
+/* l'état de chaque tortue dans la liste des élèves, le compteur « 🥚 12 / 25 tortues pondent » */
+.etat-classe { display: block; width: 100%; margin: 0 0 6px; padding: 6px 10px; border: 1px solid var(--gris-clair); border-radius: 10px; background: var(--fond); font: inherit; font-weight: 700; text-align: left; cursor: pointer; }
+.etat-classe:hover, .etat-classe:focus-visible { border-color: var(--lagon); }
+.joueurs-liste .nom-eleve { border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.joueurs-liste .nom-eleve:hover, .joueurs-liste .nom-eleve:focus-visible { color: var(--lagon); text-decoration: underline; }
+.joueurs-liste li .etat.ancienne { opacity: .45; }
+/* la fiche d'un élève (visible au tableau : avertissement et bouton « Masquer ») */
+.overlay.fiche-eleve .boite.boite-large { max-width: 980px; width: 100%; }
+.overlay.fiche-eleve .boite, .overlay.fenetre-classe .boite { text-align: left; }
+.fiche-alerte { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; background: #fff4d6; border: 1px solid var(--sable-fonce); border-radius: 10px; padding: 6px 10px; margin-bottom: 10px; font-size: .92rem; }
+.fiche-titre { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 1.5rem !important; margin: 4px 0; }
+.fiche-titre .pill { font-size: .85rem; }
+.fiche-chiffres { display: flex; gap: 14px; flex-wrap: wrap; margin: 4px 0; }
+.fiche-chiffres b { font-size: 1.2rem; }
+.fiche-grille { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.fiche-code .codeview { max-height: 52vh; overflow: auto; }
+@media (max-width: 760px) { .fiche-grille { grid-template-columns: minmax(0, 1fr); } }
+/* le résumé de la classe : un clic sur une cause → les élèves concernés */
+.resume-d { margin-top: 14px; }
+.resume-d > summary { cursor: pointer; }
+.resume-classe .resume-tete { margin: 8px 0; }
+.resume-classe .causes { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.resume-classe .cause { width: 100%; border: 1px solid var(--gris-clair); background: #fff; border-radius: 10px; padding: 6px 10px; font: inherit; text-align: left; cursor: pointer; }
+.resume-classe .cause:hover, .resume-classe .cause:focus-visible { border-color: var(--lagon); }
+.resume-classe .cause-eleves { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 4px 2px; }
+.scores tr.cliquable { cursor: pointer; }
+.scores tr.cliquable:hover td { background: var(--lagon-pale); }
+/* le Panthéon automatique : au tableau et chez l'élève */
+.pantheon-auto { margin-top: 12px; }
+.pt-auto { background: var(--lagon-pale); border-radius: 12px; padding: 10px 14px; text-align: center; }
+.pt-auto .pt-entre { font-size: 1.25rem; }
+.pt-auto .jauge { max-width: 420px; margin: 8px auto 0; }
+.pt-eleve { background: var(--lagon-pale); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
+.pt-eleve.nouveau { background: #fff4d6; border: 2px solid var(--sable-fonce); }
+.pt-eleve .code-pt { font-family: "Fira Code", monospace; letter-spacing: 1px; }
+.reglages .r-pantheon { grid-column: 1 / -1; }
+.reglages .r-pantheon span { display: flex; gap: 6px; align-items: center; }
+.csv-codes { display: inline-flex; gap: 6px; align-items: center; }

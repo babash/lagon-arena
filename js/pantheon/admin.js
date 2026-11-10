@@ -49,7 +49,7 @@ function afficher() {
       try { await db.pantheonRetirer(secret, t.id); liste = liste.filter((x) => x.id !== t.id); afficher(); recharger(); toast(`${t.pseudo} retirée du Panthéon.`); }
       catch (ex) { toast(ex.message, "err"); }
     });
-    tb.append(el("tr", { "data-id": t.id }, el("td", { class: "num" }, String(i + 1)), el("td", {}, el("b", {}, t.pseudo), el("div", { class: "origine" }, `${t.salle ? "classe " + t.salle : "hors classe"} · ${new Date(t.cree_le).toLocaleDateString("fr-FR")}`), code),
+    tb.append(el("tr", { "data-id": t.id }, el("td", { class: "num" }, String(i + 1)), el("td", {}, el("b", {}, t.pseudo), el("div", { class: "origine" }, `${t.salle ? "classe " + t.salle : "hors classe"} · ${new Date(t.cree_le).toLocaleDateString("fr-FR")}${t.manche ? ` · 🏛️ entrée automatique (manche ${t.manche})` : ""}`), code),
       el("td", {}, t.lycee || "—"), el("td", { class: "num moy" }, nombre(t.moyenne)), el("td", { class: "etat" }, t.verifie ? "✔" : "⏳"), el("td", {}, retirer)));
   });
   $("#adm-verif").addEventListener("click", () => verifier(liste.filter((t) => !t.verifie)));

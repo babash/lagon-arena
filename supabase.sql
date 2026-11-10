@@ -119,6 +119,9 @@ create unique index if not exists pantheon_empreinte on public.pantheon (emprein
 drop index if exists public.pantheon_pseudo;   -- (ancienne règle : un pseudo unique dans tout le Panthéon)
 create unique index if not exists pantheon_jeton on public.pantheon (jeton);
 create index if not exists pantheon_classement on public.pantheon (moyenne desc, cree_le);
+-- la manche d'où vient une entrée automatique (null = proposée par l'élève lui-même)
+alter table public.pantheon add column if not exists manche int;
+create index if not exists pantheon_salle on public.pantheon (salle, lower(pseudo));
 
 -- le mot de passe de l'administrateur du Panthéon (une seule ligne, voir l'en-tête)
 create table if not exists public.admin_secret (
@@ -392,6 +395,17 @@ begin
     where s.jeton = p_jeton order by sa.maj desc nulls last, j.rejoint_le desc limit 1;
 end $$;
 
+-- l'enseignant voit la DERNIÈRE tortue envoyée par chaque élève (manche <= p_manche),
+-- même pendant la programmation. Le public, lui, ne voit toujours rien avant le brawl.
+create or replace function public.codes_manche(p_code text, p_secret text, p_manche int)
+returns table (pseudo text, manche int, code text, depose_le timestamptz)
+language plpgsql security definer set search_path = public as $$
+begin
+  perform verifier_prof(p_code, p_secret);
+  return query select distinct on (t.pseudo) t.pseudo, t.manche, t.code, t.depose_le from tortues t
+    where t.salle = p_code and t.manche <= p_manche order by t.pseudo, t.manche desc;
+end $$;
+
 -- qui a verrouillé sa tortue (sans montrer le code)
 create or replace function public.etat_depots(p_salle text, p_manche int)
 returns table (pseudo text, depose_le timestamptz)
@@ -511,6 +525,89 @@ language sql security definer set search_path = public as $$
   from pantheon m where m.jeton = p_jeton
 $$;
 
+-- un code Panthéon tiré au hasard (8 caractères faciles à recopier, comme les codes de session)
+create or replace function public.nouveau_jeton_pantheon() returns text
+language plpgsql set search_path = public as $$
+declare a text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; c text := '';
+begin
+  for i in 1..8 loop c := c || substr(a, 1 + floor(random() * length(a))::int, 1); end loop;
+  return 'pantheon-' || c || '-lagon';
+end $$;
+
+-- le PANTHÉON AUTOMATIQUE : à la fin d'une manche, le navigateur de l'enseignant inscrit la ou les
+-- meilleures tortues de la classe (au plus 3), avec la moyenne qu'il a calculée sur le banc d'essai.
+-- p_entrees : [{"pseudo": "Maki", "code": "def tour(): …", "moyenne": 4.35, "banc": 1}, …]
+-- Le code doit être une tortue vraiment envoyée par cet élève dans cette salle.
+-- Doublons : même programme déjà au Panthéon → rien ; même élève (même salle, même pseudo) → remplacée si meilleure.
+-- Chaque entrée nouvelle reçoit un code Panthéon : l'élève le retrouve avec son jeton de session (mon_entree_pantheon).
+create or replace function public.pantheon_classe(p_code text, p_secret text, p_manche int, p_entrees jsonb)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare
+  x jsonb; v_pseudo text; v_src text; v_moy numeric; v_emp text; v_lycee text;
+  v pantheon%rowtype; d pantheon%rowtype; v_id bigint; v_statut text;
+  v_faits jsonb := '[]'::jsonb; v_res jsonb := '[]'::jsonb;
+begin
+  perform verifier_prof(p_code, p_secret);
+  if jsonb_typeof(p_entrees) is distinct from 'array' or jsonb_array_length(p_entrees) > 3 then
+    raise exception 'Trois tortues au plus par manche.';
+  end if;
+  select s.etablissement into v_lycee from salles s where s.code = p_code;
+  for x in select * from jsonb_array_elements(p_entrees) loop
+    v_pseudo := x->>'pseudo'; v_src := x->>'code'; v_moy := round((x->>'moyenne')::numeric, 2);
+    v_id := null; v_statut := null;
+    if (x->>'banc')::int is distinct from 1 then raise exception 'Votre page est trop ancienne : rechargez-la (Ctrl+F5).'; end if;
+    if v_moy is null or v_moy < 0 or v_moy > 30 then raise exception 'Moyenne impossible.'; end if;
+    if not exists (select 1 from tortues t where t.salle = p_code and t.pseudo = v_pseudo and t.manche <= p_manche and t.code = v_src) then
+      v_statut := 'inconnue';
+    else
+      v_emp := md5(regexp_replace(regexp_replace(v_src, '#[^\n]*', '', 'g'), '\s+', '', 'g'));
+      select * into v from pantheon p where p.salle = p_code and lower(p.pseudo) = lower(v_pseudo) order by p.moyenne desc limit 1;
+      select * into d from pantheon p where p.empreinte = v_emp;
+      if d.id is not null then
+        -- même programme déjà au Panthéon : celui de cet élève, ou une copie
+        v_statut := case when d.salle = p_code and lower(d.pseudo) = lower(v_pseudo) then 'deja' else 'copie' end;
+        if v_statut = 'deja' then v_id := d.id; end if;
+      elsif v.id is null then
+        insert into pantheon (pseudo, lycee, salle, manche, moyenne, banc, code, empreinte, jeton)
+          values (v_pseudo, v_lycee, p_code, p_manche, v_moy, 1, v_src, v_emp, nouveau_jeton_pantheon()) returning id into v_id;
+        v_statut := 'nouveau';
+      elsif v_moy > v.moyenne then
+        update pantheon set moyenne = v_moy, banc = 1, code = v_src, empreinte = v_emp, manche = p_manche, lycee = coalesce(v_lycee, lycee),
+          verifie = false, maj = now() where id = v.id;
+        v_id := v.id; v_statut := 'ameliore';
+      else
+        v_id := v.id; v_statut := 'moins_bien';
+      end if;
+    end if;
+    v_faits := v_faits || jsonb_build_object('pseudo', v_pseudo, 'statut', v_statut, 'id', v_id);
+  end loop;
+  -- on ne garde que les 1000 meilleures
+  delete from pantheon where id in (select p.id from pantheon p order by p.moyenne desc, p.cree_le offset 1000);
+  for x in select * from jsonb_array_elements(v_faits) loop
+    select * into v from pantheon p where p.id = (x->>'id')::bigint;
+    v_res := v_res || jsonb_build_object('pseudo', x->>'pseudo', 'statut', x->>'statut',
+      'moyenne', v.moyenne,
+      'rang', case when v.id is null then null else
+        (select 1 + count(*) from pantheon p where p.moyenne > v.moyenne or (p.moyenne = v.moyenne and p.cree_le < v.cree_le)) end);
+  end loop;
+  return v_res;
+end $$;
+
+-- l'élève retrouve SA tortue de la classe au Panthéon (et son code Panthéon) avec son jeton de session
+create or replace function public.mon_entree_pantheon(p_salle text, p_pseudo text, p_jeton text)
+returns table (pseudo text, salle text, manche int, moyenne numeric, verifie boolean, rang bigint, code text, cree_le timestamptz, maj timestamptz)
+language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from joueurs_secret j where j.salle = upper(p_salle) and j.pseudo = p_pseudo and j.jeton = p_jeton) then
+    raise exception 'Joueur inconnu : reconnecte-toi à la salle.';
+  end if;
+  return query select m.pseudo, m.salle, m.manche, m.moyenne, m.verifie,
+      (select 1 + count(*) from pantheon p where p.moyenne > m.moyenne or (p.moyenne = m.moyenne and p.cree_le < m.cree_le)),
+      case when m.jeton ~ '^pantheon-[A-Z0-9]{8}-lagon$' then substr(m.jeton, 10, 8) else null end, m.cree_le, m.maj
+    from pantheon m where m.salle = upper(p_salle) and lower(m.pseudo) = lower(p_pseudo)
+    order by m.moyenne desc limit 1;
+end $$;
+
 -- ---------- l'administrateur du Panthéon ----------
 create or replace function public.verifier_admin(p_secret text) returns void
 language plpgsql security definer set search_path = public as $$
@@ -522,13 +619,14 @@ end $$;
 
 drop function if exists public.pantheon_admin(text);
 create or replace function public.pantheon_admin(p_secret text)
-returns table (id bigint, pseudo text, lycee text, salle text, moyenne numeric, banc int, code text, verifie boolean, cree_le timestamptz)
+returns table (id bigint, pseudo text, lycee text, salle text, manche int, moyenne numeric, banc int, code text, verifie boolean, cree_le timestamptz)
 language plpgsql security definer set search_path = public as $$
 begin
   perform verifier_admin(p_secret);
-  return query select p.id, p.pseudo, p.lycee, p.salle, p.moyenne, p.banc, p.code, p.verifie, p.cree_le
+  return query select p.id, p.pseudo, p.lycee, p.salle, p.manche, p.moyenne, p.banc, p.code, p.verifie, p.cree_le
     from pantheon p order by p.moyenne desc, p.cree_le limit 1000;
 end $$;
+
 
 -- l'administrateur a recalculé le score : on le corrige et on le marque vérifié
 create or replace function public.pantheon_valider(p_secret text, p_id bigint, p_moyenne numeric) returns void
@@ -546,16 +644,16 @@ begin
 end $$;
 
 revoke execute on function public.verifier_prof(text, text), public.verifier_admin(text),
-  public.compter(text, int), public.menage(), public.nom_etablissement(text) from public, anon, authenticated;
+  public.compter(text, int), public.menage(), public.nom_etablissement(text), public.nouveau_jeton_pantheon() from public, anon, authenticated;
 grant execute on function public.heure_serveur(), public.creer_salle(text), public.definir_etablissement(text, text, text),
   public.piloter_salle(text, text, int, text, int, int, text, text[]),
   public.retirer_joueur(text, text, text), public.liberer_pseudo(text, text, text), public.definir_config(text, text, jsonb),
   public.rejoindre(text, text, text, text),
   public.deposer_tortue(text, text, text, int, text), public.etat_depots(text, int),
-  public.changer_jeton(text, text, text, text), public.ma_tortue(text, text, text), public.codes_session(text, text), public.retrouver_session(text),
+  public.changer_jeton(text, text, text, text), public.ma_tortue(text, text, text), public.codes_session(text, text), public.retrouver_session(text), public.codes_manche(text, text, int),
   public.enregistrer_scores(text, text, int, jsonb),
   public.statistiques(),
   public.proposer_pantheon(text, text, text, numeric, int, text, text, text), public.pantheon_top(int, text),
-  public.pantheon_lycees(), public.ma_tortue_pantheon(text),
+  public.pantheon_lycees(), public.ma_tortue_pantheon(text), public.pantheon_classe(text, text, int, jsonb), public.mon_entree_pantheon(text, text, text),
   public.pantheon_admin(text), public.pantheon_valider(text, bigint, numeric), public.pantheon_retirer(text, bigint)
 to anon, authenticated;

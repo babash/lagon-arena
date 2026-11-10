@@ -5,11 +5,14 @@
 import { db, secondesRestantes } from "../db.js";
 import { TWISTS, BONUS_PROGRESSION, equipeInfo, resultatEquipes, decrireLagon } from "../engine.js";
 import { MatchViewer } from "../viewer.js";
-import { botsPourCompleter, lancerSimulation, calculerScores, classementCumule, meilleureProgression, estBot, infosManche, equipesCompletes } from "../brawl.js";
+import { botsPourCompleter, lancerSimulation, calculerScores, classementCumule, meilleureProgression, estBot, infosManche, equipesCompletes, codeDe } from "../brawl.js";
 import { $, el, esc, toast, mmss, twistCarte, cartesEquipesHTML, annonceEquipes } from "../common.js";
 import { S, reglages, mesSalles, configActuelle, titreManche, participantsHumains, estIllimite, piloter, navigation } from "./etat.js";
 import { chargerPrep, panneauPrep, rostersHTML } from "./preparer.js";
 import { lienEleves, dessinerQR, adresseCourte, fenetreLienEleves } from "./liens.js";
+import { resumeClasseHTML, brancherResume } from "./fiche.js";
+import { ouvrirFiche } from "./salle.js";
+import { pantheonAuto } from "./pantheon-auto.js";
 
 // dessine la scène de la phase en cours
 export function rendreScene() {
@@ -231,15 +234,30 @@ async function scResultats(st) {
     ${progres.length ? `<div class="msg ok centre-txt">📈 <b>Bonus progrès (+${BONUS_PROGRESSION})</b> : ${progres.map((s) => esc(s.pseudo)).join(", ")}</div>` : ""}
     <div class="grid2" style="margin-top:14px">
       <div><h3>Ce match</h3><table class="scores"><tr><th class="num">#</th><th>Élève</th><th class="num">🥚</th><th class="num">🦈</th><th class="num">Points</th></tr>
-        ${sm.map((s) => `<tr><td class="num">${E ? s.equipe ? equipeInfo(s.equipe).icone : "" : s.rang}</td><td><span class="swatch" style="background:${(S.joueurs.find((j) => j.pseudo === s.pseudo) || {}).couleur || "#ccc"}"></span>${esc(s.pseudo)}</td><td class="num">${s.nids}</td><td class="num">${cap[s.pseudo] ?? "–"}</td><td class="num">${info.duel ? "–" : s.points + (s.bonus ? ` <small class="bonus">+${s.bonus}</small>` : "")}</td></tr>`).join("")}
+        ${sm.map((s) => `<tr class="cliquable" data-pseudo="${esc(s.pseudo)}" title="Voir son code et ses tests"><td class="num">${E ? s.equipe ? equipeInfo(s.equipe).icone : "" : s.rang}</td><td><span class="swatch" style="background:${(S.joueurs.find((j) => j.pseudo === s.pseudo) || {}).couleur || "#ccc"}"></span>${esc(s.pseudo)}</td><td class="num">${s.nids}</td><td class="num">${cap[s.pseudo] ?? "–"}</td><td class="num">${info.duel ? "–" : s.points + (s.bonus ? ` <small class="bonus">+${s.bonus}</small>` : "")}</td></tr>`).join("")}
         ${sim.resultats.filter((r) => estBot(r.id)).map((r) => `<tr class="bot"><td class="num">${r.equipe ? equipeInfo(r.equipe).icone : "🤖"}</td><td>${esc(r.nom)}</td><td class="num">${r.nids}</td><td class="num">${r.captures}</td><td class="num">–</td></tr>`).join("")}
       </table></div>
       <div><h3>Classement de la séance</h3>${tableauCumule(cls, 12)}</div>
     </div>
+    <p class="petit muted">👆 Un clic sur un élève du match : son code, ses tests, et le match revu en suivant sa tortue.</p>
+    <div id="pantheon-auto" class="pantheon-auto"></div>
+    <details class="card resume-d" id="resume-d"><summary><b>🩺 Les tortues de la classe</b> : qui ne pond pas, et pourquoi</summary><div id="resume"></div></details>
     <div class="msg info" style="margin-top:14px">🔍 <b>Laissez 2-3 minutes aux élèves</b> : sur leur écran, ils revoient le match en suivant leur tortue, ligne par ligne, avec des conseils. Pendant ce temps, préparez la manche suivante ci-dessous.</div>
     <div class="row centre actions-fin" id="actions"></div>
     <div id="replay" style="margin-top:14px"></div>
     <div id="prep"></div>`;
+  // la fiche de chaque élève, le résumé de la classe, le Panthéon automatique
+  const revoir = (p) => {
+    if (S.viewer) S.viewer.destroy();
+    S.viewer = new MatchViewer($("#replay"), { sim, focus: p, code: codeDe(p, info.manche, tortues), pensee: true, vitesse: 2.4, autoplay: false });
+    $("#replay").scrollIntoView({ behavior: "smooth" });
+  };
+  S.resultats = { manche: info.manche, sim, revoir };
+  st.querySelector("table.scores").addEventListener("click", (e) => { const tr = e.target.closest("tr[data-pseudo]"); if (tr) ouvrirFiche(tr.dataset.pseudo); });
+  const eleves = sm.map((x) => ({ pseudo: x.pseudo, code: tortues.some((t) => t.pseudo === x.pseudo && t.manche <= info.manche) ? codeDe(x.pseudo, info.manche, tortues) : null, pondu: x.nids > 0 }));
+  $("#resume").innerHTML = resumeClasseHTML(eleves, { match: true });
+  brancherResume($("#resume"), ouvrirFiche);
+  if (info.manche === S.salle.manche) pantheonAuto({ manche: info.manche, sm, tortues });
   const act = $("#actions");
   const bRevoir = el("button", { class: "btn ghost" }, "🎬 Revoir le match");
   bRevoir.addEventListener("click", () => {
@@ -283,15 +301,23 @@ async function scFin(st) {
     <h3>Classement final</h3>${tableauCumule(cls)}
     <div class="row centre" style="margin-top:16px">
       <button class="btn" id="csv">⬇️ Exporter le classement (CSV)</button>
+      <label class="petit csv-codes"><input type="checkbox" id="csv-codes"> avec les codes des tortues</label>
       <button class="btn ghost" id="nouvelle">🔄 Nouvelle séance</button>
     </div>`;
-  $("#csv").addEventListener("click", () => exporterCSV(cls));
+  $("#csv").addEventListener("click", async () => {
+    let tortues = null;
+    if ($("#csv-codes").checked) { try { tortues = await db.tortues(S.code); } catch (e) { return toast(e.message, "err"); } }
+    exporterCSV(cls, tortues);
+  });
   $("#nouvelle").addEventListener("click", () => navigation.accueil());
 }
-function exporterCSV(cls) {
+// tortues (facultatif) : ajoute le code joué par chaque élève à chaque manche (sa dernière tortue envoyée)
+function exporterCSV(cls, tortues = null) {
   const manches = [...new Set(cls.flatMap((t) => Object.keys(t.parManche).map(Number)))].sort((a, b) => a - b);
-  const lignes = [["Rang", "Pseudo", ...manches.flatMap((m) => [`M${m} nids`, `M${m} points`]), "Bonus", "Nids total", "Total points"]];
-  for (const t of cls) lignes.push([t.rang, t.pseudo, ...manches.flatMap((m) => { const s = t.parManche[m]; return s ? [s.nids, s.points] : ["", ""]; }), t.bonus, t.nids, t.total]);
+  const code = (p, m) => (tortues.some((x) => x.pseudo === p && x.manche <= m) ? codeDe(p, m, tortues) : "");
+  const lignes = [["Rang", "Pseudo", ...manches.flatMap((m) => [`M${m} nids`, `M${m} points`]), "Bonus", "Nids total", "Total points", ...(tortues ? manches.map((m) => `M${m} code`) : [])]];
+  for (const t of cls) lignes.push([t.rang, t.pseudo, ...manches.flatMap((m) => { const s = t.parManche[m]; return s ? [s.nids, s.points] : ["", ""]; }), t.bonus, t.nids, t.total,
+    ...(tortues ? manches.map((m) => (t.parManche[m] ? code(t.pseudo, m) : "")) : [])]);
   const csv = "﻿" + lignes.map((l) => l.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
   const a = el("a", { href: URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" })), download: `lagon-arena-${S.code}-${new Date().toISOString().slice(0, 10)}.csv` });
   document.body.append(a); a.click(); a.remove();
