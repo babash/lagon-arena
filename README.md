@@ -56,7 +56,8 @@ La tortue fournie au départ sait manger… mais **ne pond jamais** : sans rien 
 | **Un lagon sur mesure** | La nouveauté de manche (calme, plastique, tempête…), puis, si tu veux, le détail : nombre de requins, leur vitesse, le plastique, les heures de nuit, le corail, les algues. |
 | **Pour les élèves les plus à l'aise** | Des [missions avancées](https://babash.github.io/lagon-arena/tuto-avance.html) en trois niveaux : 🥈 intermédiaire, 🥇 expert (choisir ses algues), 👥 équipe. |
 | **Pour s'entraîner seul·e** | Le [bac à sable](https://babash.github.io/lagon-arena/eleve.html?libre=1), contre 5 tortues d'entraînement, avec une estimation sur 50 parties. |
-| **Le Panthéon** | Les [100 meilleures tortues de tous les temps](https://babash.github.io/lagon-arena/pantheon.html), toutes jugées sur les mêmes 20 lagons, affichées avec le pseudo, la classe et la date ; classement par établissement. Le programme des tortues reste secret. |
+| **Voir où chacun·e bloque** | Pendant la programmation, une pastille 🟢 🟠 🔴 🐞 par élève, d'après sa dernière tortue envoyée, et « 🥚 18 tortues sur 25 pondent ». Un clic sur un pseudo montre son code et pourquoi sa tortue ne pond pas (avec un bouton 🙈 Masquer, car l'écran est souvent projeté). |
+| **Le Panthéon** | Les [100 meilleures tortues de tous les temps](https://babash.github.io/lagon-arena/pantheon.html), toutes jugées sur les mêmes 20 lagons, affichées avec le pseudo, la classe et la date ; classement par établissement. À la fin de chaque manche, la meilleure tortue de la classe y entre toute seule (réglable, ou désactivable). Le programme des tortues reste secret. |
 
 ## Pourquoi ça marche
 
@@ -71,7 +72,7 @@ Les principes, les limites (franchement) et un argumentaire pour présenter le j
 ## Données des élèves
 
 - **Enregistré en ligne** (Supabase) : pour chaque salle, son code et, si tu le renseignes, ton établissement ; pour chaque élève, un pseudo, une couleur, les programmes envoyés et les scores ; au Panthéon, le pseudo, la classe (le code de la salle), la date, l'établissement, la moyenne et le programme. Aucun champ pour le nom ni pour l'adresse électronique.
-- **Visible par les autres** : les pseudos et les scores ; les programmes des tortues, seulement après le brawl de la manche ; au Panthéon, le pseudo, la classe, l'établissement, la date et la moyenne, jamais le programme.
+- **Visible par les autres** : les pseudos et les scores ; les programmes des tortues, par l'enseignant·e de la salle pendant la manche, et par la classe seulement après le brawl ; au Panthéon, le pseudo, la classe, l'établissement, la date et la moyenne, jamais le programme.
 - **Sur l'appareil** : le stockage du navigateur, un jour pour ce qui est à l'élève (codes de session, programme en cours, tutoriels), 60 jours pour ce qui est à toi (tes salles, tes réglages).
 - **Pour effacer** : tu peux retirer un·e élève de ta salle ; les séances terminées depuis 7 jours et les salles sans activité depuis 60 jours sont effacées automatiquement ; l'administration du Panthéon peut retirer une tortue.
 
