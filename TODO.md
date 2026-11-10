@@ -258,7 +258,7 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
   - choix de la nouveauté en bac à sable libre, lagon personnalisé de la manche ;
   - rapport et conseils du test.
 - [x] Sur un grand écran, une option « côte à côte » (le code et le test ensemble) remplace l'actuel « ◀ Réduire ».
-- [ ] Même logique dans l'onglet 📊 Résultats (rejeu du brawl) et dans « Et si… ? ».
+- [x] Même logique dans l'onglet 📊 Résultats (rejeu du brawl) et dans « Et si… ? » : lagon et pensée côte à côte quand la place le permet, clic sur une ligne → l'éditeur.
 
 **C'est fini quand** un élève peut tester, suivre sa tortue pas à pas avec sa pensée bien visible, et revenir corriger la bonne ligne en un clic, sur ordinateur comme sur téléphone, sans qu'aucune fonction actuelle ne manque.
 

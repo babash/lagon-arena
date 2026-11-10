@@ -10,6 +10,9 @@ import { ed, verifier, remplacerCode } from "./editeur.js";
 import { S, SALLE, PSEUDO, cleCode } from "./etat.js";
 import { onglet, notifier, overlay } from "./ui.js";
 
+// un clic sur une ligne de « Dans la tête de ta tortue » : retour à l'éditeur, sur cette ligne (✏️ corriger ici)
+const corrigerIci = (n) => { onglet("prog"); ed.marquer([n]); ed.allerA(n); };
+
 let resAffiches = "", viewerRes = null;
 export async function chargerResultats(montrer) {
   let scores, tortues, joueurs;
@@ -55,7 +58,7 @@ function afficherResultats(info, scores, tortues, joueurs) {
     </div></div>`;
   suivrePantheon(m);
   if (viewerRes) viewerRes.destroy();
-  viewerRes = new MatchViewer($("#res-vue"), { sim, focus: joue ? PSEUDO : null, code: codeDe(PSEUDO, m, tortues), autoplay: false, vitesse: 2.4 });
+  viewerRes = new MatchViewer($("#res-vue"), { sim, focus: joue ? PSEUDO : null, code: codeDe(PSEUDO, m, tortues), autoplay: false, vitesse: 2.4, onLigne: corrigerIci });
   $("#rejouer").classList.toggle("cache", !joue);
   if (!joue) return;
   $("#modifier").addEventListener("click", () => { onglet("prog"); ed.ta.focus(); });
@@ -129,7 +132,7 @@ function etSi(sim, info, joueurs, tortues) {
       ${rapportHTML(sim2, PSEUDO)}
       <p class="petit">${S.salle.phase === "prog" ? "👉 Si c'est mieux, n'oublie pas d'<b>envoyer</b> ta tortue !" : "👉 Garde ce code : tu pourras l'envoyer à la prochaine manche."}</p>`;
   const voir = el("button", { class: "btn small ghost" }, "🎬 Voir ce match dans le lecteur");
-  voir.addEventListener("click", () => { viewerRes.destroy(); viewerRes = new MatchViewer($("#res-vue"), { sim: sim2, focus: PSEUDO, code: ed.value, vitesse: 2.4 }); $("#res-vue").scrollIntoView({ behavior: "smooth" }); });
+  voir.addEventListener("click", () => { viewerRes.destroy(); viewerRes = new MatchViewer($("#res-vue"), { sim: sim2, focus: PSEUDO, code: ed.value, vitesse: 2.4, onLigne: corrigerIci }); $("#res-vue").scrollIntoView({ behavior: "smooth" }); });
   $("#etsi-res").append(voir);
 }
 // raccourci depuis l'onglet Programmer : « 🔁 Rejouer le dernier brawl »
