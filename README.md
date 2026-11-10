@@ -88,14 +88,14 @@ Le détail : [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (§ 7, la base de donn
 
 ## Feuille de route
 
-Les chantiers en cours (téléphones, rendu graphique, erreurs de logique, galerie des gagnantes, page « Tester », fluidité) sont détaillés dans **[TODO.md](TODO.md)**.
+Les chantiers en cours (téléphones, rendu graphique, galerie des gagnantes, écran projeté et pupitre de l'enseignant·e, fluidité) sont détaillés dans **[TODO.md](TODO.md)**. Les tests de bout en bout sont dans le dépôt : `node outils/tests/tout.mjs`.
 
 Autres pistes :
 
 - **défier les meilleures tortues** du Panthéon (top 1 à top 100) sans révéler leur programme : il faudra faire jouer ces matchs par le serveur ;
 - **classer une manche sur plusieurs lagons** pour réduire la part de chance d'un seul brawl ;
 - une fiche **« de la tortue à Python »** pour réinvestir les conditions hors du jeu ;
-- des **tests de bout en bout** dans le dépôt, et un audit d'**accessibilité**.
+- le lancement automatique des tests sur GitHub, et un audit d'**accessibilité**.
 
 ## Contact
 
