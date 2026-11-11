@@ -21,8 +21,8 @@ export async function assurerCodeSession() {
 export async function montrerCodeSession() {
   const code = await assurerCodeSession();
   if (!code) {
-    overlay(`<h2>🏠 Continuer sur un autre ordinateur</h2><p>Ton code de session n'est pas encore disponible : ton enseignant doit mettre à jour la base de données.</p>
-      <p>En attendant, sur l'autre ordinateur, demande à ton enseignant de <b>débloquer ton pseudo</b> (🔓).</p>`, true);
+    overlay(`<h2>🏠 Continuer sur un autre ordinateur</h2><p>Ton code de session n'est pas encore disponible : ton enseignant·e doit mettre à jour la base de données.</p>
+      <p>En attendant, sur l'autre ordinateur, demande à ton enseignant·e de <b>débloquer ton pseudo</b> (🔓).</p>`, true);
     return;
   }
   const lien = lienSite(`index.html#code=${code}`);   // (le code suffit : la salle et le pseudo sont retrouvés par la base)

@@ -31,7 +31,7 @@ export const CAPTEURS = [
   { nom: "algue_pres_plage", icone: "🌿🏖️", role: `Les algues les plus proches sont-elles à ${P.plageProche} cases ou moins d'une plage ?`, rep: "True / False", avance: true, groupe: "algues" },
   { nom: "portions_algue", icone: "🌿🍽️", role: `Combien de repas reste-t-il dans les algues les plus proches ? (${P.portionsHerbier} au départ, 0 = aucune)`, rep: "un nombre", avance: true, groupe: "algues" },
   // jeu en équipes (visibles pendant une manche en équipes, ou en mode avancé)
-  { nom: "mon_equipe", icone: "🏳️", role: "Le numéro de mon équipe : 1 = 🔵 Bleue, 2 = 🔴 Rouge, 3 = 🟢 Verte, 4 = 🟡 Jaune… (0 = chacun pour soi)", rep: "un nombre", equipe: true },
+  { nom: "mon_equipe", icone: "🏳️", role: "Le numéro de mon équipe : 1 = 🔵 Bleue, 2 = 🔴 Rouge, 3 = 🟢 Verte, 4 = 🟡 Jaune… (0 = chacun·e pour soi)", rep: "un nombre", equipe: true },
   { nom: "mes_nids", icone: "🥚", role: "Combien de nids me reste-t-il ?", rep: "un nombre", equipe: true },
   { nom: "nids_voisine", icone: "🐢🥚", role: "Combien de nids a la tortue collée à moi ? (0 s'il n'y en a pas)", rep: "un nombre", equipe: true },
   { nom: "nids_equipe", icone: "🥚🥚", role: "Combien de nids a mon équipe en tout ?", rep: "un nombre", equipe: true },

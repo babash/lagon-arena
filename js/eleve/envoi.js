@@ -19,7 +19,7 @@ export function majEnvoi() {
   }
   if (!estFinaliste()) {
     b.disabled = true;
-    box.innerHTML = `<div class="msg info">⭐ ${esc(titreManche())} : seuls ${s.duel.map(esc).join(", ")} envoient une tortue. Regarde le match au tableau… et continue à t'entraîner !</div>`;
+    box.innerHTML = `<div class="msg info">⭐ ${esc(titreManche())} : seul·e·s ${s.duel.map(esc).join(", ")} envoient une tortue. Regarde le match au tableau… et continue à t'entraîner !</div>`;
     return;
   }
   b.disabled = false;

@@ -6,7 +6,7 @@
 
 ## La méthode
 
-On oublie les pages telles qu'elles existent (`index.html`, `eleve.html`, `prof.html`…). Elles sont découpées comme le code, pas comme la vie de la classe. On repart des **moments** que vivent un élève et un enseignant. Pour chacun, on se pose quatre questions :
+On oublie les pages telles qu'elles existent (`index.html`, `eleve.html`, `prof.html`…). Elles sont découpées comme le code, pas comme la vie de la classe. On repart des **moments** que vivent un·e élève et un·e enseignant·e. Pour chacun, on se pose quatre questions :
 
 1. De quoi la personne a-t-elle besoin, **là, maintenant** ?
 2. Que lui montre l'écran aujourd'hui ?
@@ -19,7 +19,7 @@ Les propositions sont marquées **[TODO n]** quand elles font déjà partie d'un
 
 Avant d'entrer dans le détail, trois constats reviennent à chaque moment.
 
-**1. À chaque instant, une seule prochaine action évidente.** L'élève passe sans cesse de « écrire » à « tester », « envoyer », « regarder », « comprendre » et « corriger ». L'enseignant enchaîne « créer », « lancer », « brawl », « résultats » et « manche suivante ». Aujourd'hui, ces boutons existent tous, mais ils ont souvent le même poids visuel. L'interface devrait toujours **mettre en avant la prochaine action** (un seul bouton plein, les autres discrets) et dire en une phrase où l'on en est.
+**1. À chaque instant, une seule prochaine action évidente.** L'élève passe sans cesse de « écrire » à « tester », « envoyer », « regarder », « comprendre » et « corriger ». L'enseignant·e enchaîne « créer », « lancer », « brawl », « résultats » et « manche suivante ». Aujourd'hui, ces boutons existent tous, mais ils ont souvent le même poids visuel. L'interface devrait toujours **mettre en avant la prochaine action** (un seul bouton plein, les autres discrets) et dire en une phrase où l'on en est.
 
 **2. Le lagon de la manche doit se voir.** Avec les lagons personnalisés et les nouvelles questions, une manche n'est plus seulement « calme » ou « tempête ». Elle a ses heures de nuit, sa vue des requins, son nombre de requins, de sacs, de coraux, d'algues. Or tout cela tient aujourd'hui en une ligne de texte (« lagon personnalisé : 2 requins, 0 sac… »). Il manque une **fiche du lagon**, toujours la même, qui relie chaque règle à la question qui la lit :
 
@@ -30,7 +30,7 @@ Avant d'entrer dans le détail, trois constats reviennent à chaque moment.
 | 🦈 Requins | 5, rapides | |
 | 🛍️ Plastique | 22 sacs, sur les algues | `plastique_ici()` |
 
-Cette fiche apparaîtrait chez l'élève (programmer, tester), au tableau (pendant la programmation) et dans le panneau de préparation de l'enseignant (avec un aperçu de la carte). C'est le pont entre « les règles changent » et « mon code peut s'adapter ». **[nouveau]**
+Cette fiche apparaîtrait chez l'élève (programmer, tester), au tableau (pendant la programmation) et dans le panneau de préparation de l'enseignant·e (avec un aperçu de la carte). C'est le pont entre « les règles changent » et « mon code peut s'adapter ». **[nouveau]**
 
 > *Novembre 2026 : l'accueil montre désormais le parcours en 4 missions avec la progression de l'élève (✅ / ⏳ / 👉), et « 🔑 Entrer dans la partie » vient en premier ; le seul code de session suffit pour revenir.*
 
@@ -42,14 +42,14 @@ Cette fiche apparaîtrait chez l'élève (programmer, tester), au tableau (penda
 
 ### 1. Première visite, en classe
 
-**Besoin** : entrer dans la salle le plus vite possible, sans être bloqué par « je ne sais pas programmer ».
+**Besoin** : entrer dans la salle le plus vite possible, sans être bloqué·e par « je ne sais pas programmer ».
 
-**Aujourd'hui** : l'accueil propose « Rejoindre la partie » et « Première fois ? Le tutoriel » côte à côte. L'enseignant dit « faites d'abord le tutoriel », et l'élève ne rejoint la salle qu'ensuite. Pendant 15 minutes, l'enseignant ne voit donc **personne** dans sa salle, et ne sait pas qui avance au tutoriel.
+**Aujourd'hui** : l'accueil propose « Rejoindre la partie » et « Première fois ? Le tutoriel » côte à côte. L'enseignant·e dit « faites d'abord le tutoriel », et l'élève ne rejoint la salle qu'ensuite. Pendant 15 minutes, l'enseignant·e ne voit donc **personne** dans sa salle, et ne sait pas qui avance au tutoriel.
 
 **Propositions** :
-- **Rejoindre d'abord, puis faire le tutoriel dans la salle.** L'élève tape le code et son pseudo, puis sa page lui propose le tutoriel pendant l'attente. Au tableau, la liste des élèves affiche leur progression (⭐ 6 / 10). L'enseignant sait quand lancer la manche 1. **[nouveau]**
+- **Rejoindre d'abord, puis faire le tutoriel dans la salle.** L'élève tape le code et son pseudo, puis sa page lui propose le tutoriel pendant l'attente. Au tableau, la liste des élèves affiche leur progression (⭐ 6 / 10). L'enseignant·e sait quand lancer la manche 1. **[nouveau]**
 - **Un pseudo au hasard** (🎲 « Tortue_Zen », « Maki_Rapide »…) : moins de vrais prénoms, moins de temps perdu. **[nouveau]**
-- **Les compteurs de l'accueil** donnent envie : « 🎬 1 234 parties jouées, 🐢 5 678 joueurs ». On peut leur ajouter une touche personnelle à l'arrivée : « Bienvenue, tu es le 5 679e joueur ! ». **[nouveau]**
+- **Les compteurs de l'accueil** donnent envie : « 🎬 1 234 parties jouées, 🐢 5 678 joueur·euse·s ». On peut leur ajouter une touche personnelle à l'arrivée : « Bienvenue, tu es la 5 679e personne à jouer ! ». **[nouveau]**
 
 ### 2. Programmer pendant une manche
 
@@ -101,14 +101,14 @@ Cette fiche apparaîtrait chez l'élève (programmer, tester), au tableau (penda
 - les données de l'ordinateur s'effacent au bout d'un jour, **sans que l'élève le sache**.
 
 **Propositions** :
-- **La consigne du devoir sur la page de l'élève** : l'enseignant l'écrit en préparant la manche, et elle s'affiche en tête (« 📋 Pour jeudi : ta tortue doit éviter le plastique »). Aujourd'hui, elle ne vit que dans le message envoyé par la messagerie de l'établissement. **[nouveau]**
+- **La consigne du devoir sur la page de l'élève** : l'enseignant·e l'écrit en préparant la manche, et elle s'affiche en tête (« 📋 Pour jeudi : ta tortue doit éviter le plastique »). Aujourd'hui, elle ne vit que dans le message envoyé par la messagerie de l'établissement. **[nouveau]**
 - **Une date de brawl prévue** (facultative) : « 🎬 Brawl prévu jeudi à 9 h, dans 2 jours ». Le temps reste illimité ; c'est juste un repère. **[nouveau]**
 - **Rendre visible la durée d'un jour** : « Sur cet ordinateur, ta tortue est gardée jusqu'à demain 18 h. Pour revenir plus tard : ton code K7PQ-2XMA ». Et un rappel « seule la tortue **envoyée** est gardée dans la salle ». **[nouveau]**
 - **Le téléphone** : onglets en bas de l'écran, éditeur au doigt. **[TODO 1]**
 
-### 6. Progresser seul (bac à sable, tutoriels, Panthéon)
+### 6. Progresser seul·e (bac à sable, tutoriels, Panthéon)
 
-**Besoin** : savoir quoi faire ensuite pour devenir meilleur.
+**Besoin** : savoir quoi faire ensuite pour devenir meilleur·e.
 
 **Aujourd'hui** :
 - le bac à sable, le tutoriel avancé (une page par niveau) et le Panthéon sont trois portes séparées ;
@@ -128,23 +128,23 @@ Cette fiche apparaîtrait chez l'élève (programmer, tester), au tableau (penda
 
 ---
 
-## Les moments de l'enseignant
+## Les moments de l'enseignant·e
 
 ### 7. Découvrir le jeu
 
 **Besoin** : comprendre en 2 minutes si ça vaut une séance.
 
-**Aujourd'hui** : la vue enseignant de l'accueil (pitch, capture, 3 étapes, boutons), puis le mode démo, où il faut tout faire soi-même (créer, ajouter des élèves fictifs, lancer).
+**Aujourd'hui** : la vue enseignant·e de l'accueil (pitch, capture, 3 étapes, boutons), puis le mode démo, où il faut tout faire soi-même (créer, ajouter des élèves fictif·ve·s, lancer).
 
 **Propositions** :
-- **Une démo qui se joue toute seule** : un clic, et une séance fictive se déroule sous les yeux en 2 minutes (salle, élèves fictifs qui arrivent, manche 1, brawl, résultats, rematch). On peut la mettre en pause et reprendre la main. **[nouveau]**
+- **Une démo qui se joue toute seule** : un clic, et une séance fictive se déroule sous les yeux en 2 minutes (salle, élèves fictif·ve·s qui arrivent, manche 1, brawl, résultats, rematch). On peut la mettre en pause et reprendre la main. **[nouveau]**
 - **Une courte vidéo ou animation** sur l'accueil, à côté de la capture. **[nouveau]**
 
 ### 8. Préparer une séance ou un devoir
 
 **Besoin** : régler vite, sans se tromper, et prévoir la suite.
 
-**Aujourd'hui** : on prépare **une manche à la fois**, dans un panneau long (raccourcis, titre, nouveauté, durée, points, tortues d'entraînement, qui joue, équipes, lagon personnalisé). Et ce panneau est **projeté** : il s'affiche sous le code géant pendant l'attente, et sous les résultats entre deux manches. Les élèves voient l'enseignant régler les équipes.
+**Aujourd'hui** : on prépare **une manche à la fois**, dans un panneau long (raccourcis, titre, nouveauté, durée, points, tortues d'entraînement, qui joue, équipes, lagon personnalisé). Et ce panneau est **projeté** : il s'affiche sous le code géant pendant l'attente, et sous les résultats entre deux manches. Les élèves voient l'enseignant·e régler les équipes.
 
 **Propositions** :
 - **Séparer l'écran projeté et le pupitre.** Un bouton « 📽️ Ouvrir l'écran de projection » ouvre une fenêtre propre, à mettre sur le vidéoprojecteur : code, chrono, brawl, podium, sans aucun réglage. Pendant ce temps, la fenêtre de l'ordinateur devient le pupitre : réglages, liste des élèves, boutons. Les deux restent synchronisées. Le mode « écran dupliqué » actuel resterait possible. **[nouveau, important]**
@@ -178,11 +178,11 @@ Cette fiche apparaîtrait chez l'élève (programmer, tester), au tableau (penda
 
 **Aujourd'hui** :
 - un podium final, la meilleure progression et l'export CSV ;
-- la séance terminée est effacée au bout de 7 jours (ménage), **sans que l'enseignant en soit prévenu**.
+- la séance terminée est effacée au bout de 7 jours (ménage), **sans que l'enseignant·e en soit prévenu·e**.
 
 **Propositions** :
-- **Prévenir du ménage** au moment de terminer : « Cette séance sera effacée dans 7 jours. Exportez le CSV maintenant ». **[nouveau]**
-- **Un bilan pédagogique** tiré des derniers programmes des élèves (lisibles après le brawl) : combien de tortues pondent correctement (plage + nuit + énergie), mettent la fuite avant de manger, évitent le plastique, utilisent `elif` ; et les erreurs de logique les plus fréquentes. C'est une évaluation formative, imprimable, que l'enseignant n'a aujourd'hui aucun moyen d'obtenir. **[nouveau, s'appuie sur TODO 4]**
+- **Prévenir du ménage** au moment de terminer : « Cette séance sera effacée dans 7 jours. Exporte le CSV maintenant ». **[nouveau]**
+- **Un bilan pédagogique** tiré des derniers programmes des élèves (lisibles après le brawl) : combien de tortues pondent correctement (plage + nuit + énergie), mettent la fuite avant de manger, évitent le plastique, utilisent `elif` ; et les erreurs de logique les plus fréquentes. C'est une évaluation formative, imprimable, que l'enseignant·e n'a aujourd'hui aucun moyen d'obtenir. **[nouveau, s'appuie sur TODO 4]**
 - **« Continuer en devoir »** : transformer la séance terminée en devoir, avec les mêmes élèves et leurs tortues. **[nouveau]**
 
 ### 11. Administrer le Panthéon
@@ -190,8 +190,8 @@ Cette fiche apparaîtrait chez l'élève (programmer, tester), au tableau (penda
 **Aujourd'hui** : `pantheon.html?admin`, un mot de passe, la vérification des scores et le retrait des tortues.
 
 **Propositions** :
-- **Un compteur « à vérifier »** visible sur la page publique quand on est connecté en administrateur. **[nouveau]**
-- **Le signalement** d'un pseudo ou d'un établissement par les enseignants (un bouton 🚩, qui ne retire rien tout seul). **[nouveau]**
+- **Un compteur « à vérifier »** visible sur la page publique quand on est connecté·e à l'administration. **[nouveau]**
+- **Le signalement** d'un pseudo ou d'un établissement par les enseignant·e·s (un bouton 🚩, qui ne retire rien tout seul). **[nouveau]**
 
 ### 12. Le Panthéon, côté public
 
@@ -199,7 +199,7 @@ Cette fiche apparaîtrait chez l'élève (programmer, tester), au tableau (penda
 
 **Propositions** :
 - **Un podium** des 3 premières en tête de page.
-- **Chaque ligne affiche le pseudo, la classe (code de la salle) et la date**, plus l'établissement si l'enseignant l'a renseigné en créant la salle : deux élèves de classes différentes peuvent avoir le même pseudo. **[décidé]**
+- **Chaque ligne affiche le pseudo, la classe (code de la salle) et la date**, plus l'établissement si l'enseignant·e l'a renseigné en créant la salle : deux élèves de classes différentes peuvent avoir le même pseudo. **[décidé]**
 - **Un classement des établissements** (moyenne de leurs 5 meilleures tortues), pour ceux qui sont renseignés.
 - **Un encadré « Comment entrer au Panthéon ? »** en 3 étapes.
 - **Les 20 lagons du banc d'essai** en miniatures : les élèves voient sur quoi leur tortue est jugée.
@@ -214,27 +214,31 @@ En reprenant tous les moments, voici ce qui **existe déjà mais reste caché**,
 
 1. **Les règles de la manche** (lagon personnalisé, nouvelles questions) → la fiche du lagon.
 2. **« Dans la tête de ta tortue »** → la page « Tester » **[TODO 3]**.
-3. **L'oubli au bout d'un jour** (élève) et **l'effacement au bout de 7 jours** (enseignant) → des messages au bon moment.
+3. **L'oubli au bout d'un jour** (élève) et **l'effacement au bout de 7 jours** (enseignant·e) → des messages au bon moment.
 4. **Le bonus de progression** → un objectif annoncé avant la manche, pas découvert après.
 5. **Le Panthéon et ses repères** → des objectifs dans l'estimation et une carte de progression.
-6. **L'état de chaque élève** pour l'enseignant → des états simples, sans lire le code.
+6. **L'état de chaque élève** pour l'enseignant·e → des états simples, sans lire le code.
 
 ## Ce qu'il faudrait ajouter, en résumé
 
 | Idée | Pour qui | Intérêt | Effort |
 |---|---|---|---|
-| 📽️ Écran de projection séparé du pupitre | enseignant | ⭐⭐⭐ | moyen |
-| 🗺️ Fiche du lagon (règles + questions qui les lisent) | tous | ⭐⭐⭐ | faible |
-| Rejoindre d'abord, tutoriel dans la salle, progression visible | élève, enseignant | ⭐⭐⭐ | moyen |
-| États des élèves pendant la programmation | enseignant | ⭐⭐ | moyen (après TODO 4) |
-| Bilan pédagogique de fin de séance | enseignant | ⭐⭐ | moyen (après TODO 4) |
-| Frise de la séance, « manche suivante » en un clic | enseignant | ⭐⭐ | moyen |
-| Consigne et date du devoir | élève, enseignant | ⭐⭐ | faible |
+| 📽️ Écran de projection séparé du pupitre | enseignant·e | ⭐⭐⭐ | moyen |
+| 🗺️ Fiche du lagon (règles + questions qui les lisent) | tout le monde | ⭐⭐⭐ | faible |
+| Rejoindre d'abord, tutoriel dans la salle, progression visible | élève, enseignant·e | ⭐⭐⭐ | moyen |
+| États des élèves pendant la programmation | enseignant·e | ⭐⭐ | moyen (après TODO 4) |
+| Bilan pédagogique de fin de séance | enseignant·e | ⭐⭐ | moyen (après TODO 4) |
+| Frise de la séance, « manche suivante » en un clic | enseignant·e | ⭐⭐ | moyen |
+| Consigne et date du devoir | élève, enseignant·e | ⭐⭐ | faible |
 | Objectif de progression avant la manche | élève | ⭐⭐ | faible |
 | Histoire du match en 3 vignettes | élève | ⭐⭐ | faible |
 | Carte de progression « Mon parcours » | élève | ⭐⭐ | moyen |
-| Démo qui se joue toute seule | enseignant | ⭐⭐ | moyen |
-| Messages « oubli dans 1 jour » et « effacement dans 7 jours » | tous | ⭐⭐ | faible |
+| Démo qui se joue toute seule | enseignant·e | ⭐⭐ | moyen |
+| Messages « oubli dans 1 jour » et « effacement dans 7 jours » | tout le monde | ⭐⭐ | faible |
 | Un seul code par élève | élève | ⭐ | à étudier |
 | Panthéon : podium, classe et date, établissements, comment entrer, banc d'essai | élève | ⭐ | faible |
 | Pseudo au hasard | élève | ⭐ | faible |
+
+---
+
+Conçu par Babash - NSI Tani Malandi, développé avec [Claude Code](https://claude.com/claude-code) · [Code source sur GitHub](https://github.com/babash/lagon-arena) · code [MIT](../LICENSE), documents [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.fr)

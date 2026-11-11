@@ -1,11 +1,11 @@
 // =====================================================================
 //  Configuration de Lagon Arena
-//  1. Créez un projet gratuit sur https://supabase.com (région Europe).
-//  2. Lancez le fichier supabase.sql dans « SQL Editor ».
-//  3. Recopiez ci-dessous l'URL du projet et la clé publique
+//  1. Crée un projet gratuit sur https://supabase.com (région Europe).
+//  2. Lance le fichier supabase.sql dans « SQL Editor ».
+//  3. Recopie ci-dessous l'URL du projet et la clé publique
 //     (Project Settings > API Keys > « Publishable key », ou l'ancienne clé « anon »).
 //  Tant que SUPABASE_URL est vide, le site fonctionne en MODE DÉMO :
-//  tout reste dans ce navigateur (pratique pour tester seul).
+//  tout reste dans ce navigateur (pratique pour tester seul·e).
 // =====================================================================
 export const CONFIG = {
   SUPABASE_URL: "https://gkyvaugipddjqjvvpopw.supabase.co",

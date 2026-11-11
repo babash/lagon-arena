@@ -86,7 +86,7 @@ export function rostersHTML(equipes, liste, nb) {
 const PRESETS = {
   rematch: { label: "🔁 Rematch", titre: "", f: () => ({ mode: "solo", coef: 1, qui: "tous", titre: "", illimite: false, lagon: null, nouveaute: prepDefaut(prep.manche, scoresPrep).nouveaute, duree: prep.manche === 1 ? reglages.duree1 : reglages.duree }) },
   equipes: { label: "👥 En équipes", f: () => ({ mode: "equipes", coef: 1, qui: "tous", titre: "Manche en équipes", nbEquipes: prep.nbEquipes || 2 }) },
-  duel: { label: "⛈️ Duel des champions", f: () => ({ mode: "solo", coef: 0, illimite: false, lagon: null, qui: "choix", participants: classementCumule(scoresPrep).slice(0, 3).map((t) => t.pseudo), nouveaute: TWIST_DUEL, duree: reglages.dureeDuel, titre: "Duel des champions" }) },
+  duel: { label: "⛈️ Duel des champion·ne·s", f: () => ({ mode: "solo", coef: 0, illimite: false, lagon: null, qui: "choix", participants: classementCumule(scoresPrep).slice(0, 3).map((t) => t.pseudo), nouveaute: TWIST_DUEL, duree: reglages.dureeDuel, titre: "Duel des champion·ne·s" }) },
   entrainement: { label: "🏋️ Entraînement", f: () => ({ coef: 0, titre: "Manche d'entraînement" }) },
   longue: { label: "♾️ Manche longue", f: () => ({ illimite: true, titre: prep.titre || "Manche longue" }) },
 };
@@ -112,10 +112,10 @@ export function panneauPrep(box, scores) {
     <div class="prep-ligne"><b>🐢 Qui joue ?</b>
       <label><input type="radio" name="qui" value="tous" ${prep.qui === "tous" ? "checked" : ""}> toute la classe</label>
       <label><input type="radio" name="qui" value="choix" ${prep.qui === "choix" ? "checked" : ""}> seulement :</label>
-      ${prep.qui === "choix" ? `<span class="choix-joueurs">${tous.map((p) => `<button class="chip ${prep.participants.includes(p) ? "on" : ""}" data-joueur="${esc(p)}">${esc(p)}</button>`).join("") || '<span class="muted petit">aucun élève connecté</span>'}</span>` : ""}
+      ${prep.qui === "choix" ? `<span class="choix-joueurs">${tous.map((p) => `<button class="chip ${prep.participants.includes(p) ? "on" : ""}" data-joueur="${esc(p)}">${esc(p)}</button>`).join("") || '<span class="muted petit">aucun·e élève connecté·e</span>'}</span>` : ""}
     </div>
     <div class="prep-ligne"><b>👥 Mode</b>
-      <label><input type="radio" name="mode" value="solo" ${prep.mode === "solo" ? "checked" : ""}> chacun pour soi</label>
+      <label><input type="radio" name="mode" value="solo" ${prep.mode === "solo" ? "checked" : ""}> chacun·e pour soi</label>
       <label><input type="radio" name="mode" value="equipes" ${prep.mode === "equipes" ? "checked" : ""}> en équipes (seul le rang de l'équipe compte)</label>
     </div>
     ${prep.mode === "equipes" ? `<div class="prep-equipes">
@@ -125,11 +125,11 @@ export function panneauPrep(box, scores) {
       <span class="petit muted">${selection ? `<b>${esc(selection)}</b> : clique sur l'équipe où le mettre.` : "À la main : clique sur un nom, puis sur son équipe (ou fais-le glisser)."}</span></div>
       <div class="eq-cols">${Array.from({ length: prep.nbEquipes }, (_, i) => i + 1).map((e) => `<div class="eq ${selection ? "cible" : ""}" data-equipe="${e}" style="${styleEquipe(e)}"><h4>${nomEquipe(e)} (${liste.filter((p) => prep.equipes[p] === e).length})</h4>
         <div class="eq-noms">${liste.filter((p) => prep.equipes[p] === e).map((p) => `<button class="eq-nom ${p === selection ? "sel" : ""}" draggable="true" data-bascule="${esc(p)}">${esc(p)}</button>`).join("") || '<span class="muted petit">personne</span>'}</div></div>`).join("")}</div>
-      ${(() => { const vides = Array.from({ length: prep.nbEquipes }, (_, i) => i + 1).filter((e) => !liste.some((p) => prep.equipes[p] === e)); return vides.length && liste.length ? `<div class="msg warn petit">⚠️ ${vides.map(nomEquipe).join(", ")} : personne dans cette équipe, elle ne jouera pas (sauf si un élève arrive en retard : il ira dans l'équipe la plus petite).</div>` : ""; })()}
+      ${(() => { const vides = Array.from({ length: prep.nbEquipes }, (_, i) => i + 1).filter((e) => !liste.some((p) => prep.equipes[p] === e)); return vides.length && liste.length ? `<div class="msg warn petit">⚠️ ${vides.map(nomEquipe).join(", ")} : personne dans cette équipe, elle ne jouera pas (sauf si un·e élève arrive en retard : il ou elle ira dans l'équipe la plus petite).</div>` : ""; })()}
       <p class="petit">Points par élève selon le rang de son équipe : <b>${baremeEquipes(prep.nbEquipes).join(" / ")}</b> (× le coefficient ; des équipes à égalité se partagent les points). On classe les équipes selon la moyenne de nids par élève : les équipes peuvent avoir des tailles différentes. Les 🤖 ne sont dans aucune équipe : ce sont des concurrentes neutres.</p>
     </div>` : ""}
-    <p class="petit ok-publie">📣 Publié : les élèves voient déjà ces réglages${prep.mode === "equipes" ? " et <b>leur équipe</b> (ils peuvent préparer une stratégie)" : ""}.</p>
-    ${prep.illimite ? `<p class="petit">♾️ <b>Temps illimité</b> : les élèves peuvent programmer et envoyer leur tortue (même depuis chez eux, avec leur code de session) jusqu'à ce que vous lanciez le brawl.</p>` : ""}
+    <p class="petit ok-publie">📣 Publié : les élèves voient déjà ces réglages${prep.mode === "equipes" ? " et <b>leur équipe</b> (ils et elles peuvent préparer une stratégie)" : ""}.</p>
+    ${prep.illimite ? `<p class="petit">♾️ <b>Temps illimité</b> : les élèves peuvent programmer et envoyer leur tortue (même depuis la maison, avec leur code de session) jusqu'à ce que tu lances le brawl.</p>` : ""}
     <div class="row"><button class="btn big corail" id="go">▶ Lancer ${prep.devoir && prep.manche === 1 ? "le devoir" : "la manche " + prep.manche}${prep.illimite ? " ♾️" : ""}${prep.mode === "equipes" ? " 👥" : ""}${prep.coef === 2 ? " (×2)" : prep.coef === 0 ? " (hors classement)" : ""}</button></div>
   </div>`;
   const maj = (redessiner = true) => { publierPrep(); if (redessiner) panneauPrep(box, scores); };
@@ -200,7 +200,7 @@ function panneauLagon() {
 // lancer la manche préparée
 export async function lancerManche() {
   const p = prep;
-  if (p.qui === "choix" && !p.participants.length) return toast("Choisissez au moins un élève qui joue.", "err");
+  if (p.qui === "choix" && !p.participants.length) return toast("Choisis au moins un·e élève qui joue.", "err");
   if (p.mode === "equipes") completerEquipes();
   try {
     await publierPrep(true);

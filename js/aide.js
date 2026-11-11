@@ -36,7 +36,7 @@ function regles() {
     <li>Un match dure <b>${TICKS} tours</b>, soit 3 jours et 3 nuits (une journée = 60 tours). Il commence à 8 h.</li>
     <li>La nuit va de <b>19 h à 6 h</b> (de 20 h à 5 h avec les nuits courtes, la finale et la tempête).</li>
     <li><code>heure()</code> donne l'heure (0 à 23) : pratique pour <b>partir vers la plage avant la nuit</b>.</li>
-    <li>🚀 <code>debut_nuit()</code> et <code>fin_nuit()</code> donnent les heures de la nuit <b>de la manche en cours</b> (elles changent avec la nouveauté et le lagon choisi par ton enseignant).</li></ul>`)}
+    <li>🚀 <code>debut_nuit()</code> et <code>fin_nuit()</code> donnent les heures de la nuit <b>de la manche en cours</b> (elles changent avec la nouveauté et le lagon choisi par ton enseignant·e).</li></ul>`)}
   ${section("⚡ L'énergie", `<table class="prims">
     <tr><td>Départ</td><td>${P.energieDepart} ⚡ (maximum ${P.energieMax})</td></tr>
     <tr><td>Faim</td><td>−1 ⚡ tous les ${P.perteEnergie} tours</td></tr>

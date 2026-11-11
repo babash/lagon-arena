@@ -27,14 +27,14 @@ export function rendreScene() {
 function scAttente(st) {
   const devoir = (mesSalles()[S.code] || {}).devoir;
   st.innerHTML = `<div class="stage-centre">
-    ${devoir ? `<div class="msg info">📚 <b>Devoir à la maison</b> : réglez la manche ci-dessous (nouveauté, équipes…), puis cliquez sur <b>▶ Lancer le devoir</b>. Le lien à donner aux élèves s'affichera.</div>` : ""}
+    ${devoir ? `<div class="msg info">📚 <b>Devoir à la maison</b> : règle la manche ci-dessous (nouveauté, équipes…), puis clique sur <b>▶ Lancer le devoir</b>. Le lien à donner aux élèves s'affichera.</div>` : ""}
     <h2 class="titre-scene">🌊 Rejoignez le lagon !</h2>
     <p class="consigne">1. Allez sur <b>${esc(adresseCourte())}</b><br>2. Tapez le code :</p>
     <div class="code-salle geant">${S.code}</div>
     <div id="qr" class="qr cache"></div>
-    <p class="consigne"><b id="nb-grand">${S.joueurs.length}</b> élève(s) connecté(s)</p>
+    <p class="consigne"><b id="nb-grand">${S.joueurs.length}</b> élève(s) connecté·e(s)</p>
     <p class="row centre"><button class="btn ghost" id="lien-acces">🔗 Lien d'accès à donner aux élèves</button></p>
-    <p class="petit muted">Conseil : laissez d'abord 10 à 15 minutes aux élèves pour les missions 1 et 2 de leur parcours (« 🗺️ Ton parcours », sur l'accueil).</p>
+    <p class="petit muted">Conseil : laisse d'abord 10 à 15 minutes aux élèves pour les missions 1 et 2 de leur parcours (« 🗺️ Ton parcours », sur l'accueil).</p>
   </div>
   <div id="prep"></div>`;
   dessinerQR($("#qr"), lienEleves());
@@ -73,7 +73,7 @@ function scProg(st) {
     piloter({ duree: Math.round(r + 60) }).catch((e) => toast(e.message, "err"));
   });
   $("#stop").addEventListener("click", () => {
-    if (!confirm((estIllimite() ? "Fermer les envois maintenant ?" : "Terminer le chrono maintenant ?") + " Les élèves connectés ont encore 5 secondes (envoi automatique).")) return;
+    if (!confirm((estIllimite() ? "Fermer les envois maintenant ?" : "Terminer le chrono maintenant ?") + " Les élèves connecté·e·s ont encore 5 secondes (envoi automatique).")) return;
     piloter({ duree: 5 }).catch((e) => toast(e.message, "err"));
   });
   $("#chrono5").addEventListener("click", () => piloter({ duree: 300 }).catch((e) => toast(e.message, "err")));
@@ -89,7 +89,7 @@ function scProg(st) {
       $("#plus").classList.toggle("cache", long); $("#chrono5").classList.toggle("cache", !long); $("#changer-tw").classList.toggle("cache", !long);
       $("#stop").textContent = long ? "⏹ Fermer les envois" : "⏹ Terminer le chrono";
       $("#aide-prog").innerHTML = long
-        ? "♾️ <b>Temps illimité</b> : les élèves programment et renvoient leur tortue quand ils veulent, même depuis chez eux (avec leur <b>code de session</b>), jusqu'à ce que vous lanciez le brawl."
+        ? "♾️ <b>Temps illimité</b> : les élèves programment et renvoient leur tortue quand ils et elles veulent, même depuis la maison (avec leur <b>code de session</b>), jusqu'à ce que tu lances le brawl."
         : "Les élèves peuvent renvoyer leur tortue jusqu'à la fin du chrono. À 0, les tortues modifiées sont envoyées automatiquement.";
     }
     gc.textContent = long ? "♾️" : r > 0 ? mmss(r) : "0:00";
@@ -123,7 +123,7 @@ async function demarrerBrawl() {
   if (brawlEnCours) return;
   const r = secondesRestantes(S.salle.fin_chrono);
   if (r > 3) {
-    if (!confirm((estIllimite() ? "Fermer les envois et lancer le brawl maintenant ?" : "Le chrono n'est pas terminé. Lancer le brawl maintenant ?") + "\n(Les élèves connectés ont 5 secondes : les tortues modifiées sont envoyées automatiquement.)")) return;
+    if (!confirm((estIllimite() ? "Fermer les envois et lancer le brawl maintenant ?" : "Le chrono n'est pas terminé. Lancer le brawl maintenant ?") + "\n(Les élèves connecté·e·s ont 5 secondes : les tortues modifiées sont envoyées automatiquement.)")) return;
     brawlEnCours = true;
     try { await piloter({ duree: 5 }); } catch (e) { toast(e.message, "err"); brawlEnCours = false; return; }
     $("#aide-prog").innerHTML = "<b>📤 Envoi automatique des dernières tortues…</b>";
@@ -239,10 +239,10 @@ async function scResultats(st) {
       </table></div>
       <div><h3>Classement de la séance</h3>${tableauCumule(cls, 12)}</div>
     </div>
-    <p class="petit muted">👆 Un clic sur un élève du match : son code, ses tests, et le match revu en suivant sa tortue.</p>
+    <p class="petit muted">👆 Un clic sur un·e élève du match : son code, ses tests, et le match revu en suivant sa tortue.</p>
     <div id="pantheon-auto" class="pantheon-auto"></div>
     <details class="card resume-d" id="resume-d"><summary><b>🩺 Les tortues de la classe</b> : qui ne pond pas, et pourquoi</summary><div id="resume"></div></details>
-    <div class="msg info" style="margin-top:14px">🔍 <b>Laissez 2-3 minutes aux élèves</b> : sur leur écran, ils revoient le match en suivant leur tortue, ligne par ligne, avec des conseils. Pendant ce temps, préparez la manche suivante ci-dessous.</div>
+    <div class="msg info" style="margin-top:14px">🔍 <b>Laisse 2-3 minutes aux élèves</b> : sur leur écran, ils et elles revoient le match en suivant leur tortue, ligne par ligne, avec des conseils. Pendant ce temps, prépare la manche suivante ci-dessous.</div>
     <div class="row centre actions-fin" id="actions"></div>
     <div id="replay" style="margin-top:14px"></div>
     <div id="prep"></div>`;

@@ -1,8 +1,8 @@
 # 📜 Les règles du jeu
 
-[← Retour au README](../README.md) · [Guide de l'enseignant](GUIDE-ENSEIGNANT.md) · [Pédagogie](PEDAGOGIE.md)
+[← Retour au README](../README.md) · [Guide de l'enseignant·e](GUIDE-ENSEIGNANT.md) · [Pédagogie](PEDAGOGIE.md)
 
-Ce document décrit les règles **exactes** du moteur (`js/moteur/`). Les valeurs viennent de l'objet `P` de `js/moteur/regles.js` : si vous les changez, ce document doit suivre.
+Ce document décrit les règles **exactes** du moteur (`js/moteur/`). Les valeurs viennent de l'objet `P` de `js/moteur/regles.js` : si tu les changes, ce document doit suivre.
 
 ## Les règles en 1 minute (ce que voient les élèves)
 
@@ -26,7 +26,7 @@ Sous l'éditeur, un **aide-mémoire** reste toujours visible : 🥚 = 🏖️ pl
 - Chaque élève écrit une fonction `tour()`. **À chaque tour, le jeu l'appelle** pour chaque tortue.
 - La tortue fait **une seule action par tour** : la première rencontrée en lisant le code de haut en bas. Si aucune action n'est atteinte, elle ne fait rien.
 - **Pour marquer 1 point (1 nid)**, il faut appeler `pondre()` **sur une plage**, **la nuit**, avec **au moins 6 ⚡**. Pondre coûte 4 ⚡.
-- Le gagnant est la tortue qui a le plus de nids à la fin du match.
+- La gagnante est la tortue qui a le plus de nids à la fin du match.
 
 ```python
 def tour():
@@ -120,11 +120,11 @@ En équipes : on ne pousse **jamais une équipière**, et `pousser()` vise **d'a
 | 🦈 Requins affamés | **5 rapides, vision 5** | 4 sacs | 19 h – 6 h | au choix |
 | 🌙 Nuits courtes | 3, vision 4 | 4 sacs | **20 h – 5 h** | au choix : il faut anticiper avec `heure()` |
 | 🏆 Finale | **5 rapides, vision 5** | 6 sacs | **20 h – 5 h** | manche 3 |
-| ⛈️ Tempête | **5 rapides, vision 5** | **22 sacs, sur les algues** | **20 h – 5 h** | duel des champions |
+| ⛈️ Tempête | **5 rapides, vision 5** | **22 sacs, sur les algues** | **20 h – 5 h** | duel des champion·ne·s |
 
 ### Un lagon personnalisé
 
-Par-dessus la nouveauté, l'enseignant peut régler le lagon d'une manche (panneau « Préparer la manche ») :
+Par-dessus la nouveauté, l'enseignant·e peut régler le lagon d'une manche (panneau « Préparer la manche ») :
 
 | Réglage | Valeurs |
 |---|---|
@@ -159,12 +159,12 @@ Le code des tortues d'entraînement est dans `js/moteur/tortues.js`. La Pirate e
 
 ## 9. Les points
 
-### Chacun pour soi
+### Chacun·e pour soi
 
 - Points selon le **rang parmi les élèves** : 25, 20, 16, 13, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 (1 point minimum). Les ex æquo ont le même rang.
-- **+3 de bonus de progression** si la tortue pond plus de nids qu'à la manche précédente : un élève qui progresse marque aussi.
+- **+3 de bonus de progression** si la tortue pond plus de nids qu'à la manche précédente : un·e élève qui progresse marque aussi.
 - Une manche peut être **à points doubles** (×2) ou **hors classement** (entraînement).
-- Le **duel des champions** (les 3 premiers, complétés par des 🤖) est hors classement.
+- Le **duel des champion·ne·s** (les 3 premier·e·s, complété·e·s par des 🤖) est hors classement.
 
 ### En équipes
 
@@ -192,8 +192,8 @@ Les couleurs sont attribuées automatiquement : 🔵 Bleue, 🔴 Rouge, 🟢 Ver
 
 Le Panthéon classe les tortues de tous les temps sur un **banc d'essai** identique pour toutes (`js/pantheon.js`) :
 
-- **20 parties** « chacun pour soi », lagon calme, contre les 5 tortues d'entraînement ;
-- toujours **les mêmes 20 lagons** (graines fixes) : le calcul est reproductible, l'administrateur peut le refaire pour vérifier un score ;
+- **20 parties** « chacun·e pour soi », lagon calme, contre les 5 tortues d'entraînement ;
+- toujours **les mêmes 20 lagons** (graines fixes) : le calcul est reproductible, l'administration du Panthéon peut le refaire pour vérifier un score ;
 - le score est la **moyenne de nids**, arrondie au centième ; à égalité, la première arrivée passe devant.
 
 Sur ce banc, les tortues d'entraînement font : Championne 5,50 · Maline 4,25 · Prudente 2,05 · Gourmande 1,35 · Bulle 0.
@@ -262,7 +262,7 @@ Certains coins du lagon sont truffés de requins, loin des plages ou presque vid
 
 | | Primitive | Rôle | Réponse |
 |---|---|---|---|
-| 🏳️ | `mon_equipe()` | Le numéro de mon équipe : 1 = 🔵 Bleue, 2 = 🔴 Rouge, 3 = 🟢 Verte, 4 = 🟡 Jaune… (0 = chacun pour soi) | un nombre |
+| 🏳️ | `mon_equipe()` | Le numéro de mon équipe : 1 = 🔵 Bleue, 2 = 🔴 Rouge, 3 = 🟢 Verte, 4 = 🟡 Jaune… (0 = chacun·e pour soi) | un nombre |
 | 🥚 | `mes_nids()` | Combien de nids me reste-t-il ? | un nombre |
 | 🐢🥚 | `nids_voisine()` | Combien de nids a la tortue collée à moi ? (0 s'il n'y en a pas) | un nombre |
 | 🥚🥚 | `nids_equipe()` | Combien de nids a mon équipe en tout ? | un nombre |
@@ -294,3 +294,7 @@ Pas de boucle, de liste ni de variable qui survit d'un tour à l'autre : **chaqu
 Les erreurs fréquentes sont expliquées en français, avec la ligne et une suggestion : `:` oublié, `=` au lieu de `==`, parenthèses manquantes, faute de frappe dans un nom (« Tu voulais dire `requin_proche` ? »), indentation incohérente, `true` au lieu de `True`, `&&` au lieu de `and`, etc.
 
 Dans l'éditeur, on peut taper les mots-clés **en français** pour les retrouver : *si* → `if`, *sinon si* → `elif`, *sinon* → `else`, *et* → `and`, *ou* → `or`, *pas* → `not`, *vrai* → `True`, *faux* → `False`.
+
+---
+
+Conçu par Babash - NSI Tani Malandi, développé avec [Claude Code](https://claude.com/claude-code) · [Code source sur GitHub](https://github.com/babash/lagon-arena) · code [MIT](../LICENSE), documents [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.fr)

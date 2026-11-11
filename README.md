@@ -6,7 +6,7 @@
 
 ## 👉 [Essayer maintenant : babash.github.io/lagon-arena](https://babash.github.io/lagon-arena/index.html)
 
-**Gratuit · sans compte · rien à installer · des pseudos, enregistrés en ligne ; le Panthéon affiche le pseudo, la classe, l'établissement et la date**
+**Gratuit · sans compte · rien à installer.** Enregistrés en ligne : le pseudo, la couleur de la tortue, les programmes envoyés (un par manche) et les scores, sans nom ni adresse électronique ; le Panthéon public affiche le pseudo, la classe, l'établissement, la date et la moyenne, jamais le programme.
 
 Lagon Arena fait partie des [Ressources NSI et SNT](https://babash.github.io/Babash-NSI-SNT/), rubrique [NSI Première](https://babash.github.io/Babash-NSI-SNT/nsi-premiere/).
 
@@ -16,7 +16,7 @@ Lagon Arena fait partie des [Ressources NSI et SNT](https://babash.github.io/Bab
 
 ## Une séance en trois étapes
 
-1. **Tu** ouvres l'[espace enseignant](https://babash.github.io/lagon-arena/prof.html) et cliques sur **Créer une salle** : un code de 4 lettres s'affiche au tableau. C'est lui qui identifie la classe ; tu peux y ajouter le nom de ton établissement, si tu le souhaites.
+1. **Tu** ouvres l'[espace enseignant·e](https://babash.github.io/lagon-arena/prof.html) et cliques sur **Créer une salle** : un code de 4 lettres s'affiche au tableau. C'est lui qui identifie la classe ; tu peux y ajouter le nom de ton établissement, si tu le souhaites.
 2. **Les élèves** vont sur [le site](https://babash.github.io/lagon-arena/index.html), suivent leur **parcours en 4 missions** (environ 30 minutes, aucun prérequis : la première se joue sans code), puis tapent le code et un pseudo.
 3. **Tu lances les manches** : 8 minutes de programmation, le **brawl** projeté (1 minute), 3 minutes de rapport… puis un rematch avec une nouveauté (invasion de plastique, nuits courtes, requins affamés).
 
@@ -25,7 +25,7 @@ Lagon Arena fait partie des [Ressources NSI et SNT](https://babash.github.io/Bab
 | ![Le tutoriel](docs/img/tutoriel.webp) **Le parcours en 4 missions** : piloter sa tortue à la main pour découvrir les règles, écrire ses règles en français, compléter le code avec des listes, puis l'écrire. L'élève repart avec une tortue qui pond. | ![L'écran élève](docs/img/eleve.webp) **L'écran élève** : ✍️ Programmer (un éditeur qui complète les mots, même en français, et 🧩 Mes règles pour ajouter une règle sans taper), 🧪 Tester (le lagon et la « pensée » côte à côte), 📜 Règles, 💡 Conseils. |
 | ![Les résultats de l'élève](docs/img/eleve-resultats.webp) **Après le brawl** : le match rejoué en suivant sa tortue, ce qu'elle pensait, des conseils qui disent quoi écrire. | ![Les résultats projetés](docs/img/prof-resultats.webp) **Au tableau** : podium, résultats du match, classement de la séance. |
 
-Tu veux d'abord découvrir le jeu seul·e ? Ouvre l'[espace enseignant en mode démo](https://babash.github.io/lagon-arena/prof.html?demo) et ajoute des élèves fictif·ve·s.
+Tu veux d'abord découvrir le jeu seul·e ? Ouvre l'[espace enseignant·e en mode démo](https://babash.github.io/lagon-arena/prof.html?demo) et ajoute des élèves fictif·ve·s.
 
 ## Ce que les élèves écrivent
 

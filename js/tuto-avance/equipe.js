@@ -21,7 +21,7 @@ ETAPES_EQUIPE.push({
     box.innerHTML = `<div class="etape"><div class="texte">
       <h2>👥 Jouer en équipe</h2>
       <ul class="points">
-        <li>Ton enseignant peut lancer une manche <b>en équipes</b> : 2 équipes ou plus (${[1, 2, 3, 4].map((e) => `${EQUIPES[e].icone} ${EQUIPES[e].nom}`).join(", ")}…). Tu sais <b>avant la manche</b> avec qui tu joues : mettez-vous d'accord sur une stratégie !</li>
+        <li>Ton enseignant·e peut lancer une manche <b>en équipes</b> : 2 équipes ou plus (${[1, 2, 3, 4].map((e) => `${EQUIPES[e].icone} ${EQUIPES[e].nom}`).join(", ")}…). Tu sais <b>avant la manche</b> avec qui tu joues : mettez-vous d'accord sur une stratégie !</li>
         <li><b>Seul le rang de l'équipe compte</b> (on compare la moyenne des nids de ses tortues) : aider une équipière rapporte autant que pondre soi-même !</li>
         <li>🛡️ Deux équipières <b>collées</b> sont protégées des requins. On ne peut pas pousser une équipière.</li>
         <li>🎁 ${act("donner")} passe ${P.don} ⚡ à une équipière collée à toi. ${act("aller_vers_equipiere")} va la rejoindre.</li>

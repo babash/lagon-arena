@@ -10,7 +10,7 @@ export const NIVEAUX = {
   moyen: { icone: "🥈", titre: "Intermédiaire", cle: "lagon:tuto-avance",   // (même clé qu'avant : les étoiles déjà gagnées sont gardées)
     resume: "Les distances, <code>or</code> / <code>not</code>, les algues libres, <b>pousser</b> une tortue (sur un requin…), partir avant la nuit.", defi: "battre la Pirate 🏴‍☠️" },
   expert: { icone: "🥇", titre: "Expert", cle: "lagon:tuto-expert",
-    resume: "<b>Lire le lagon</b> : requins autour, algues sûres, touffes presque vides, algues près des plages… pour choisir les meilleures algues.", defi: "une stratégie d'expert" },
+    resume: "<b>Lire le lagon</b> : requins autour, algues sûres, touffes presque vides, algues près des plages… pour choisir les meilleures algues.", defi: "une stratégie d'expert·e" },
   equipe: { icone: "👥", titre: "Équipe", cle: "lagon:tuto-equipe",
     resume: "S'entraider (<b>donner</b> de l'énergie, se protéger à deux), et jouer contre plusieurs équipes : viser l'équipe <b>rivale</b>.", defi: "une stratégie d'équipe" },
 };

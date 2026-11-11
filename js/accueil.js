@@ -27,7 +27,7 @@ if (MODE === "db") {
     if (!s || (!s.parties && !s.participants)) return;
     const box = $("#compteurs");
     box.innerHTML = `<div class="compteur"><b data-n="${s.parties}">0</b><span>🎬 partie${s.parties > 1 ? "s" : ""} jouée${s.parties > 1 ? "s" : ""}</span></div>
-      <div class="compteur"><b data-n="${s.participants}">0</b><span>🐢 joueur${s.participants > 1 ? "s" : ""}</span></div>
+      <div class="compteur"><b data-n="${s.participants}">0</b><span>🐢 joueur·euse${s.participants > 1 ? "·s" : ""}</span></div>
       ${s.pantheon ? `<a class="compteur petit-compteur" href="pantheon.html"><b data-n="${s.pantheon}">0</b><span>🏛️ au Panthéon</span></a>` : ""}`;
     box.classList.remove("cache");
     defiler(box);
@@ -59,7 +59,7 @@ montrer(q.get("salle") ? "eleve" : q.has("prof") ? "prof" : store.get("lagon:pro
 
 // les salles de cet enseignant (gardées 60 jours dans ce navigateur)
 const salles = Object.keys(store.get("lagon:prof", {}) || {});
-if (salles.length) $("#mes-salles").innerHTML = `<div class="msg info">🔑 Vous avez <b>${salles.length} salle${salles.length > 1 ? "s" : ""}</b> sur ce navigateur (${salles.slice(0, 6).join(", ")}${salles.length > 6 ? "…" : ""}) : retrouvez-la${salles.length > 1 ? "s" : ""} dans l'<a href="prof.html">espace enseignant</a>.</div>`;
+if (salles.length) $("#mes-salles").innerHTML = `<div class="msg info">🔑 Tu as <b>${salles.length} salle${salles.length > 1 ? "s" : ""}</b> sur ce navigateur (${salles.slice(0, 6).join(", ")}${salles.length > 6 ? "…" : ""}) : retrouve-la${salles.length > 1 ? "s" : ""} dans l'<a href="prof.html">espace enseignant·e</a>.</div>`;
 
 // ---------- le parcours : les 4 missions du tutoriel, avec leur progression ----------
 const salleQ = q.get("salle") ? q.get("salle").toUpperCase().replace(/[^A-Z0-9]/g, "") : "";
@@ -81,7 +81,7 @@ function dessinerParcours() {
       </a></li>`;
   }).join("") + `<li class="mission m-partie${!prochaine ? " ici" : ""}"><a href="#titre-acces" class="mission-lien">
       <span class="mission-num" aria-hidden="true">🏁</span><span class="mission-ic" aria-hidden="true">🏆</span>
-      <span class="mission-corps"><span class="mission-sur">Ensuite</span><b>La partie avec ta classe</b><span class="mission-txt">Ton enseignant affiche un code : entre-le en haut de la page, et que la meilleure tortue gagne !</span></span>
+      <span class="mission-corps"><span class="mission-sur">Ensuite</span><b>La partie avec ta classe</b><span class="mission-txt">Ton enseignant·e affiche un code : entre-le en haut de la page, et que la meilleure tortue gagne !</span></span>
       <span class="mission-pied"><span class="mission-etat">${prochaine ? "Après les missions" : "👉 Prête !"}</span></span></a></li>`;
 }
 dessinerParcours();
@@ -169,13 +169,13 @@ $("#reprendre").addEventListener("submit", async (e) => {
     if (r === null) {
       $("#reprise-secours").classList.remove("cache");
       const d = store.get("lagon:derniere"); if (d) { $("#salle2").value = d.salle; $("#pseudo2").value = d.pseudo; }
-      return montrerErreur("#erreur2", "Pour l'instant, tape aussi le code de ta salle et ton pseudo (ton enseignant doit mettre à jour la base de données).");
+      return montrerErreur("#erreur2", "Pour l'instant, tape aussi le code de ta salle et ton pseudo (ton enseignant·e doit mettre à jour la base de données).");
     }
-    if (!r) return montrerErreur("#erreur2", `Aucune partie avec le code <b>${esc(codeLisible(code))}</b>. Vérifie-le dans ton cahier (attention aux lettres qui se ressemblent). La salle a peut-être été supprimée : demande à ton enseignant.`);
+    if (!r) return montrerErreur("#erreur2", `Aucune partie avec le code <b>${esc(codeLisible(code))}</b>. Vérifie-le dans ton cahier (attention aux lettres qui se ressemblent). La salle a peut-être été supprimée : demande à ton enseignant·e.`);
     if (r.couleur) couleur = r.couleur;
     await entrer(r.salle, r.pseudo, j, code);
   } catch (err) {
-    montrerErreur("#erreur2", /déjà pris/.test(err.message) ? "Ce code de session ne correspond pas à ce pseudo. Vérifie la salle, le pseudo et le code (ou demande à ton enseignant de débloquer ton pseudo)." : esc(err.message));
+    montrerErreur("#erreur2", /déjà pris/.test(err.message) ? "Ce code de session ne correspond pas à ce pseudo. Vérifie la salle, le pseudo et le code (ou demande à ton enseignant·e de débloquer ton pseudo)." : esc(err.message));
   }
 });
 

@@ -110,7 +110,7 @@ function majCarteManche(annoncer = false) {
          <span class="petit">Seul le <b>rang de ton équipe</b> compte (moyenne des nids). Mettez-vous d'accord sur une stratégie ! Nouvelles primitives : <code>donner()</code>, <code>equipiere_fatiguee()</code>…</span></div>`
       : c.participants && !c.participants.includes(PSEUDO)
         ? `<div class="mon-equipe">👥 Manche en équipes : ${nums.map((e) => `${nomEquipe(e)} (${noms(e)})`).join(" · ")}. Tu ne joues pas cette manche : observe leurs stratégies !</div>`
-        : `<div class="mon-equipe">👥 Manche en équipes : ton enseignant va t'ajouter à une équipe.</div>`;
+        : `<div class="mon-equipe">👥 Manche en équipes : ton enseignant·e va t'ajouter à une équipe.</div>`;
     if (annoncer && mienne) toast(`👥 Tu es dans l'équipe ${nomEquipe(mienne)} !`);
   }
   box.innerHTML = html + "</div>";

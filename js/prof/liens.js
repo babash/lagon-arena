@@ -49,7 +49,7 @@ Choisis un pseudo (pas ton vrai nom), puis plonge dans le lagon !`;
 export function fenetreLienEleves({ devoir = false } = {}) {
   const lien = lienEleves();
   const o = fenetre(`<h2>🔗 Lien d'accès pour les élèves</h2>
-    <p>${devoir ? "📚 <b>Devoir</b> : la manche est ouverte, sans limite de temps. " : ""}Donnez ce lien aux élèves : la salle <b>${esc(S.code)}</b> est déjà remplie, ils n'ont plus qu'à choisir un pseudo.</p>
+    <p>${devoir ? "📚 <b>Devoir</b> : la manche est ouverte, sans limite de temps. " : ""}Donne ce lien aux élèves : la salle <b>${esc(S.code)}</b> est déjà remplie, il ne leur reste qu'à choisir un pseudo.</p>
     <p class="lien-prof">${esc(lien)}</p>
     <p class="row centre"><button class="btn" id="copier-lien-el">📋 Copier le lien</button></p>
     <div id="qr-lien" class="qr cache"></div>
@@ -65,20 +65,20 @@ export function fenetreLienEleves({ devoir = false } = {}) {
 export function fenetreLienEnseignant() {
   const lien = lienEnseignant();
   const o = fenetre(`<h2>🏠 Piloter depuis un autre ordinateur</h2>
-    <p>Ouvrez ce <b>lien enseignant</b> sur l'autre ordinateur (envoyez-le-vous par la messagerie de l'établissement, par exemple) : la salle <b>${esc(S.code)}</b> s'y ajoutera à « Mes salles ».</p>
+    <p>Ouvre ce <b>lien enseignant·e</b> sur l'autre ordinateur (envoie-le-toi par la messagerie de l'établissement, par exemple) : la salle <b>${esc(S.code)}</b> s'y ajoutera à « Mes salles ».</p>
     <p class="lien-prof">${esc(lien)}</p>
-    <p class="petit">⚠️ <b>Ne le donnez pas aux élèves</b> : ce lien permet de piloter la salle.</p>
+    <p class="petit">⚠️ <b>Ne le donne pas aux élèves</b> : ce lien permet de piloter la salle.</p>
     <p class="row centre"><button class="btn" id="copier-prof">📋 Copier le lien</button></p>`);
-  boutonCopier(o, "#copier-prof", lien, "Lien enseignant copié !");
+  boutonCopier(o, "#copier-prof", lien, "Lien enseignant·e copié !");
 }
 
 export async function fenetreCodesSession() {
   let l;
-  try { l = await db.codesSession(S.code, S.secret); } catch { return toast("Codes de session indisponibles : relancez supabase.sql dans Supabase.", "err"); }
+  try { l = await db.codesSession(S.code, S.secret); } catch { return toast("Codes de session indisponibles : relance supabase.sql dans Supabase.", "err"); }
   const o = fenetre(`<h2>🔑 Codes de session · salle ${esc(S.code)}</h2>
     <p class="petit">Pour se reconnecter depuis un autre ordinateur (chez soi…), l'élève clique sur « 🏠 J'ai un code de session » sur l'accueil et tape <b>seulement son code</b> : sa salle et son pseudo sont retrouvés tout seuls. Chaque élève voit aussi le sien avec le bouton « 🏠 Mon code de session ».</p>
     <table class="scores codes-table"><tr><th>Pseudo</th><th>Code de session</th></tr>
-      ${l.map((x) => `<tr><td>${esc(x.pseudo)}</td><td class="code-cell">${x.code ? codeLisible(x.code) : '<span class="muted petit">créé quand l\'élève ouvrira sa page</span>'}</td></tr>`).join("") || '<tr><td colspan="2" class="muted">Aucun élève</td></tr>'}</table>
+      ${l.map((x) => `<tr><td>${esc(x.pseudo)}</td><td class="code-cell">${x.code ? codeLisible(x.code) : '<span class="muted petit">créé quand l\'élève ouvrira sa page</span>'}</td></tr>`).join("") || '<tr><td colspan="2" class="muted">Aucun·e élève</td></tr>'}</table>
     <p class="petit">⚠️ À ne pas projeter : chaque code permet d'envoyer une tortue à la place de l'élève.</p>
     <p class="row centre"><button class="btn ghost" id="imprimer-codes">🖨️ Imprimer</button></p>`, { large: true });
   $("#imprimer-codes", o).addEventListener("click", () => { document.body.classList.add("impr-codes"); window.print(); document.body.classList.remove("impr-codes"); });

@@ -38,7 +38,7 @@ Six tortues « types » d'élèves, 20 parties chacune, lagon calme :
    - L'éditeur dit « ✅ Code valide » pour une tortue qui ne pondra jamais.
    - Le rapport conseille d'ajouter `pondre()` alors qu'il est déjà écrit.
    - Le coup de pouce ne vérifie que la *présence* des mots `pondre` et `aller_vers_plage`. Il passe donc à « Attention aux requins ».
-4. **L'enseignant est aveugle.** Il ne voit ni qui ne pond pas, ni pourquoi, ni le code des élèves, même après le brawl.
+4. **L'enseignant·e est aveugle.** Il ou elle ne voit ni qui ne pond pas, ni pourquoi, ni le code des élèves, même après le brawl.
 
 ### Les autres difficultés relevées
 
@@ -48,13 +48,13 @@ Six tortues « types » d'élèves, 20 parties chacune, lagon calme :
 | Au vidéoprojecteur (1024×768) : le code géant et le classement du brawl sortent de l'écran ; le panneau de réglages est projeté | 6 |
 | Sur téléphone (devoir) : éditeur étroit, page de 3 200 px de haut | 7 |
 | Les pages se figent 2 s au calcul du brawl, se chargent en 3,3 s en connexion lente | 9 |
-| Les données d'un jour (élève) et l'effacement à 7 jours (enseignant) ne sont annoncés nulle part | 10 |
+| Les données d'un jour (élève) et l'effacement à 7 jours (enseignant·e) ne sont annoncés nulle part | 10 |
 
 ---
 
 ## Le constat n° 2 (novembre 2026) : les élèves comprennent mal le jeu
 
-> À l'usage, les règles du jeu sont mal comprises, le tutoriel n'est pas assez progressif (il doit aussi convenir à des élèves de **Seconde**), l'accueil est peu pratique et les rappels des règles sont brouillons. Un élève qui a son code de session ne devrait pas avoir à retaper son pseudo.
+> À l'usage, les règles du jeu sont mal comprises, le tutoriel n'est pas assez progressif (il doit aussi convenir à des élèves de **Seconde**), l'accueil est peu pratique et les rappels des règles sont brouillons. Un·e élève qui a son code de session ne devrait pas avoir à retaper son pseudo.
 
 C'est le **chantier 1 bis** ci-dessous.
 
@@ -75,7 +75,7 @@ C'est le **chantier 1 bis** ci-dessous.
 | **P1** | **1.** Faire pondre toutes les tortues | Le problème n° 1 en classe |
 | **P1** | **1 bis.** Un parcours progressif, des règles claires, un accueil pratique | ✅ Fait en novembre : les élèves comprenaient mal le jeu |
 | **P1** | **2.** Séparer Programmer, Tester, Aide et Conseils | Indispensable pour comprendre sa tortue ; c'est là que s'affichent les diagnostics du chantier 1 |
-| **P1** | **3.** L'enseignant voit les codes et les difficultés | Pour aider les élèves au bon moment |
+| **P1** | **3.** L'enseignant·e voit les codes et les difficultés | Pour aider les élèves au bon moment |
 | P2 | **4.** Le Panthéon automatique | Les meilleures tortues de chaque manche y entrent seules |
 | P2 | **5.** La galerie des gagnantes | Apprendre des tortues qui marchent |
 | P2 | **6.** Vidéoprojecteur : écran projeté et pupitre | Ne plus projeter les réglages ni les codes |
@@ -84,7 +84,7 @@ C'est le **chantier 1 bis** ci-dessous.
 | P3 | **9.** La fluidité, sans perte de fonctionnalité | |
 | P3 | **10.** Les parcours (fiche du lagon, progression, messages…) | |
 
-Les chantiers 1, 2 et 3 se répondent : le diagnostic (1) s'affiche dans « Programmer » et « Tester » (2) et chez l'enseignant (3). Le plus simple est de construire d'abord le **diagnostic** (1.1), puis les écrans.
+Les chantiers 1, 2 et 3 se répondent : le diagnostic (1) s'affiche dans « Programmer » et « Tester » (2) et chez l'enseignant·e (3). Le plus simple est de construire d'abord le **diagnostic** (1.1), puis les écrans.
 
 ---
 
@@ -116,11 +116,11 @@ Les chantiers 1, 2 et 3 se répondent : le diagnostic (1) s'affiche dans « Prog
 
 ## 1. Faire pondre toutes les tortues
 
-*Objectif : qu'un élève qui a fait le tutoriel ait une tortue qui pond, et que, quand elle ne pond pas, il sache **pourquoi** et **quelle ligne changer**.*
+*Objectif : qu'un·e élève qui a fait le tutoriel ait une tortue qui pond, et que, quand elle ne pond pas, l'élève sache **pourquoi** et **quelle ligne changer**.*
 
 ### 1.1. Un diagnostic juste : comprendre ce que fait vraiment la tortue
 
-C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce et à l'enseignant.
+C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce et à l'enseignant·e.
 
 - [x] **Les tests de la tortue** (`js/moteur/diagnostic.js`, affichés par `js/bilan.js`) : on fait jouer **un tour** du programme dans 10 situations clés, et on compare ce qu'elle fait à ce qu'on attend. Les exercices des tutoriels utilisent les mêmes situations.
 
@@ -148,7 +148,7 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
   - [x] un **`pondre()` toujours refusé** (il manque la plage, la nuit ou l'énergie) ;
   - [ ] un **`manger()` sans `algue_ici()`** (aujourd'hui, seulement par le test « le jour, en pleine eau ») ;
   - [x] deux conditions identiques, une action (même dans un `else`) qui ne s'exécute jamais.
-  - [x] Méthode : essayer toutes les situations de débutant (5 questions vrai/faux, l'énergie de 0 à 10, l'heure de 0 à 23 : au plus 8 500 situations), en respectant les liens évidents (`est_la_nuit()` dépend de l'heure et de la nouveauté). Moins de 50 ms par analyse (≈ 15 ms mesurés).
+  - [x] Méthode : essayer toutes les situations de débutant·e (5 questions vrai/faux, l'énergie de 0 à 10, l'heure de 0 à 23 : au plus 8 500 situations), en respectant les liens évidents (`est_la_nuit()` dépend de l'heure et de la nouveauté). Moins de 50 ms par analyse (≈ 15 ms mesurés).
   - [ ] Pour les questions avancées (distances, équipes…), utiliser des **situations réelles** relevées dans des parties simulées. Aujourd'hui, une ligne qui dépend d'une question avancée n'est jamais déclarée « jamais atteinte » (pas de fausse alerte, mais pas d'alerte non plus).
 - [x] **Les 4 actions clés** : `pondre()`, `aller_vers_plage()`, `manger()`, `aller_vers_algue()` (ou `aller_vers_algue_libre()`), présentes **et atteignables**. Une action en commentaire ou jamais atteinte compte comme absente. Une petite liste toujours visible sous l'éditeur : « Ta tortue sait : ✅ manger · ✅ aller vers les algues · ❌ pondre · ❌ aller vers la plage ».
 - [x] **Un verdict simple, en une ligne**, en tête de l'éditeur :
@@ -202,12 +202,12 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 - [x] Les missions « la tortue qui ne mange jamais », « la pondeuse impatiente » et « le sac plastique » sortent du tutoriel débutant (elles restent dans le moteur) : le tutoriel garde ses 15 étapes et environ 15 minutes.
 - [x] Quand un exercice ou une mission échoue, l'explication des tests de la tortue s'affiche (« 🔍 … c'est la ligne 3 qui agit, parce que… »).
 - [x] **Une étape finale « Construis ta tortue »** : l'élève assemble la tortue complète avec le bilan de santé en direct, jusqu'à 🟢. Puis **« 🐢 Emporter ma tortue »** : elle l'attend dans l'éditeur de la salle (ou du bac à sable).
-- [ ] La progression du tutoriel est visible par l'enseignant (chantier 3).
+- [ ] La progression du tutoriel est visible par l'enseignant·e (chantier 3).
 
 ### 1.5. Tests et critères
 
 - [x] Les 6 tortues types dans `outils/verifier.mjs`, avec le diagnostic attendu pour chacune.
-- [x] **Aucune fausse alerte** sur les tortues d'entraînement, les solutions des tutoriels, les stratégies d'expert et d'équipe, et les programmes du coup de pouce.
+- [x] **Aucune fausse alerte** sur les tortues d'entraînement, les solutions des tutoriels, les stratégies d'expert·e et d'équipe, et les programmes du coup de pouce.
 
 **C'est fini quand** :
 - pour chaque tortue type A à E, l'éditeur affiche 🔴 ou 🟠 avec **la vraie cause et la bonne ligne** ;
@@ -221,7 +221,7 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 *Fait sur `dev` le 10 novembre 2026.*
 
 - [x] **Le tutoriel devient un parcours en 4 missions** (`js/parcours.js`), qu'on peut faire en plusieurs fois :
-  1. 🌊 **Comprendre le jeu** (sans code) : le but, le lagon, **🎮 Pilote ta tortue** (l'élève choisit l'action à chaque tour : il découvre la ponte refusée le jour ou sans énergie, la plage, le requin), puis **les règles en 1 minute** (6 cartes, l'énergie à manipuler, un vrai/faux) ;
+  1. 🌊 **Comprendre le jeu** (sans code) : le but, le lagon, **🎮 Pilote ta tortue** (l'élève choisit l'action à chaque tour et découvre la ponte refusée le jour ou sans énergie, la plage, le requin), puis **les règles en 1 minute** (6 cartes, l'énergie à manipuler, un vrai/faux) ;
   2. 💬 **Parler à ta tortue** : les questions, les ordres, puis **« Si… alors… »** en français (deux listes ; la traduction Python s'affiche dessous) ;
   3. ✍️ **Tes premières règles en Python** : **« Complète le code »** (des listes à la place des trous, sans clavier), puis `if`, `else`, `and`, `elif` au clavier ;
   4. 🥚 **Une tortue qui pond** : une seule chaîne, l'ordre des priorités, deux tortues à réparer, puis **Construis ta tortue** (avec 🧩, sans taper si besoin).
@@ -264,22 +264,22 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 - [x] Sur un grand écran, une option « côte à côte » (le code et le test ensemble) remplace l'actuel « ◀ Réduire ».
 - [x] Même logique dans l'onglet 📊 Résultats (rejeu du brawl) et dans « Et si… ? » : lagon et pensée côte à côte quand la place le permet, clic sur une ligne → l'éditeur.
 
-**C'est fini quand** un élève peut tester, suivre sa tortue pas à pas avec sa pensée bien visible, et revenir corriger la bonne ligne en un clic, sur ordinateur comme sur téléphone, sans qu'aucune fonction actuelle ne manque.
+**C'est fini quand** un·e élève peut tester, suivre sa tortue pas à pas avec sa pensée bien visible, et revenir corriger la bonne ligne en un clic, sur ordinateur comme sur téléphone, sans qu'aucune fonction actuelle ne manque.
 
 ---
 
-## 3. L'enseignant voit les codes et les difficultés
+## 3. L'enseignant·e voit les codes et les difficultés
 
-*Pour aider le bon élève au bon moment, et pour discuter des codes après le brawl.*
+*Pour aider l'élève qui en a besoin, au bon moment, et pour discuter des codes après le brawl.*
 
 ### 3.1. Dans les résultats
 
-- [x] Dans l'écran des résultats de la manche, **un clic sur un élève** ouvre sa fiche (`js/prof/fiche.js`) :
+- [x] Dans l'écran des résultats de la manche, **un clic sur un·e élève** ouvre sa fiche (`js/prof/fiche.js`) :
   - son **code** (en couleur), tel qu'il a joué ;
   - ses nids, ses captures, ses épuisements ;
   - le **diagnostic** du chantier 1 (« ne pond jamais : deux blocs à la suite ») ;
   - **« ▶ Revoir le match en suivant cette tortue »**, avec sa pensée.
-- [x] Un résumé de la classe : « 🥚 18 tortues sur 25 ont pondu. Les 7 autres : 4 ont deux blocs à la suite, 2 mangent la nuit, 1 n'a pas de `pondre()` ». Un clic sur une cause liste les élèves concernés.
+- [x] Un résumé de la classe : « 🥚 18 tortues sur 25 ont pondu. Les 7 autres : 4 ont deux blocs à la suite, 2 mangent la nuit, 1 n'a pas de `pondre()` ». Un clic sur une cause liste les élèves concerné·e·s.
 - [x] **Attention au projecteur** : tant que le chantier 6 (écran projeté et pupitre séparés) n'est pas fait, la fiche s'ouvre avec un avertissement « visible au tableau », et un bouton pour la masquer d'un coup.
 - [x] L'export CSV peut inclure les codes (case à cocher).
 
@@ -292,16 +292,16 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
   - ⏳ rien envoyé.
 
   Plus un compteur en tête : « 🥚 12 tortues sur 25 pondent » ; un clic ouvre le résumé des causes (🩺 Les tortues de la classe).
-- [x] **Voir le code envoyé** par un élève pendant la manche, pour l'aider (un clic sur son pseudo). Il reste invisible pour les autres élèves.
-- [ ] **(Option, pas encore faite)** L'état du **brouillon** en cours, avant envoi. Seul l'état est envoyé (🟢 / 🔴 / 🐞), jamais le code. Pratique pour repérer un élève bloqué qui n'ose pas envoyer.
-- [ ] La progression du tutoriel de chaque élève (⭐ 6 / 10), s'il l'a fait après avoir rejoint la salle (voir le chantier 10).
+- [x] **Voir le code envoyé** par un·e élève pendant la manche, pour l'aider (un clic sur son pseudo). Ce code reste invisible pour les autres élèves.
+- [ ] **(Option, pas encore faite)** L'état du **brouillon** en cours, avant envoi. Seul l'état est envoyé (🟢 / 🔴 / 🐞), jamais le code. Pratique pour repérer un·e élève bloqué·e qui n'ose pas envoyer.
+- [ ] La progression du tutoriel de chaque élève (⭐ 6 / 10), si le tutoriel a été fait après avoir rejoint la salle (voir le chantier 10).
 
 ### Côté base
 
-- [x] `codes_manche(code, secret, manche)` (enseignant) : la dernière tortue de chaque élève (manche ≤ `manche`), **même pendant la programmation**. Le public ne voit toujours rien avant le brawl. Sans cette fonction (base pas à jour), la liste montre ✅ / ⏳ comme avant, et les fiches s'ouvrent après le brawl avec les codes publics.
-- [ ] Pour l'option du brouillon : une petite table `etats` (salle, pseudo, état, date), écrite par l'élève avec son jeton, et lue par l'enseignant.
+- [x] `codes_manche(code, secret, manche)` (enseignant·e) : la dernière tortue de chaque élève (manche ≤ `manche`), **même pendant la programmation**. Le public ne voit toujours rien avant le brawl. Sans cette fonction (base pas à jour), la liste montre ✅ / ⏳ comme avant, et les fiches s'ouvrent après le brawl avec les codes publics.
+- [ ] Pour l'option du brouillon : une petite table `etats` (salle, pseudo, état, date), écrite par l'élève avec son jeton, et lue par l'enseignant·e.
 
-**C'est fini quand** l'enseignant voit, pendant la manche, qui ne pond pas et pourquoi. Après le brawl, il ouvre en un clic le code et le rejeu de n'importe quel élève.
+**C'est fini quand** l'enseignant·e voit, pendant la manche, qui ne pond pas et pourquoi. Après le brawl, il ou elle ouvre en un clic le code et le rejeu de n'importe quel·le élève.
 
 ---
 
@@ -309,18 +309,18 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 
 *Les meilleures tortues de chaque manche entrent d'elles-mêmes au Panthéon.*
 
-- [x] **À la fin de chaque manche**, quand l'enseignant passe aux résultats, son navigateur (`js/prof/pantheon-auto.js`) :
+- [x] **À la fin de chaque manche**, quand l'enseignant·e passe aux résultats, son navigateur (`js/prof/pantheon-auto.js`) :
   1. prend la ou les meilleures tortues d'élèves de la manche (réglage : la 1re, ou les 3 premières) ;
   2. écarte celles qui n'ont pondu aucun nid, et les copies des tutoriels, des tortues d'entraînement et du coup de pouce ;
   3. leur fait passer le banc d'essai (20 parties, par petits paquets : la page reste utilisable ; un vrai calcul en arrière-plan reste au chantier 9) ;
   4. les inscrit au Panthéon. Chaque manche n'est traitée qu'une fois (notée avec la salle).
 - [x] **Ce qu'affiche le Panthéon : le pseudo, la classe et la date.** La classe, c'est le **code de la salle** (ou du devoir). Le trio pseudo + classe + date est unique : deux élèves de classes différentes peuvent avoir le même pseudo. Fait pour les tortues proposées depuis une salle (la classe est prouvée par le jeton de session) ; les entrées automatiques suivront la même règle.
-- [x] **L'établissement est facultatif** : l'enseignant peut le renseigner **en créant la salle ou le devoir** (un champ de plus, vide par défaut, prérempli avec le dernier utilisé), puis le changer dans les réglages de la salle. Il s'affiche sous le code de la salle et il est proposé à l'élève qui inscrit sa tortue au Panthéon. Il est gardé avec la salle.
+- [x] **L'établissement est facultatif** : l'enseignant·e peut le renseigner **en créant la salle ou le devoir** (un champ de plus, vide par défaut, prérempli avec le dernier utilisé), puis le changer dans les réglages de la salle. Il s'affiche sous le code de la salle et il est proposé à l'élève qui inscrit sa tortue au Panthéon. Il est gardé avec la salle.
   - [x] Affiché à côté de la classe au Panthéon, et filtre par établissement. Pour une tortue venue d'une salle, c'est l'établissement de la salle qui compte (l'élève ne le tape pas).
-- [x] **Réglages enseignant** (gardés 60 jours, dans ⚙️ Réglages) :
+- [x] **Réglages enseignant·e** (gardés 60 jours, dans ⚙️ Réglages) :
   - « 🏛️ Envoyer les meilleures tortues au Panthéon » : oui par défaut ;
   - 1 ou 3 tortues par manche.
-- [x] **L'élève le voit** dans ses résultats : « 🏛️ Ta tortue entre au Panthéon à la 12e place ! », avec **son code Panthéon** pour l'améliorer plus tard. Il le retrouve avec son code de session, sans rien noter (le formulaire « 🏛️ Proposer au Panthéon » le reprend tout seul).
+- [x] **L'élève le voit** dans ses résultats : « 🏛️ Ta tortue entre au Panthéon à la 12e place ! », avec **son code Panthéon** pour l'améliorer plus tard. L'élève le retrouve avec son code de session, sans rien noter (le formulaire « 🏛️ Proposer au Panthéon » le reprend tout seul).
 - [x] **Au tableau**, dans les résultats : « 🏛️ Maki_Rapide entre au Panthéon (12e) ».
 - [x] **Doublons** (réglés par la base) :
   - même programme déjà au Panthéon : on ne l'ajoute pas ;
@@ -329,18 +329,18 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 - [x] **Pseudos en double entre classes (décidé)** : on n'exige plus qu'un pseudo soit unique dans tout le Panthéon. Chaque ligne affiche « Moya · classe K7PQ · 4 nov. 2026 » (et l'établissement s'il a été renseigné), ce qui suffit à distinguer deux Moya.
   - Les propositions faites à la main depuis le bac à sable (sans salle) affichent « hors classe » à la place du code.
   - Les entrées déjà au Panthéon gardent leur lycée, affiché comme établissement.
-- [x] Les entrées automatiques restent ⏳ jusqu'à la vérification de l'administrateur, comme les autres (l'administrateur voit « entrée automatique (manche 2) »).
+- [x] Les entrées automatiques restent ⏳ jusqu'à la vérification de l'administration du Panthéon, comme les autres (l'administration voit « entrée automatique (manche 2) »).
 
 ### Côté base
 
 - [x] `salles.etablissement` (texte facultatif), rempli par `creer_salle(établissement)` ; `definir_etablissement(code, secret, établissement)` pour le changer.
-- [x] `pantheon_classe(code, secret, manche, entrées)` : l'inscription par l'enseignant (avec le secret de la salle) ; le code doit être une tortue vraiment envoyée par l'élève ; un code Panthéon est tiré au hasard pour chaque nouvelle entrée.
+- [x] `pantheon_classe(code, secret, manche, entrées)` : l'inscription par l'enseignant·e (avec le secret de la salle) ; le code doit être une tortue vraiment envoyée par l'élève ; un code Panthéon est tiré au hasard pour chaque nouvelle entrée.
 - [x] Les entrées gardent leur origine : salle (la classe, `pantheon.salle`), pseudo, date, établissement.
 - [x] … et la manche (`pantheon.manche`, pour les entrées automatiques).
 - [x] L'index unique `pantheon_pseudo` est supprimé (pseudo + classe + date suffisent à distinguer deux tortues) ; `pantheon_lycees` sert de liste des établissements.
 - [x] `mon_entree_pantheon(salle, pseudo, jeton)` : l'élève retrouve son code Panthéon avec son jeton de session.
 
-**C'est fini quand**, après chaque manche, la meilleure tortue apparaît au Panthéon sans que personne n'ait rien fait, et que l'élève concerné le voit avec son code.
+**C'est fini quand**, après chaque manche, la meilleure tortue apparaît au Panthéon sans que personne n'ait rien fait, et que l'élève concerné·e le voit avec son code.
 
 ---
 
@@ -349,22 +349,22 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 *Après le brawl, les meilleures tortues de la classe deviennent des exemples à étudier. S'appuie sur le chantier 3.*
 
 - [ ] **Au tableau**, dans les résultats de la manche, une **🏆 Galerie** :
-  - [ ] le code des 3 premières (ou de celles que l'enseignant choisit) ;
+  - [ ] le code des 3 premières (ou de celles que l'enseignant·e choisit) ;
   - [ ] pour chacune, les lignes les plus souvent exécutées (« 42 % du temps : `aller_vers_algue()` ») et ses moments forts.
 - [ ] **Des questions pour lancer la discussion** : « Quelle ligne fait la différence ? », « Qu'est-ce que la 1re fait que la 3e ne fait pas ? ».
 - [ ] **Chez les élèves**, la galerie dans l'onglet 📊 Résultats :
   - [ ] **comparer** son code avec celui d'une gagnante, côte à côte ;
   - [ ] **« Et si j'avais sa ligne 3 ? »**, qui rejoue le même match avec une ligne empruntée.
-- [ ] **L'enseignant décide** : galerie affichée ou non, avec ou sans les pseudos (« Tortue A, B, C »).
+- [ ] **L'enseignant·e décide** : galerie affichée ou non, avec ou sans les pseudos (« Tortue A, B, C »).
 - [ ] Rien n'est montré pendant la programmation.
 
-**C'est fini quand** l'enseignant peut projeter et commenter le code des gagnantes, et que chaque élève peut comparer et emprunter une idée.
+**C'est fini quand** l'enseignant·e peut projeter et commenter le code des gagnantes, et que chaque élève peut comparer et emprunter une idée.
 
 ---
 
 ## 6. Vidéoprojecteur : écran projeté et pupitre
 
-*En 1024×768, le code géant et le classement sortent de l'écran. Et tout ce que l'enseignant règle est projeté, y compris, bientôt, les codes des élèves.*
+*En 1024×768, le code géant et le classement sortent de l'écran. Et tout ce que l'enseignant·e règle est projeté, y compris, bientôt, les codes des élèves.*
 
 - [ ] **« 📽️ Ouvrir l'écran de projection »** : une fenêtre propre, à mettre sur le vidéoprojecteur. Elle montre le code de la salle, le chrono, le brawl, le podium, la galerie, sans aucun réglage. La fenêtre de l'ordinateur devient le **pupitre** : réglages, liste des élèves, états, codes. Les deux restent synchronisées. Le mode actuel, un seul écran dupliqué, reste possible.
 - [ ] **Mise en page 1024×768** :
@@ -375,7 +375,7 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
   - [ ] les 3 premières sont mises en valeur ;
   - [ ] le texte est assez grand pour le fond de la salle.
 
-**C'est fini quand**, en 1024×768, l'écran projeté montre le code géant (attente) et le classement (brawl) sans faire défiler, et qu'aucun réglage ni aucun code d'élève n'apparaît au tableau sans que l'enseignant l'ait choisi.
+**C'est fini quand**, en 1024×768, l'écran projeté montre le code géant (attente) et le classement (brawl) sans faire défiler, et qu'aucun réglage ni aucun code d'élève n'apparaît au tableau sans que l'enseignant·e l'ait choisi.
 
 ---
 
@@ -390,9 +390,9 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
   - [ ] une autocomplétion utilisable au doigt.
 - [ ] **Lagon et pensée** : pleine largeur, gros boutons, une frise qu'on fait glisser.
 - [ ] **Tutoriels, accueil, Panthéon, aide** : rien ne déborde, les tableaux défilent dans leur cadre.
-- [ ] **Espace enseignant sur téléphone** : surveiller la salle (états des élèves) et lancer le brawl.
+- [ ] **Espace enseignant·e sur téléphone** : surveiller la salle (états des élèves) et lancer le brawl.
 
-**C'est fini quand** rien ne déborde horizontalement à 360 px, et qu'un élève peut faire tout le devoir au doigt.
+**C'est fini quand** rien ne déborde horizontalement à 360 px, et qu'un·e élève peut faire tout le devoir au doigt.
 
 ---
 
@@ -401,13 +401,13 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 - [ ] **Accueil** :
   - [ ] un en-tête vivant : un petit match qui tourne en fond, désactivé si le système demande moins d'animations ;
   - [ ] des boutons d'action plus visibles ;
-  - [ ] une vue enseignant qui donne envie.
+  - [ ] une vue enseignant·e qui donne envie.
 - [ ] **Une identité cohérente** : une seule famille d'icônes, ou des emojis homogènes ; cartes, ombres et espacements identiques ; hiérarchie des titres claire.
 - [ ] **Polices hébergées sur le site** (woff2), qui ne bloquent plus l'affichage.
 - [ ] **Moments de fête** : podium animé, confettis pour la meilleure progression, sons au choix (désactivés par défaut).
 - [ ] **Accessibilité de base** : contrastes, navigation au clavier, information jamais portée par la couleur seule, réglage « moins d'animations » respecté.
 
-**C'est fini quand** les captures avant et après des 5 tailles d'écran sont validées par l'enseignant.
+**C'est fini quand** les captures avant et après des 5 tailles d'écran sont validées par l'enseignant·e.
 
 ---
 
@@ -429,18 +429,18 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 
 ## 10. Les parcours (d'après [docs/INTERFACES.md](docs/INTERFACES.md))
 
-- [ ] **La fiche du lagon**, chez l'élève, au tableau et dans la préparation : les règles de la manche, chacune avec la question qui la lit (« 🌙 nuit 20 h → 5 h : `debut_nuit()` = 20 » ; « 👁️ requins : 5 cases, `vision_requin()` »), avec un aperçu de la carte pour l'enseignant.
-- [ ] **Rejoindre la salle d'abord, faire le tutoriel ensuite**, avec sa progression visible par l'enseignant (chantier 3).
+- [ ] **La fiche du lagon**, chez l'élève, au tableau et dans la préparation : les règles de la manche, chacune avec la question qui la lit (« 🌙 nuit 20 h → 5 h : `debut_nuit()` = 20 » ; « 👁️ requins : 5 cases, `vision_requin()` »), avec un aperçu de la carte pour l'enseignant·e.
+- [ ] **Rejoindre la salle d'abord, faire le tutoriel ensuite**, avec sa progression visible par l'enseignant·e (chantier 3).
 - [ ] **Un objectif de progression annoncé avant la manche** (« ta dernière estimation : 2,4 nids : fais mieux pour le bonus +3 »).
 - [ ] **Des messages au bon moment** :
   - l'oubli au bout d'un jour, chez l'élève (« ta tortue est gardée sur cet ordinateur jusqu'à demain 18 h ; ton code : … ») ;
-  - l'effacement 7 jours après la fin d'une séance, chez l'enseignant (« exportez le CSV maintenant »).
-- [ ] **Le devoir** : une consigne écrite par l'enseignant et affichée chez l'élève, une date de brawl prévue (facultative).
+  - l'effacement 7 jours après la fin d'une séance, chez l'enseignant·e (« exporte le CSV maintenant »).
+- [ ] **Le devoir** : une consigne écrite par l'enseignant·e et affichée chez l'élève, une date de brawl prévue (facultative).
 - [ ] **Préparer toute la séance d'un coup** : une frise des manches, puis un seul bouton « ▶ Manche suivante ».
 - [ ] **Un bilan pédagogique de fin de séance**, à partir des codes et des diagnostics (chantiers 1 et 3) : ce que la classe maîtrise, les erreurs les plus fréquentes, imprimable.
 - [ ] **Les moments du match** en 3 vignettes cliquables chez l'élève ; **sa progression** d'une manche à l'autre.
 - [ ] **« Mon parcours »** : tutoriel → intermédiaire → expert → équipe → Panthéon (battre la Prudente, la Maline, puis la Championne).
-- [ ] **Une démo qui se joue toute seule** pour l'enseignant qui découvre.
+- [ ] **Une démo qui se joue toute seule** pour l'enseignant·e qui découvre.
 - [ ] **Un seul code par élève**, à étudier : aujourd'hui, il y a un code de session par salle et un code Panthéon.
 - [ ] **Le Panthéon, côté public** : podium, classement des établissements (quand ils sont renseignés), « comment entrer », les 20 lagons du banc d'essai.
 - [ ] Un **pseudo au hasard** (🎲) sur l'accueil.
@@ -454,7 +454,7 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 | Mesure | Valeur |
 |---|---|
 | Page élève | 37 modules JavaScript en cascade : 0,6 s normalement, **3,3 s** en connexion lente |
-| Brawl de 30 tortues | **2 s** de page figée au calcul, chez l'enseignant puis chez chaque élève |
+| Brawl de 30 tortues | **2 s** de page figée au calcul, chez l'enseignant·e puis chez chaque élève |
 | Estimation sur 50 parties | 4,2 s |
 | Animation du lagon | 54 images/s |
 | Page élève sur téléphone | 3 200 px de haut |
@@ -467,6 +467,6 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
 |---|---|
 | Déjà sur `main` | Ménage, compteurs, Panthéon, lagon personnalisé : **à relancer** si ce n'est pas encore fait |
 | 1 bis | ✅ `retrouver_session(jeton)` et l'index `joueurs_secret_jeton` : entrer avec le seul code de session (appliqué en production le 10 novembre 2026) |
-| 3 | ✅ `codes_manche` (enseignant), appliqué en production le 10 novembre 2026 ; option non faite : table `etats` des brouillons |
-| 4 | ✅ `salles.etablissement`, `pantheon.salle` (la classe), fin de l'unicité des pseudos ; ✅ `pantheon.manche`, `mon_entree_pantheon`, `nouveau_jeton_pantheon` (en production le 10 novembre) ; ✅ `pantheon_classe` et la nouvelle `pantheon_admin` (migration `supabase/0001-pantheon-automatique.sql`, appliquée le 10 novembre au soir avec l'accord de l'enseignant) |
+| 3 | ✅ `codes_manche` (enseignant·e), appliqué en production le 10 novembre 2026 ; option non faite : table `etats` des brouillons |
+| 4 | ✅ `salles.etablissement`, `pantheon.salle` (la classe), fin de l'unicité des pseudos ; ✅ `pantheon.manche`, `mon_entree_pantheon`, `nouveau_jeton_pantheon` (en production le 10 novembre) ; ✅ `pantheon_classe` et la nouvelle `pantheon_admin` (migration `supabase/0001-pantheon-automatique.sql`, appliquée le 10 novembre au soir avec l'accord de l'enseignant·e) |
 | 10 | consigne et date du devoir (dans les réglages de la manche, sans nouvelle table) |
