@@ -6,7 +6,7 @@
 
 ## 👉 [Essayer maintenant : babash.github.io/lagon-arena](https://babash.github.io/lagon-arena/index.html)
 
-**Gratuit · sans compte · rien à installer · des pseudos, enregistrés en ligne ; le Panthéon affiche le pseudo, la classe, l'établissement et la date**
+**Gratuit · sans compte · rien à installer.** Enregistrés en ligne : le pseudo, la couleur de la tortue, les programmes envoyés (un par manche) et les scores, sans nom ni adresse électronique ; le Panthéon public affiche le pseudo, la classe, l'établissement, la date et la moyenne, jamais le programme.
 
 Lagon Arena fait partie des [Ressources NSI et SNT](https://babash.github.io/Babash-NSI-SNT/), rubrique [NSI Première](https://babash.github.io/Babash-NSI-SNT/nsi-premiere/).
 
