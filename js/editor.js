@@ -97,6 +97,7 @@ export function infoHTML(nom) {
   return `🔤 <code>${nom}</code> = « ${esc(i.fr)} » : ${esc(i.role)}`;
 }
 
+let nbEditeurs = 0;   // pour l'identifiant unique de chaque ligne d'aide
 export class CodeEditor {
   constructor(container, { value = "", onChange = () => {}, info = true, avance = null } = {}) {
     this.onChange = onChange; this.errLine = null; this.avance = avance;   // avance : null = suivre le mode avancé
@@ -115,6 +116,11 @@ export class CodeEditor {
     cp.title = "Copier tout le code"; cp.addEventListener("click", () => copier(this.ta.value));
     this.root.append(cp);
     if (info) { this.barre = document.createElement("div"); this.barre.className = "editor-info"; this.barre.innerHTML = AIDE_DEFAUT; container.append(this.barre); }
+    // sortir de l'éditeur au clavier : Échap, puis Tab (ou Maj+Tab), comme dans CodeMirror (WCAG 2.1.2)
+    this.echap = false;
+    this.aideClavier = document.createElement("p"); this.aideClavier.className = "aide-clavier";
+    this.aideClavier.id = "aide-clavier-" + (++nbEditeurs); this.aideClavier.textContent = "Échap puis Tab pour sortir de l'éditeur";
+    this.ta.setAttribute("aria-describedby", this.aideClavier.id); container.append(this.aideClavier);
     this.popup = document.createElement("ul"); this.popup.className = "ac cache"; this.popup.setAttribute("role", "listbox");
     document.body.append(this.popup);
     this.choix = []; this.sel = 0;
@@ -128,6 +134,7 @@ export class CodeEditor {
     this.ta.addEventListener("keydown", (e) => this.touche(e));
     this.ta.addEventListener("blur", () => setTimeout(() => { this.fermer(); this.render(); }, 150));
     this.ta.addEventListener("focus", () => this.render());
+    this.ta.addEventListener("blur", () => { this.echap = false; });
     for (const ev of ["click", "keyup"]) this.ta.addEventListener(ev, (e) => {
       if (!["ArrowUp", "ArrowDown"].includes(e.key) || this.popup.classList.contains("cache")) this.infoCurseur();
       const cl = this.ta.value.slice(0, this.ta.selectionStart).split("\n").length - 1;
@@ -314,12 +321,16 @@ export class CodeEditor {
 
   touche(e) {
     const ta = this.ta, v = ta.value, s = ta.selectionStart, f = ta.selectionEnd;
+    // après Échap, Tab (ou Maj+Tab) n'indente pas : le navigateur passe à l'élément suivant (ou précédent)
+    if (this.echap && e.key === "Tab" && !e.ctrlKey && !e.altKey && !e.metaKey) { this.echap = false; return; }
+    if (!["Shift", "Control", "Alt", "Meta"].includes(e.key)) this.echap = false;   // toute autre touche : Tab indente de nouveau
     if (this.ouvert()) {
       if (e.key === "ArrowDown") { e.preventDefault(); this.sel = (this.sel + 1) % this.choix.length; this.dessinerPopup(); return; }
       if (e.key === "ArrowUp") { e.preventDefault(); this.sel = (this.sel - 1 + this.choix.length) % this.choix.length; this.dessinerPopup(); return; }
       if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); this.accepter(); return; }
       if (e.key === "Escape") { e.preventDefault(); this.fermer(); return; }
     }
+    if (e.key === "Escape") { this.echap = true; return; }
     if (e.key === " " && e.ctrlKey) { e.preventDefault(); this.proposer(true); return; }
     if (e.key === "Tab") {
       e.preventDefault();
