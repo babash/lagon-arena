@@ -3,6 +3,12 @@
 //  • Supabase (API REST) si js/config.js est rempli ;
 //  • sinon MODE DÉMO : tout est stocké dans ce navigateur (localStorage),
 //    partagé entre les onglets (pratique pour tester prof + élèves sur un seul poste).
+//  La base a deux formes, reconnues toutes seules au premier appel :
+//  • « lagon » (supabase.sql d'aujourd'hui) : le schéma lagon, que l'API ne voit pas, et les
+//    fonctions public.lagon_… ; tout passe par elles, même les lectures ;
+//  • « ancienne » (avant le déménagement dans la base unique, novembre 2026) : les tables dans
+//    public, des fonctions sans préfixe et 4 tables lisibles directement. Gardée le temps du
+//    retour en arrière possible (30 jours), puis retirée.
 // =====================================================================
 import { CONFIG } from "./config.js";
 import { store } from "./stockage.js";
@@ -29,10 +35,23 @@ export const MODE = CONFIG.SUPABASE_URL && !forceDemo ? "db" : "demo";
 class Supabase {
   constructor(url, key) {
     this.base = (CONFIG.REST_URL || url.replace(/\/+$/, "") + "/rest/v1");
+    // la clé « publishable » va dans l'en-tête apikey ; une ancienne clé « anon » (un JWT) va aussi dans Authorization
     this.headers = { "Content-Type": "application/json", apikey: key };
-    // les anciennes clés « anon » sont des JWT : elles vont aussi dans Authorization
     if (key.startsWith("eyJ")) this.headers.Authorization = "Bearer " + key;
+    this._forme = null;
   }
+  // la forme de la base, « lagon » ou « ancienne » (voir l'en-tête), reconnue une fois pour toutes
+  forme() {
+    if (!this._forme) {
+      this._forme = this.req("/rpc/lagon_heure_serveur", { method: "POST", body: "{}" }).then(() => "lagon", (err) => {
+        if (/pas prête/.test(err.message)) return "ancienne";
+        this._forme = null;   // (réseau coupé…) : on réessaiera au prochain appel
+        throw err;
+      });
+    }
+    return this._forme;
+  }
+  async lagon() { return (await this.forme()) === "lagon"; }
   async req(path, opts = {}) {
     let r;
     try { r = await fetch(this.base + path, { ...opts, headers: { ...this.headers, ...(opts.headers || {}) } }); }
@@ -51,7 +70,8 @@ class Supabase {
     }
     return data;
   }
-  rpc(fn, args = {}) { return this.req("/rpc/" + fn, { method: "POST", body: JSON.stringify(args) }); }
+  // une fonction de la base : lagon_<nom> dans la base d'aujourd'hui, <nom> dans l'ancienne
+  async rpc(fn, args = {}) { return this.req("/rpc/" + ((await this.lagon()) ? "lagon_" + fn : fn), { method: "POST", body: JSON.stringify(args) }); }
   get(table, query) { return this.req(`/${table}?${query}`); }
 
   async heureServeur() { return new Date(await this.rpc("heure_serveur")); }
@@ -66,12 +86,19 @@ class Supabase {
     }
   }
   definirEtablissement(code, secret, etablissement) { return this.rpc("definir_etablissement", { p_code: code, p_secret: secret, p_etablissement: nomEtablissement(etablissement) }); }
-  async salle(code) { const r = await this.get("salles", `code=eq.${encodeURIComponent(code)}&select=*`); return r[0] || null; }
+  // les lectures : par des fonctions dans la base d'aujourd'hui (aucune table n'est lisible), par les tables dans l'ancienne
+  async salle(code) {
+    if (await this.lagon()) return (await this.rpc("salle", { p_code: code })) || null;
+    const r = await this.get("salles", `code=eq.${encodeURIComponent(code)}&select=*`); return r[0] || null;
+  }
   piloter(code, secret, s) {
     return this.rpc("piloter_salle", { p_code: code, p_secret: secret, p_manche: s.manche, p_phase: s.phase,
       p_duree: s.duree ?? null, p_graine: s.graine ?? null, p_nouveaute: s.nouveaute ?? null, p_duel: s.duel ?? null });
   }
-  joueurs(code) { return this.get("joueurs", `salle=eq.${encodeURIComponent(code)}&select=pseudo,couleur&order=rejoint_le`); }
+  async joueurs(code) {
+    if (await this.lagon()) return this.rpc("joueurs", { p_code: code });
+    return this.get("joueurs", `salle=eq.${encodeURIComponent(code)}&select=pseudo,couleur&order=rejoint_le`);
+  }
   rejoindre(code, pseudo, jeton, couleur) { return this.rpc("rejoindre", { p_salle: code, p_pseudo: pseudo, p_jeton: jeton, p_couleur: couleur }); }
   deposer(code, pseudo, jeton, manche, src) { return this.rpc("deposer_tortue", { p_salle: code, p_pseudo: pseudo, p_jeton: jeton, p_manche: manche, p_code: src }); }
   depots(code, manche) { return this.rpc("etat_depots", { p_salle: code, p_manche: manche }); }
@@ -89,18 +116,26 @@ class Supabase {
     try { return await this.rpc("codes_manche", { p_code: code, p_secret: secret, p_manche: manche }); }
     catch (err) { if (/pas prête/.test(err.message)) return null; throw err; }
   }
-  tortues(code) { return this.get("tortues", `salle=eq.${encodeURIComponent(code)}&select=pseudo,manche,code`); }
+  // les programmes de la salle, seulement après le brawl de leur manche
+  async tortues(code) {
+    if (await this.lagon()) return this.rpc("programmes", { p_code: code });
+    return this.get("tortues", `salle=eq.${encodeURIComponent(code)}&select=pseudo,manche,code`);
+  }
   enregistrerScores(code, secret, manche, scores) { return this.rpc("enregistrer_scores", { p_code: code, p_secret: secret, p_manche: manche, p_scores: scores }); }
-  scores(code) { return this.get("scores", `salle=eq.${encodeURIComponent(code)}&select=*&order=manche,rang`); }
+  async scores(code) {
+    if (await this.lagon()) return this.rpc("scores", { p_code: code });
+    return this.get("scores", `salle=eq.${encodeURIComponent(code)}&select=*&order=manche,rang`);
+  }
   retirerJoueur(code, secret, pseudo) { return this.rpc("retirer_joueur", { p_code: code, p_secret: secret, p_pseudo: pseudo }); }
   libererPseudo(code, secret, pseudo) { return this.rpc("liberer_pseudo", { p_code: code, p_secret: secret, p_pseudo: pseudo }); }
   definirConfig(code, secret, config) { return this.rpc("definir_config", { p_code: code, p_secret: secret, p_config: config }); }
   // l'accueil et le Panthéon
-  // les chiffres de l'accueil. Si la base n'a pas encore la fonction (supabase.sql pas encore relancé),
+  // les chiffres de l'accueil. Si l'ancienne base n'a pas encore la fonction (supabase.sql pas encore relancé),
   // on les compte dans les tables publiques : les parties d'après le numéro de manche de chaque salle.
   async statistiques() {
     try { return await this.rpc("statistiques"); }
-    catch {
+    catch (err) {
+      if (await this.lagon().catch(() => true)) throw err;
       const salles = await this.get("salles", "select=manche,phase");
       const parties = salles.reduce((n, s) => n + (["brawl", "resultats", "fin"].includes(s.phase) ? s.manche : Math.max(0, s.manche - 1)), 0);
       return { parties, participants: await this.compter("joueurs"), pantheon: 0, approximatif: true };
@@ -112,9 +147,12 @@ class Supabase {
     const n = parseInt((r.headers.get("content-range") || "").split("/")[1], 10);
     return Number.isFinite(n) ? n : 0;
   }
-  // depuis une salle : salle + jetonSalle rattachent la tortue à la classe (si la base n'est pas à jour, on l'inscrit sans)
-  async proposerPantheon({ pseudo, lycee, code, moyenne, banc, jeton, salle = null, jetonSalle = null }) {
-    const p = { p_pseudo: pseudo, p_lycee: lycee || null, p_code: code, p_moyenne: moyenne, p_banc: banc, p_jeton: jeton };
+  // depuis une salle : salle + jetonSalle rattachent la tortue à la classe, avec l'établissement de la salle.
+  // L'élève ne donne jamais l'établissement (ce n'est pas une donnée de l'élève) : hors classe, il n'y en a pas.
+  async proposerPantheon({ pseudo, code, moyenne, banc, jeton, salle = null, jetonSalle = null }) {
+    if (await this.lagon()) return this.rpc("proposer_pantheon", { p_pseudo: pseudo, p_code: code, p_moyenne: moyenne, p_banc: banc, p_jeton: jeton, p_salle: salle, p_jeton_salle: salle ? jetonSalle : null });
+    // l'ancienne base (si elle n'est pas à jour, on l'inscrit sans la classe)
+    const p = { p_pseudo: pseudo, p_lycee: null, p_code: code, p_moyenne: moyenne, p_banc: banc, p_jeton: jeton };
     if (salle) {
       try { return await this.rpc("proposer_pantheon", { ...p, p_salle: salle, p_jeton_salle: jetonSalle }); }
       catch (err) { if (!/pas prête/.test(err.message)) throw err; }
@@ -164,6 +202,7 @@ class Demo {
     const s = this.load(); this.verifProf(s, code, secret);
     const etab = nomEtablissement(etablissement);
     s.salles[code].etablissement = etab;
+    for (const p of s.pantheon || []) if (p.salle === code && p.cree_le >= s.salles[code].cree_le) p.lycee = etab;   // les tortues de la classe le suivent
     this.save(s);
     return etab;
   }
@@ -184,8 +223,7 @@ class Demo {
     if (!s.salles[code]) throw new Error("Salle introuvable : vérifie le code affiché au tableau.");
     if (pseudo.length < 2 || pseudo.length > 14 || !/^[A-Za-z0-9À-ÿ _-]+$/.test(pseudo)) throw new Error("Pseudo invalide : 2 à 14 lettres ou chiffres.");
     const j = s.joueurs[code].find((x) => x.pseudo === pseudo);
-    if (!j) {
-      if (s.joueurs[code].length >= 30) throw new Error("La salle est pleine (30 joueurs maximum).");
+    if (!j) {   // (aucun plafond du nombre de joueurs)
       s.joueurs[code].push({ pseudo, couleur }); s.jetons[code][pseudo] = jeton;
     } else if (s.jetons[code][pseudo] == null) { s.jetons[code][pseudo] = jeton; j.couleur = couleur; }   // pseudo débloqué
     else if (s.jetons[code][pseudo] !== jeton) throw new Error("Ce pseudo est déjà pris dans cette salle. Si c'est le tien (autre ordinateur), demande à ton enseignant de le débloquer.");
@@ -283,10 +321,11 @@ class Demo {
   classementPantheon(s) {
     return (s.pantheon || []).slice().sort((a, b) => b.moyenne - a.moyenne || a.cree_le.localeCompare(b.cree_le)).map((p, i) => ({ ...p, rang: i + 1 }));
   }
-  async proposerPantheon({ pseudo, lycee, code, moyenne, banc, jeton, salle = null, jetonSalle = null }) {
+  async proposerPantheon({ pseudo, code, moyenne, banc, jeton, salle = null, jetonSalle = null }) {
     await this.pause();
     const s = this.load(); s.pantheon = s.pantheon || [];
-    pseudo = pseudo.trim(); lycee = nomEtablissement(lycee); salle = (salle || "").trim().toUpperCase() || null;
+    pseudo = pseudo.trim(); salle = (salle || "").trim().toUpperCase() || null;
+    let lycee = null;   // hors classe : pas d'établissement
     if (banc !== 1) throw new Error("Ta page est trop ancienne : recharge-la (Ctrl+F5).");
     if (pseudo.length < 2 || pseudo.length > 14 || !/^[A-Za-z0-9À-ÿ _-]+$/.test(pseudo)) throw new Error("Pseudo invalide : 2 à 14 lettres ou chiffres.");
     if (salle) {   // rattachée à la classe : le jeton de session prouve que ce pseudo est bien celui de l'élève dans cette salle
@@ -307,7 +346,7 @@ class Demo {
   async pantheonTop(limite = 100, lycee = null) {
     await this.pause();
     return this.classementPantheon(this.load()).filter((p) => !lycee || (p.lycee || "").toLowerCase() === lycee.trim().toLowerCase())
-      .slice(0, limite).map(({ rang, pseudo, lycee: l, salle, moyenne, verifie, cree_le }) => ({ rang, pseudo, lycee: l, salle: salle || null, moyenne, verifie, cree_le }));
+      .slice(0, limite).map(({ rang, pseudo, lycee: l, moyenne, verifie, cree_le }) => ({ rang, pseudo, lycee: l, moyenne, verifie, cree_le }));   // ni classe ni programme
   }
   async pantheonLycees() {
     const n = {};

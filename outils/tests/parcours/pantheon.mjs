@@ -1,7 +1,8 @@
 // Le Panthéon : une copie de tortue d'entraînement est refusée ; une vraie tortue passe le banc d'essai et
-// entre (hors classe, depuis le bac à sable) ; le même programme proposé par un autre est refusé ; la page
-// du Panthéon (classement, filtre par établissement, « ma tortue », retrouver avec son code) ;
-// une tortue proposée depuis une salle est rattachée à sa classe ; l'administration (vérifier, retirer).
+// entre (hors classe, depuis le bac à sable, sans établissement) ; le même programme proposé par un autre est
+// refusé ; la page du Panthéon (pseudo, établissement, score et date, jamais la classe ; filtre par
+// établissement, « ma tortue », retrouver avec son code) ; une tortue proposée depuis une salle est rattachée
+// à sa classe et prend l'établissement de la salle ; l'administration (vérifier, retirer).
 import { TORTUES } from "../lib.mjs";
 
 export default {
@@ -39,7 +40,7 @@ export default {
     await el.click("#pantheon");
     await t.attendre(() => el.$("#pt-form"), "le banc d'essai (20 parties) se termine et le formulaire s'ouvre", { delai: 40000 });
     await el.fill("#pt-pseudo", "Maki_Rapide");
-    await el.fill("#pt-lycee", "Lycée de Chirongui");
+    t.ok(!(await el.$("#pt-lycee")), "hors classe, l'élève ne tape pas d'établissement (ce n'est pas une donnée de l'élève)");
     await el.click("#pt-form button[type=submit]");
     const codeP = await t.attendre(async () => { const c = await el.$(".overlay .code-perso"); return c && t.propre(await c.textContent()); }, "la tortue entre au Panthéon et l'élève reçoit son code Panthéon");
     await t.fermerFenetre(el);
@@ -57,19 +58,20 @@ export default {
     await t.attendre(async () => (await t.texte(el2, "#pt-erreur").catch(() => "")).includes("déjà au Panthéon"), "le même programme est refusé");
     await t.fermerFenetre(el2);
     // une moyenne inventée, envoyée directement : elle entre, mais restera à vérifier
-    await t.db(el, (db) => db.proposerPantheon({ pseudo: "Tricheur", lycee: "Lycée de Chirongui", code: "def tour():\n    if sur_plage():\n        pondre()\n    else:\n        aller_vers_plage()\n", moyenne: 9.99, banc: 1, jeton: "pantheon-ZZZZ9999-lagon" }));
+    await t.db(el, (db) => db.proposerPantheon({ pseudo: "Tricheur", code: "def tour():\n    if sur_plage():\n        pondre()\n    else:\n        aller_vers_plage()\n", moyenne: 9.99, banc: 1, jeton: "pantheon-ZZZZ9999-lagon" }));
 
     // 4. une tortue proposée depuis une salle (un autre ordinateur, donc un autre code Panthéon) : rattachée à la classe
     const ctx3 = await t.autreOrdinateur(el, { largeur: 1300 });
     const cl = await t.page(ctx3, "Moya");
     await cl.goto(t.url("index.html"));
-    const salle = await t.db(cl, (db) => db.creerSalle().then((r) => r.code));
+    const salle = await t.db(cl, (db) => db.creerSalle("Lycée de Chirongui").then((r) => r.code));
     await t.rejoindre(cl, salle, "Moya");
     await t.ecrireCode(cl, TORTUES.experte.replace("heure() >= 17", "heure() >= 16"));   // (une autre tortue que celle de Maki)
     await cl.click('[data-t="test"]');
     await cl.click("#pantheon");
     await t.attendre(() => cl.$("#pt-form"), "le banc d'essai de la classe se termine", { delai: 40000 });
-    t.contient(await t.texte(cl, ".pt-classe"), salle, "depuis une salle, la classe est remplie toute seule");
+    t.contient(await t.texte(cl, ".pt-classe"), salle, "depuis une salle, la tortue est rattachée à la classe");
+    t.contient(await t.texte(cl, ".pt-classe"), "Lycée de Chirongui", "depuis une salle, l'établissement de la salle est repris");
     await cl.click("#pt-form button[type=submit]");
     await t.attendre(() => cl.$(".overlay .code-perso"), "la tortue de la classe entre au Panthéon");
     await t.fermerFenetre(cl);
@@ -79,12 +81,13 @@ export default {
     await p.goto(t.url("pantheon.html"));
     await t.attendre(async () => (await t.texte(p, "#classement")).includes("Maki_Rapide") || (t.log("classement :", (await t.texte(p, "#classement")).slice(0, 300)), false), "Maki_Rapide est au classement", { delai: 15000, pas: 3000 });
     const lignes = await p.$$eval("#classement tr", (l) => l.map((r) => r.innerText.replace(/\s+/g, " ").trim()));
-    t.ok(lignes.some((l) => l.includes("Maki_Rapide") && l.includes("hors classe")), "depuis le bac à sable : « hors classe »");
-    t.ok(lignes.some((l) => l.includes("Moya") && l.includes("classe " + salle)), `depuis la salle : « classe ${salle} »`);
+    t.ok(lignes.some((l) => l.includes("Maki_Rapide") && l.includes("entrée le") && !l.includes("Lycée")), "depuis le bac à sable : le pseudo et la date, sans établissement");
+    t.ok(lignes.some((l) => l.includes("Moya") && l.includes("Lycée de Chirongui") && l.includes("entrée le")), "depuis la salle : le pseudo, l'établissement de la salle et la date");
+    t.ok(!lignes.some((l) => l.includes(salle) || /classe/.test(l)), "la classe (le code de la salle) n'est jamais affichée");
     t.contient(await t.texte(p, "#ma-tortue"), "Moya", "« ma tortue » montre la dernière tortue proposée sur ce navigateur");
     await p.click('#classement a[data-lycee="Lycée de Chirongui"]');
     await t.attendre(async () => (await t.texte(p, "#resume")).includes("dans cet établissement") && decodeURIComponent(p.url()).includes("lycee=Lycée de Chirongui"), "le filtre par établissement");
-    t.ok(!(await t.texte(p, "#classement")).includes("Moya"), "le filtre n'affiche que cet établissement");
+    t.ok(!(await t.texte(p, "#classement")).includes("Maki_Rapide"), "le filtre n'affiche que cet établissement");
     // retrouver sa tortue depuis un autre ordinateur, avec son code Panthéon
     const p2 = await t.page(await t.autreOrdinateur(p), "pantheon2");
     await p2.goto(t.url("pantheon.html"));

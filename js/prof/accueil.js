@@ -22,7 +22,7 @@ export function accueil() {
       <div class="card etab-card">
         <label class="champ"><span>🏫 Établissement <span class="petit muted">(facultatif)</span></span>
           <input type="text" id="etablissement" maxlength="60" value="${esc(store.get("lagon:etablissement") || "")}" placeholder="ex. Lycée de Chirongui" autocomplete="organization"></label>
-        <p class="petit muted">La classe est reconnue par le <b>code de la salle</b>. L'établissement, si tu le donnes, s'affiche à côté (au Panthéon notamment) ; il est proposé aux élèves qui y inscrivent leur tortue. Tu pourras le changer dans les réglages de la salle.</p>
+        <p class="petit muted">La classe est reconnue par le <b>code de la salle</b>. L'établissement, si tu le donnes, s'affiche au Panthéon avec les tortues de ta classe (les élèves ne le tapent pas). Tu pourras le changer dans les réglages de la salle : les tortues de la classe suivent.</p>
       </div>
       <div class="card">
         <h2>🌊 Séance en classe</h2>

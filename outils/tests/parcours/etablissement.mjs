@@ -31,7 +31,7 @@ export default {
     await el.click("#pantheon");
     await t.attendre(() => el.$("#pt-form"), "le banc d'essai se termine", { delai: 40000 });
     const c = await t.texte(el, ".pt-classe");
-    t.contient(c, salle, "la classe (code de la salle) est remplie");
+    t.contient(c, salle, "la tortue est rattachée à la classe (code de la salle)");
     t.contient(c, "Chirongui", "l'établissement de la salle est rempli");
     t.ok(!(await el.isVisible("#pt-lycee")), "l'élève n'a pas à taper l'établissement");
   },
