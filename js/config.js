@@ -11,8 +11,9 @@
 //  le déménagement dans la base unique (novembre 2026) ne change que les deux lignes ci-dessous.
 // =====================================================================
 export const CONFIG = {
-  SUPABASE_URL: "https://gkyvaugipddjqjvvpopw.supabase.co",
-  SUPABASE_KEY: "sb_publishable_D056BtLTe3WXsmDhj4DEDw_2q6Ktlw8",   // clé publique : elle peut être visible
+  // la base unique des applications du site (« Babash - applications »), depuis le déménagement (T42)
+  SUPABASE_URL: "https://cukahpyqkljiddmimpyi.supabase.co",
+  SUPABASE_KEY: "sb_publishable_dYwCrwaqiDOm8knczJu3Kw_5InHwyPB",   // clé « publishable » : elle peut être visible
   // adresse publique du site : tous les liens à donner (élèves, code de session, lien enseignant, QR code) pointent ici
   URL_SITE: "https://babash.github.io/lagon-arena/",
   DUREE_PROG_1: 8 * 60,      // durée de la 1re phase de programmation (secondes)
