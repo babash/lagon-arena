@@ -47,7 +47,7 @@ index.html  tuto.html  tuto-avance.html  eleve.html  prof.html  pantheon.html
 css/style.css
 img/                  ← icône (tortue.svg)
 docs/                 ← documentation (et docs/img : captures d'écran)
-js/config.js          ← URL + clé publique Supabase, adresse publique du site (URL_SITE), durées
+js/config.js          ← adresse + clé « publishable » de la base, adresse publique du site (URL_SITE), durées
 js/engine.js          ← point d'entrée du MOTEUR (réexporte js/moteur/*)
   moteur/hasard.js        hasard reproductible (mulberry32), graine d'une manche
   moteur/regles.js        réglages P, nouveautés TWISTS, lagon personnalisé (LAGON_REGLAGES, reglesManche),
@@ -148,22 +148,32 @@ Un mini-Python écrit pour l'occasion, en trois temps : découpage en mots (*tok
 
 ## 7. La base de données (`supabase.sql`)
 
-| Table | Contenu | Lecture |
+Depuis le déménagement de novembre 2026 (T42), Lagon Arena vit dans la **base commune des applications du site** (projet Supabase `cukahpyqkljiddmimpyi`), dans son propre schéma, `lagon`. Les migrations, leur ordre, leurs inverses et les vérifications sont dans [`supabase/LISEZMOI.md`](../supabase/LISEZMOI.md) ; `supabase.sql` est le script complet, fabriqué à partir d'elles par `outils/supabase_sql.py` (pour installer sa propre copie).
+
+- **Le schéma `lagon` n'est pas exposé à l'API** : aucune table n'est lisible ni modifiable directement, même par erreur. Toutes les tables ont la RLS, sans règle et sans droit pour `anon`.
+- **La page passe par les fonctions `public.lagon_…`** (`security definer`, `search_path` vide, appelables par `anon` seul). `js/db.js` ajoute le préfixe tout seul : la page appelle `rpc("creer_salle")`, la base reçoit `lagon_creer_salle`. Pendant les 30 jours où l'ancien projet reste en réserve, `js/db.js` reconnaît aussi l'ancienne forme (tables dans `public`, fonctions sans préfixe).
+- Chaque table, chaque colonne et chaque fonction a un **commentaire** en français, que le tableau de bord affiche ; la vue `commun.registre` les liste avec les autres applications.
+
+| Table (`lagon.`) | Contenu | Données d'élèves |
 |---|---|---|
-| `salles` | code (c'est lui qui identifie la classe), établissement (facultatif), manche, phase, fin du chrono, graine, nouveauté, duel, `config` (réglages de la manche préparée, en JSON) | publique |
-| `salles_secret` | jeton enseignant·e de chaque salle | personne |
-| `joueurs` | pseudo, couleur | publique |
-| `joueurs_secret` | jeton de chaque élève | personne |
-| `tortues` | code envoyé par manche | **seulement après le brawl** de la manche (politique RLS) |
-| `scores` | nids, rang, points, bonus, nouveauté (+ version), duel, équipe, lagon personnalisé | publique |
-| `compteurs` | compteurs de l'accueil (parties, participants, salles), gardés à part pour que le ménage ne les fasse pas baisser | personne (fonction `statistiques`) |
-| `pantheon` | pseudo, classe (`salle` : le code de la salle, vide = hors classe), date d'entrée, établissement (colonne `lycee`), `manche` (entrées automatiques ; vide = proposée par l'élève), moyenne, version du banc, **programme**, empreinte du programme, jeton (code Panthéon), vérifié | personne (fonctions ci-dessous) |
-| `admin_secret` | le mot de passe de l'administration du Panthéon | personne |
+| `salles` | code (c'est lui qui identifie la classe), établissement (facultatif), manche, phase, fin du chrono, graine, nouveauté, duel, `config` (réglages de la manche préparée, en JSON) | non |
+| `salles_secrets` | le secret de pilotage de chaque salle (enseignant·e) | non (secret) |
+| `joueurs` | pseudo, couleur, date d'arrivée | oui |
+| `joueurs_jetons` | jeton de chaque élève (il contient son code de session) | oui (secret) |
+| `programmes` | le programme envoyé par manche (l'ancienne table `tortues`) | oui |
+| `scores` | nids, rang, points, bonus, nouveauté (+ version), duel, équipe, lagon personnalisé | oui (pseudo) |
+| `compteurs` | compteurs de l'accueil (parties, participants, salles) et date du dernier ménage, gardés à part pour que le ménage ne les fasse pas baisser | non |
+| `pantheon` | pseudo, date d'entrée, établissement (colonne `lycee`, celui de la salle), classe d'origine (`salle`, jamais affichée ; vide = proposée hors classe), `manche` (entrées automatiques), moyenne, version du banc, **programme**, empreinte du programme, jeton (code Panthéon), vérifié | oui |
+| `pantheon_admin` | l'**empreinte** (bcrypt) du mot de passe de l'administration du Panthéon | non (secret) |
+
+Les fonctions d'entrée (toutes préfixées `lagon_` dans la base ; ci-dessous sans le préfixe) :
 
 | Fonction | Qui | Rôle |
 |---|---|---|
-| `creer_salle(établissement)` | tout le monde | crée une salle (l'établissement est facultatif), renvoie le code et le secret ; supprime les salles inutilisées depuis 60 jours |
-| `definir_etablissement(code, secret, établissement)` | enseignant·e | renseigner, corriger ou effacer l'établissement de la salle |
+| `creer_salle(établissement)` | tout le monde | crée une salle (l'établissement est facultatif), renvoie le code et le secret ; lance le ménage |
+| `salle(code)`, `joueurs(code)`, `scores(code)` | tout le monde, avec le code de la salle | l'état de la salle ; les pseudos et couleurs ; les scores (elles remplacent l'ancienne lecture publique des tables) |
+| `programmes(code)` | tout le monde, avec le code de la salle | les programmes, **seulement après le brawl** de leur manche |
+| `definir_etablissement(code, secret, établissement)` | enseignant·e | renseigner, corriger ou effacer l'établissement de la salle ; les tortues de la classe au Panthéon le suivent |
 | `piloter_salle(code, secret, …)` | enseignant·e | change de manche, de phase, de chrono, de nouveauté |
 | `definir_config(code, secret, config)` | enseignant·e | publie les réglages de la manche préparée (équipes, points…) |
 | `enregistrer_scores(code, secret, manche, scores)` | enseignant·e | enregistre les scores calculés par son navigateur |
@@ -171,20 +181,22 @@ Un mini-Python écrit pour l'occasion, en trois temps : découpage en mots (*tok
 | `codes_session(code, secret)` | enseignant·e | la liste des codes de session des élèves |
 | `codes_manche(code, secret, manche)` | enseignant·e | la dernière tortue envoyée par chaque élève (manche ≤ `manche`), **même pendant la programmation** : pour l'état de chaque élève et sa fiche. Le public ne voit toujours rien avant le brawl |
 | `pantheon_classe(code, secret, manche, entrées)` | enseignant·e | le Panthéon automatique : au plus 3 tortues `{pseudo, code, moyenne, banc}` ; le code doit être une tortue vraiment envoyée par l'élève dans la salle. Même programme déjà au Panthéon → rien (`deja` ou `copie`) ; même élève (même salle, même pseudo) → remplacée si meilleure (`ameliore`, sinon `moins_bien`) ; sinon `nouveau`, avec un code Panthéon tiré au hasard. Renvoie le statut et le rang de chacune |
-| `rejoindre(salle, pseudo, jeton, couleur)` | élève | rejoindre (ou revenir avec le même jeton) |
+| `rejoindre(salle, pseudo, jeton, couleur)` | élève | rejoindre (ou revenir avec le même jeton) ; **aucun plafond du nombre de joueurs** |
 | `deposer_tortue(salle, pseudo, jeton, manche, code)` | élève | envoyer sa tortue pour la manche en cours |
-| `changer_jeton`, `ma_tortue` | élève | passer à un code de session ; retrouver sa dernière tortue |
-| `mon_entree_pantheon(salle, pseudo, jeton)` | élève | sa tortue de la classe au Panthéon (rang, moyenne, manche) **et son code Panthéon**, retrouvé grâce à son jeton de session (pour l'améliorer plus tard avec « 🏛️ Proposer au Panthéon ») |
+| `changer_jeton`, `ma_tortue`, `retrouver_session(jeton)` | élève | passer à un code de session ; retrouver sa dernière tortue ; revenir avec son seul code de session |
+| `mon_entree_pantheon(salle, pseudo, jeton)` | élève | sa tortue de la classe au Panthéon (rang, moyenne, manche) **et son code Panthéon**, retrouvé grâce à son jeton de session |
 | `etat_depots(salle, manche)` | tout le monde | qui a envoyé (sans le code) |
 | `heure_serveur()` | tout le monde | pour synchroniser les chronos |
 | `statistiques()` | tout le monde | les chiffres de l'accueil (et lance le ménage, au plus une fois par heure) |
-| `proposer_pantheon(pseudo, établissement, code, moyenne, banc, jeton, salle, jeton de session)` | élève | entrer au Panthéon, ou améliorer sa tortue (gardée si elle fait mieux). Avec la salle et le jeton de session, la tortue est rattachée à la classe, avec l'établissement de la salle ; plus d'unicité des pseudos (pseudo + classe + date suffisent à distinguer deux tortues) |
-| `pantheon_top(limite, établissement)`, `pantheon_lycees()`, `ma_tortue_pantheon(jeton)` | tout le monde | le classement **sans les programmes** : pseudo, classe, date, établissement, moyenne |
+| `proposer_pantheon(pseudo, code, moyenne, banc, jeton, salle, jeton de session)` | élève | entrer au Panthéon, ou améliorer sa tortue (gardée si elle fait mieux). Avec la salle et le jeton de session, la tortue est rattachée à la classe, avec l'établissement de la salle ; hors classe, sans établissement (l'élève ne le donne jamais) |
+| `pantheon_top(limite, établissement)`, `pantheon_lycees()`, `ma_tortue_pantheon(jeton)` | tout le monde | le classement **sans les programmes ni la classe** : rang, pseudo, établissement, moyenne, vérifiée, date |
 | `pantheon_admin`, `pantheon_valider`, `pantheon_retirer` | administration | lire les programmes (et la manche des entrées automatiques), corriger un score recalculé, retirer une tortue |
+
+Les listes sans borne (joueurs, scores, programmes, codes) sont renvoyées en un seul objet JSON : l'API de Supabase ne les coupe donc pas à 1 000 lignes.
 
 **Le code de session** d'un·e élève (8 caractères, sans lettres ambiguës) *est* son jeton : `jeton = "perso-" + CODE + "-lagon"`. Le retaper sur un autre ordinateur suffit donc à reprendre son pseudo, sans compte.
 
-**Le ménage** (`menage()`, appelée par `creer_salle` et `statistiques`, au plus une fois par heure) supprime les séances terminées depuis 7 jours, les salles jamais commencées depuis 7 jours, et les salles sans activité depuis 60 jours (l'activité compte aussi les élèves qui rejoignent ou envoient leur tortue).
+**Le ménage** (`lagon.menage()`, appelée par `creer_salle` et `statistiques`, au plus une fois par heure) supprime les séances terminées depuis 7 jours, les salles jamais commencées depuis 7 jours, et les salles sans activité depuis 60 jours (l'activité compte aussi les élèves qui rejoignent ou envoient leur tortue).
 
 **Le Panthéon.** Le navigateur de l'élève calcule la moyenne sur le banc d'essai et l'envoie avec le programme. La base ne peut pas refaire le calcul : un score envoyé à la main peut donc être faux. D'où : le programme est gardé (illisible par le public), l'empreinte refuse deux fois le même programme (sans commentaires ni espaces), et l'**administration du Panthéon** recalcule les scores dans son navigateur (`pantheon.html?admin`, recalcul déterministe) puis les valide (⏳ → ✔). Au-delà de 1 000 tortues, les moins bonnes sont effacées.
 
@@ -232,7 +244,7 @@ node outils/tests/captures.mjs --reference # … et cette série devient la réf
 | `devoir` | lien et message pour les élèves, invitation, code de session, envoi, brawl plus tard |
 | `lagon` | lagon personnalisé : réglages, résumé, bac à sable de l'élève, brawl, match rejoué identique (et différent sans) |
 | `etablissement` | établissement à la création, prérempli, modifiable, repris au Panthéon par l'élève de la salle |
-| `pantheon` | copie refusée, banc d'essai, entrée hors classe et de classe, même programme refusé, page publique, filtre, retrouver avec son code, administration |
+| `pantheon` | copie refusée, banc d'essai, entrée hors classe (sans établissement) et de classe (établissement de la salle), même programme refusé, page publique (pseudo, établissement, score, date ; jamais la classe), filtre, retrouver avec son code, administration |
 | `stockage` | 1 jour pour l'élève, 60 jours pour l'enseignant·e, ménage au chargement, autres sites intacts |
 | `telephone` | à 390 px, aucune page ne déborde : accueil, toutes les étapes des tutoriels, tous les onglets élève, Panthéon, enseignant·e |
 
@@ -263,19 +275,19 @@ python3 -m http.server 8000
 
 Avec `?demo`, tout reste dans le navigateur (le mode est mémorisé pour l'onglet ; `?demo=0` l'annule).
 
-**Après une modification de `supabase.sql`** : relancer le script en entier dans l'éditeur SQL de la base. Il est relançable sans risque : il ajoute les colonnes et fonctions manquantes et conserve les salles, les élèves et les scores. Toute évolution du schéma doit rester **compatible avec les pages déjà ouvertes** (colonnes ajoutées avec une valeur par défaut, anciennes fonctions conservées).
+**Changer la base** : écrire une migration numérotée dans `supabase/` (avec son inverse), la faire voir à l'enseignant avant de l'appliquer, puis refabriquer `supabase.sql` (`python3 -I outils/supabase_sql.py`) dans le même commit : voir [`supabase/LISEZMOI.md`](../supabase/LISEZMOI.md) et les règles des bases du site. Toute évolution du schéma doit rester **compatible avec les pages déjà ouvertes** (on ajoute d'abord, on publie la page, puis on retire).
 
 **Après une modification du moteur** : `node outils/verifier.mjs`. Changer une règle change le résultat des anciennes manches quand on les rejoue : voir la [compatibilité des anciennes séances](#5-compatibilité-des-anciennes-séances).
 
-**Réglages** (`js/config.js`) : adresse publique du site (`URL_SITE`, utilisée dans tous les liens donnés aux élèves), durées de programmation par défaut, nombre minimum de tortues. La clé de la base qui y figure est une clé **publique**, faite pour être visible : la sécurité repose sur les règles de `supabase.sql`. Une clé secrète ne doit jamais y être placée.
+**Réglages** (`js/config.js`) : adresse publique du site (`URL_SITE`, utilisée dans tous les liens donnés aux élèves), durées de programmation par défaut, nombre minimum de tortues. La clé de la base qui y figure est la clé **« publishable »**, publique, faite pour être visible (envoyée dans l'en-tête `apikey`) : la sécurité repose sur les règles de `supabase.sql`. Une clé secrète ne doit jamais y être placée.
 
-**Le Panthéon** : pour l'administrer, choisir un mot de passe d'au moins 12 caractères et l'enregistrer une fois dans l'éditeur SQL (`insert into public.admin_secret (secret) values ('…') on conflict (id) do update set secret = excluded.secret;`), puis ouvrir `pantheon.html?admin`. Si les règles du moteur changent, le banc d'essai doit changer de version (`BANC.version` dans `js/pantheon.js`, et la version acceptée dans `proposer_pantheon`) et les tortues doivent être revérifiées.
+**Le Panthéon** : pour l'administrer, choisir un mot de passe d'au moins 12 caractères et l'enregistrer une fois dans l'éditeur SQL (`select lagon.definir_mot_de_passe_admin('…');` : seule son empreinte est gardée), puis ouvrir `pantheon.html?admin`. Si les règles du moteur changent, le banc d'essai doit changer de version (`BANC.version` dans `js/pantheon.js`, et la version acceptée dans `lagon_proposer_pantheon`) et les tortues doivent être revérifiées.
 
 **Bon à savoir** :
 
 - la base de l'offre gratuite se met en pause après environ une semaine sans activité : il faut la réactiver depuis son tableau de bord avant le cours ;
 - à chaque création de salle, les salles inutilisées depuis 60 jours sont supprimées avec les pseudos de leurs élèves, leurs tortues et leurs scores ;
-- la charge est faible : 30 élèves interrogent la base toutes les 2 secondes, et ne reçoivent que du texte.
+- la charge est faible : 30 élèves interrogent la base toutes les 2 secondes, et ne reçoivent que du texte. Il n'y a pas de plafond du nombre d'élèves ; au-delà d'une trentaine de tortues, le brawl est plus long à calculer (chantier du TODO).
 
 ---
 

@@ -314,7 +314,7 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
   2. écarte celles qui n'ont pondu aucun nid, et les copies des tutoriels, des tortues d'entraînement et du coup de pouce ;
   3. leur fait passer le banc d'essai (20 parties, par petits paquets : la page reste utilisable ; un vrai calcul en arrière-plan reste au chantier 9) ;
   4. les inscrit au Panthéon. Chaque manche n'est traitée qu'une fois (notée avec la salle).
-- [x] **Ce qu'affiche le Panthéon : le pseudo, la classe et la date.** La classe, c'est le **code de la salle** (ou du devoir). Le trio pseudo + classe + date est unique : deux élèves de classes différentes peuvent avoir le même pseudo. Fait pour les tortues proposées depuis une salle (la classe est prouvée par le jeton de session) ; les entrées automatiques suivront la même règle.
+- [x] **Ce qu'affiche le Panthéon : le pseudo, l'établissement s'il est connu, le score et la date** (décision de l'enseignant du 12/11, qui remplace « le pseudo, la classe et la date » ; la classe reste gardée, sans être affichée). *Avant :* La classe, c'est le **code de la salle** (ou du devoir). Le trio pseudo + classe + date est unique : deux élèves de classes différentes peuvent avoir le même pseudo. Fait pour les tortues proposées depuis une salle (la classe est prouvée par le jeton de session) ; les entrées automatiques suivront la même règle.
 - [x] **L'établissement est facultatif** : l'enseignant·e peut le renseigner **en créant la salle ou le devoir** (un champ de plus, vide par défaut, prérempli avec le dernier utilisé), puis le changer dans les réglages de la salle. Il s'affiche sous le code de la salle et il est proposé à l'élève qui inscrit sa tortue au Panthéon. Il est gardé avec la salle.
   - [x] Affiché à côté de la classe au Panthéon, et filtre par établissement. Pour une tortue venue d'une salle, c'est l'établissement de la salle qui compte (l'élève ne le tape pas).
 - [x] **Réglages enseignant·e** (gardés 60 jours, dans ⚙️ Réglages) :
@@ -327,7 +327,7 @@ C'est la brique commune : elle sert à l'éditeur, au rapport, au coup de pouce 
   - même élève (même salle, même pseudo) avec une meilleure tortue : on la remplace ;
   - même élève avec une tortue moins bonne : on garde l'ancienne.
 - [x] **Pseudos en double entre classes (décidé)** : on n'exige plus qu'un pseudo soit unique dans tout le Panthéon. Chaque ligne affiche « Moya · classe K7PQ · 4 nov. 2026 » (et l'établissement s'il a été renseigné), ce qui suffit à distinguer deux Moya.
-  - Les propositions faites à la main depuis le bac à sable (sans salle) affichent « hors classe » à la place du code.
+  - Les propositions faites à la main depuis le bac à sable (sans salle) affichaient « hors classe » ; depuis le 12/11, elles n'ont pas d'établissement (l'élève ne le tape plus).
   - Les entrées déjà au Panthéon gardent leur lycée, affiché comme établissement.
 - [x] Les entrées automatiques restent ⏳ jusqu'à la vérification de l'administration du Panthéon, comme les autres (l'administration voit « entrée automatique (manche 2) »).
 

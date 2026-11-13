@@ -2,10 +2,13 @@
 //  Configuration de Lagon Arena
 //  1. Crée un projet gratuit sur https://supabase.com (région Europe).
 //  2. Lance le fichier supabase.sql dans « SQL Editor ».
-//  3. Recopie ci-dessous l'URL du projet et la clé publique
-//     (Project Settings > API Keys > « Publishable key », ou l'ancienne clé « anon »).
+//  3. Recopie ci-dessous l'URL du projet et sa clé « publishable »
+//     (Project Settings > API Keys > « Publishable key ») : elle est publique, faite pour être vue.
+//     Jamais la clé « secret » ni « service_role ».
 //  Tant que SUPABASE_URL est vide, le site fonctionne en MODE DÉMO :
 //  tout reste dans ce navigateur (pratique pour tester seul·e).
+//  La page reconnaît seule la forme de la base (schéma lagon d'aujourd'hui, ou l'ancienne) :
+//  le déménagement dans la base unique (novembre 2026) ne change que les deux lignes ci-dessous.
 // =====================================================================
 export const CONFIG = {
   SUPABASE_URL: "https://gkyvaugipddjqjvvpopw.supabase.co",

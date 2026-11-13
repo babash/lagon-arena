@@ -199,7 +199,7 @@ Cette fiche apparaîtrait chez l'élève (programmer, tester), au tableau (penda
 
 **Propositions** :
 - **Un podium** des 3 premières en tête de page.
-- **Chaque ligne affiche le pseudo, la classe (code de la salle) et la date**, plus l'établissement si l'enseignant·e l'a renseigné en créant la salle : deux élèves de classes différentes peuvent avoir le même pseudo. **[décidé]**
+- **Chaque ligne affiche le pseudo, l'établissement (s'il est renseigné), le score et la date** ; la classe (code de la salle) n'est pas affichée, et l'établissement est celui de la salle, jamais tapé par l'élève. **[décidé le 12/11, remplace « pseudo, classe et date »]**
 - **Un classement des établissements** (moyenne de leurs 5 meilleures tortues), pour ceux qui sont renseignés.
 - **Un encadré « Comment entrer au Panthéon ? »** en 3 étapes.
 - **Les 20 lagons du banc d'essai** en miniatures : les élèves voient sur quoi leur tortue est jugée.

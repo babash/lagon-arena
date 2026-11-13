@@ -111,11 +111,11 @@ Le bouton **🔗 Lien d'accès élèves** de la salle redonne le lien et le mess
 
 ## 6. Le Panthéon
 
-Le [Panthéon](https://babash.github.io/lagon-arena/pantheon.html) classe les **100 meilleures tortues de tous les temps**, toutes classes confondues. Chaque tortue y est affichée avec **le pseudo, la classe et la date** (« Moya · classe K7PQ · 6 nov. 2026 »), plus l'établissement s'il est renseigné : deux élèves de classes différentes peuvent donc avoir le même pseudo. Depuis son bac à sable, un·e élève clique sur **🏛️ Proposer au Panthéon** :
+Le [Panthéon](https://babash.github.io/lagon-arena/pantheon.html) classe les **100 meilleures tortues de tous les temps**, toutes classes confondues. Chaque tortue y est affichée avec **le pseudo, l'établissement** (s'il est renseigné), **le score et la date** (« Moya · Lycée de Chirongui · 4,35 · entrée le 6 nov. 2026 »). La classe (le code de la salle) n'est pas affichée. L'établissement n'est jamais tapé par l'élève : c'est celui que tu donnes à la salle. Depuis son bac à sable, un·e élève clique sur **🏛️ Proposer au Panthéon** :
 
 - sa tortue joue **20 parties** dans le lagon calme contre les 5 tortues d'entraînement, sur **les mêmes 20 lagons pour tout le monde** : son score est sa **moyenne de nids** ;
-- **depuis la salle**, sa tortue est inscrite avec **son pseudo de la salle** et **sa classe** (le code de la salle, prouvé par son jeton de session), et avec l'établissement que l'enseignant·e a renseigné en créant la salle. Rien à taper ;
-- **depuis le bac à sable libre**, elle est affichée « hors classe » : l'élève choisit un pseudo et, s'il ou elle le veut, un établissement ;
+- **depuis la salle**, sa tortue est inscrite avec **son pseudo de la salle** et **sa classe** (le code de la salle, prouvé par son jeton de session), et avec l'établissement que l'enseignant·e a renseigné pour la salle. Rien à taper. Si tu changes l'établissement de la salle, les tortues de la classe le suivent ;
+- **depuis le bac à sable libre**, l'élève choisit un pseudo ; la tortue est affichée sans établissement ;
 - on peut afficher le classement d'un seul établissement ;
 - l'élève reçoit un **code Panthéon** pour améliorer sa tortue plus tard : la nouvelle version remplace l'ancienne si elle fait mieux (et reste rattachée à sa classe, même améliorée depuis la maison) ;
 - son **programme est gardé mais jamais lisible** ; on ne peut pas entrer deux fois avec le même programme, ni avec une tortue d'entraînement ou une stratégie des tutoriels recopiée telle quelle.
@@ -129,7 +129,7 @@ C'est un bon objectif pour les élèves rapides, ou pour prolonger le travail à
 À la fin de **chaque manche**, quand les résultats s'affichent, ton navigateur envoie **la meilleure tortue de la classe** au Panthéon, sans que personne ait rien à faire :
 
 - elle doit avoir pondu au moins un nid pendant le match, et être un programme **inventé par l'élève** (pas la tortue de départ, une tortue d'entraînement, une solution des tutoriels ni un programme du coup de pouce) ;
-- elle passe le même banc d'essai de 20 parties (quelques secondes, la page reste utilisable), puis elle est inscrite avec **le pseudo, la classe** (le code de la salle), l'établissement et la date ;
+- elle passe le même banc d'essai de 20 parties (quelques secondes, la page reste utilisable), puis elle est inscrite avec **le pseudo**, l'établissement de la salle et la date, rattachée à la classe (le code de la salle, qui n'est pas affiché) ;
 - au tableau : « 🏛️ **Maki_Rapide entre au Panthéon (12e) !** » ;
 - l'élève le voit dans ses résultats (« 🏛️ Ta tortue entre au Panthéon à la 12e place ! »), avec **son code Panthéon** pour l'améliorer plus tard ;
 - même programme déjà au Panthéon : il n'est pas ajouté ; même élève de la même salle : sa tortue est remplacée seulement si la nouvelle fait mieux ;
