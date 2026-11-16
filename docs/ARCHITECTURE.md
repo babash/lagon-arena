@@ -148,10 +148,10 @@ Un mini-Python écrit pour l'occasion, en trois temps : découpage en mots (*tok
 
 ## 7. La base de données (`supabase.sql`)
 
-Depuis le déménagement de novembre 2026 (T42), Lagon Arena vit dans la **base commune des applications du site** (projet Supabase `cukahpyqkljiddmimpyi`), dans son propre schéma, `lagon`. Les migrations, leur ordre, leurs inverses et les vérifications sont dans [`supabase/LISEZMOI.md`](../supabase/LISEZMOI.md) ; `supabase.sql` est le script complet, fabriqué à partir d'elles par `outils/supabase_sql.py` (pour installer sa propre copie).
+`supabase.sql` installe la base sous sa nouvelle forme, décrite ci-dessous : le schéma `lagon`, prévu pour la **base commune des applications du site** (projet Supabase `cukahpyqkljiddmimpyi`). C'est le script complet, fabriqué par `outils/supabase_sql.py` à partir des migrations, dont l'ordre, les inverses et les vérifications sont dans [`supabase/LISEZMOI.md`](../supabase/LISEZMOI.md) (pour installer sa propre copie). **Le site publié utilise encore l'ancien projet, jusqu'au déménagement** (T42, voir ce LISEZMOI) : ses tables y sont dans `public`, quatre d'entre elles (`salles`, `joueurs`, `scores`, `tortues`) sont lisibles par tout le monde, une salle y accueille 30 joueurs au plus, ses fonctions n'ont pas de préfixe, et l'établissement changé par l'enseignant·e n'y suit pas les tortues déjà au Panthéon.
 
 - **Le schéma `lagon` n'est pas exposé à l'API** : aucune table n'est lisible ni modifiable directement, même par erreur. Toutes les tables ont la RLS, sans règle et sans droit pour `anon`.
-- **La page passe par les fonctions `public.lagon_…`** (`security definer`, `search_path` vide, appelables par `anon` seul). `js/db.js` ajoute le préfixe tout seul : la page appelle `rpc("creer_salle")`, la base reçoit `lagon_creer_salle`. Pendant les 30 jours où l'ancien projet reste en réserve, `js/db.js` reconnaît aussi l'ancienne forme (tables dans `public`, fonctions sans préfixe).
+- **La page passe par les fonctions `public.lagon_…`** (`security definer`, `search_path` vide, appelables par `anon` seul). `js/db.js` ajoute le préfixe tout seul : la page appelle `rpc("creer_salle")`, la base reçoit `lagon_creer_salle`. `js/db.js` reconnaît aussi l'ancienne forme (tables dans `public`, fonctions sans préfixe) : celle du site publié jusqu'au déménagement, puis de l'ancien projet, gardé en réserve 30 jours.
 - Chaque table, chaque colonne et chaque fonction a un **commentaire** en français, que le tableau de bord affiche ; la vue `commun.registre` les liste avec les autres applications.
 
 | Table (`lagon.`) | Contenu | Données d'élèves |
@@ -281,13 +281,13 @@ Avec `?demo`, tout reste dans le navigateur (le mode est mémorisé pour l'ongle
 
 **Réglages** (`js/config.js`) : adresse publique du site (`URL_SITE`, utilisée dans tous les liens donnés aux élèves), durées de programmation par défaut, nombre minimum de tortues. La clé de la base qui y figure est la clé **« publishable »**, publique, faite pour être visible (envoyée dans l'en-tête `apikey`) : la sécurité repose sur les règles de `supabase.sql`. Une clé secrète ne doit jamais y être placée.
 
-**Le Panthéon** : pour l'administrer, choisir un mot de passe d'au moins 12 caractères et l'enregistrer une fois dans l'éditeur SQL (`select lagon.definir_mot_de_passe_admin('…');` : seule son empreinte est gardée), puis ouvrir `pantheon.html?admin`. Si les règles du moteur changent, le banc d'essai doit changer de version (`BANC.version` dans `js/pantheon.js`, et la version acceptée dans `lagon_proposer_pantheon`) et les tortues doivent être revérifiées.
+**Le Panthéon** : pour l'administrer, choisir un mot de passe d'au moins 12 caractères et l'enregistrer une fois dans l'éditeur SQL, puis ouvrir `pantheon.html?admin`. Dans une base installée avec `supabase.sql` : `select lagon.definir_mot_de_passe_admin('…');` (seule son empreinte est gardée) ; dans l'ancien projet, tant que le site l'utilise : `insert into public.admin_secret (secret) values ('…') on conflict (id) do update set secret = excluded.secret;`. Si les règles du moteur changent, le banc d'essai doit changer de version (`BANC.version` dans `js/pantheon.js`, et la version acceptée dans `lagon_proposer_pantheon`) et les tortues doivent être revérifiées.
 
 **Bon à savoir** :
 
 - la base de l'offre gratuite se met en pause après environ une semaine sans activité : il faut la réactiver depuis son tableau de bord avant le cours ;
 - à chaque création de salle, les salles inutilisées depuis 60 jours sont supprimées avec les pseudos de leurs élèves, leurs tortues et leurs scores ;
-- la charge est faible : 30 élèves interrogent la base toutes les 2 secondes, et ne reçoivent que du texte. Il n'y a pas de plafond du nombre d'élèves ; au-delà d'une trentaine de tortues, le brawl est plus long à calculer (chantier du TODO).
+- la charge est faible : 30 élèves interrogent la base toutes les 2 secondes, et ne reçoivent que du texte.
 
 ---
 
