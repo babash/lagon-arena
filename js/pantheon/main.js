@@ -24,13 +24,14 @@ async function charger() {
   $("#resume").textContent = top.length ? `${top.length} tortue${top.length > 1 ? "s" : ""}${lycee ? " dans cet établissement" : ""}` : "";
 }
 
-// « classe K7PQ · 6 nov. 2026 » (ou « hors classe ») : avec le pseudo, c'est ce qui distingue deux tortues
+// le Panthéon affiche le pseudo, l'établissement (s'il est connu), le score et la date (décision du 12/11) :
+// la date d'entrée, avec le pseudo, distingue deux tortues ; la classe n'est pas affichée
 const jour = (d) => (d ? new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "");
-const origine = (t) => `${t.salle ? `classe ${t.salle}` : "hors classe"}${t.cree_le ? " · " + jour(t.cree_le) : ""}`;
+const origine = (t) => (t.cree_le ? "entrée le " + jour(t.cree_le) : "");
 
 function afficher() {
   const memo = store.get("lagon:pantheon", {}) || {};
-  const estMoi = (l) => memo.pseudo && l.pseudo === memo.pseudo && (l.salle || null) === (memo.salle || null);
+  const estMoi = (l) => memo.pseudo && l.pseudo === memo.pseudo && !!memo.cree_le && l.cree_le === memo.cree_le;
   // les tortues d'entraînement s'intercalent à leur place, sans rang
   const lignes = top.map((t) => ({ ...t, type: "eleve" }));
   for (const r of refs) {
@@ -82,7 +83,7 @@ async function maTortue(code, annoncer = false) {
     if (!t) { box.innerHTML = ""; if (annoncer) toast("Aucune tortue avec ce code Panthéon.", "err"); return; }
     box.innerHTML = `<div class="msg ok">🐢 Ta tortue <b>${esc(t.pseudo)}</b> (${esc(origine(t))}${t.lycee ? ` · ${esc(t.lycee)}` : ""}) est <b>${t.rang}${t.rang === 1 ? "re" : "e"}</b> du Panthéon avec <b>${nombre(t.moyenne)}</b> nids en moyenne ${t.verifie ? "✔" : "⏳"}.
       Pour l'améliorer : modifie-la dans le <a href="eleve.html?libre=1">bac à sable</a>, puis « 🏛️ Proposer au Panthéon » avec ton code.</div>`;
-    store.set("lagon:pantheon", { ...(store.get("lagon:pantheon", {}) || {}), code, pseudo: t.pseudo, lycee: t.lycee || "", salle: t.salle || null });
+    store.set("lagon:pantheon", { ...(store.get("lagon:pantheon", {}) || {}), code, pseudo: t.pseudo, salle: t.salle || null, cree_le: t.cree_le || null });
     afficher();
   } catch (e) { if (annoncer) toast(e.message, "err"); }
 }

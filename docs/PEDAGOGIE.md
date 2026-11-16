@@ -118,7 +118,7 @@ Une séance réussie dépend de la capacité de l'enseignant·e à **piloter la 
 
 ### 3.10. Sobriété et respect des élèves
 
-Enregistrés en ligne : le pseudo, la couleur de la tortue, les programmes envoyés (un par manche) et les scores, sans nom ni adresse électronique ; le Panthéon public affiche le pseudo, la classe, l'établissement, la date et la moyenne, jamais le programme. Pas de compte, pas de traceur. Le site est statique, la base minuscule, l'hébergement gratuit. Une salle disparaît 60 jours après sa dernière utilisation.
+Enregistrés en ligne : le pseudo, la couleur de la tortue, les programmes envoyés (un par manche) et les scores, sans nom ni adresse électronique ; le Panthéon public affiche le pseudo, l'établissement (donné par l'enseignant·e), la date et la moyenne, jamais le programme. Pas de compte, pas de traceur. Le site est statique, la base minuscule, l'hébergement gratuit. Une salle disparaît 60 jours après sa dernière utilisation.
 
 ### 3.11. Un ancrage local
 
@@ -187,7 +187,7 @@ Voir le texte prêt à dire dans le [guide de l'enseignant·e](GUIDE-ENSEIGNANT.
 - **« Et les élèves qui n'ont jamais programmé ? »** Le parcours part de zéro, par l'exemple : on pilote d'abord sa tortue à la main, on écrit ses règles en français, on complète le code avec des listes, puis on tape. Il convient dès la Seconde. L'éditeur complète les mots, comprend le français et explique les erreurs. Le coup de pouce donne la prochaine idée. Un·e élève qui ajoute seulement deux conditions à la tortue de départ (pondre sur la plage la nuit, aller vers la plage la nuit) passe de 0 à près de 4 nids en moyenne dans le bac à sable (mesuré sur 60 lagons) : la première victoire arrive vite.
 - **« C'est un jeu : qu'est-ce qu'ils et elles apprennent vraiment ? »** À écrire, lire et **déboguer** des chaînes de conditions et des expressions booléennes, dans des centaines de situations. Le jeu ne fait que fournir les situations et le retour. Demande à un·e élève d'expliquer sa tortue : tu entendras « le premier vrai gagne ».
 - **« La compétition, ça ne décourage pas les plus faibles ? »** C'est le risque principal. Les pseudos, le bonus de progression, les équipes équilibrées et les manches hors classement le limitent ; à toi de choisir ce que tu projettes.
-- **« Et les données des élèves ? »** Enregistrés en ligne : le pseudo, la couleur de la tortue, les programmes envoyés (un par manche) et les scores, sans nom ni adresse électronique ; le Panthéon public affiche le pseudo, la classe, l'établissement, la date et la moyenne, jamais le programme. Pas de compte. Les séances terminées sont effacées au bout de 7 jours, les salles sans activité au bout de 60 jours.
+- **« Et les données des élèves ? »** Enregistrés en ligne : le pseudo, la couleur de la tortue, les programmes envoyés (un par manche) et les scores, sans nom ni adresse électronique ; le Panthéon public affiche le pseudo, l'établissement (donné par l'enseignant·e), la date et la moyenne, jamais le programme. Pas de compte. Les séances terminées sont effacées au bout de 7 jours, les salles sans activité au bout de 60 jours.
 - **« Ça marche sur les ordinateurs du lycée ? »** Il faut un navigateur récent (Firefox, Chrome, Edge) et une connexion. Rien à installer.
 
 ## 7. Références
