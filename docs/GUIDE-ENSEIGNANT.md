@@ -124,6 +124,8 @@ Les tortues d'entraînement apparaissent dans le classement comme **repères** (
 
 C'est un bon objectif pour les élèves rapides, ou pour prolonger le travail à la maison : « Entrez au Panthéon, et battez la Championne ! »
 
+Le Panthéon **a repris à zéro le 19/11/2026**, avec le déménagement de la base : les tortues entrées avant n'y sont plus, et un code Panthéon donné avant ne retrouve plus de tortue. Un·e élève peut reproposer la sienne depuis le bac à sable, avec son ancien code s'il ou elle l'a gardé.
+
 ### Le Panthéon automatique
 
 À la fin de **chaque manche**, quand les résultats s'affichent, ton navigateur envoie **la meilleure tortue de la classe** au Panthéon, sans que personne ait rien à faire :
