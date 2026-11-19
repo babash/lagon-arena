@@ -16,10 +16,18 @@ if (MODE === "demo") $("#demo").classList.remove("cache");
 
 let lycee = params.get("lycee") || "", top = [], refs = [];
 
+// le message du classement (vide, ou erreur) : au-dessus du tableau, et non dans une de ses lignes,
+// pour qu'il reste lisible en entier sur un téléphone, où le tableau défile dans son cadre
+function message(texte, classe) {
+  const m = $("#vide");
+  m.textContent = texte || "";
+  m.className = texte ? `msg ${classe}` : "cache";
+}
+
 async function charger() {
   try {
     top = await db.pantheonTop(100, lycee || null);
-  } catch (e) { $("#classement").innerHTML = `<tr><td colspan="5" class="msg err">${esc(e.message)}</td></tr>`; return; }
+  } catch (e) { $("#classement").innerHTML = ""; message(e.message, "err"); return; }
   afficher();
   $("#resume").textContent = top.length ? `${top.length} tortue${top.length > 1 ? "s" : ""}${lycee ? " dans cet établissement" : ""}` : "";
 }
@@ -39,7 +47,7 @@ function afficher() {
     lignes.splice(i < 0 ? lignes.length : i, 0, { type: "repere", pseudo: r.nom, moyenne: r.moyenne });
   }
   const tb = $("#classement"); tb.innerHTML = "";
-  if (!top.length) tb.append(el("tr", {}, el("td", { colspan: 5, class: "muted" }, lycee ? "Aucune tortue de cet établissement pour l'instant." : "Le Panthéon est encore vide : à toi d'y entrer en premier !")));
+  message(top.length ? "" : lycee ? "Aucune tortue de cet établissement pour l'instant." : "Le Panthéon est encore vide : à toi d'y entrer en premier !", "info");
   for (const l of lignes) {
     if (l.type === "repere") {
       tb.append(el("tr", { class: "bot repere" }, el("td", { class: "num" }, ""), el("td", {}, `🤖 ${l.pseudo}`), el("td", {}, "tortue d'entraînement"),
