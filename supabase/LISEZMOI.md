@@ -9,8 +9,8 @@ Règles communes à toutes les applications : `architecture/regles-supabase.md` 
 | N° | Fichier (inverse) | Projet | Ce qu'elle fait | Appliquée |
 |---|---|---|---|---|
 | 0001 | `0001-pantheon-automatique.sql` (`0001-pantheon-automatique-inverse.sql`) | ancien projet `gkyvaugipddjqjvvpopw` | `pantheon_classe` (le Panthéon automatique, avec la limite des 1 000 meilleures tortues) et `pantheon_admin` avec la manche | ✅ le 10/11/2026 à 23 h 08 (heure de Mayotte), sous le nom `lagon_0001_pantheon_automatique` |
-| 0002 | `0002-base-unique.sql` (`0002-base-unique-inverse.sql`) | base unique `cukahpyqkljiddmimpyi` | le schéma `lagon`, ses 9 tables **vides**, 8 fonctions internes et 30 fonctions d'entrée `public.lagon_…` | ✅ le 19/11/2026 à HH:MM, sous le nom `lagon_0002_base_unique` (SQL accepté par l'enseignant le 19/11 à 12:51) |
-| 0003 | `0003-pantheon-importe.sql` (`0003-pantheon-importe-inverse.sql`) | base unique | sans import, sur le Panthéon vide : le compteur des identifiants à 1 et `id` « generated always » (son nom et ses commentaires parlent d'un import qui n'a pas eu lieu : le fichier est resté tel quel, pour garder le texte accepté) | ✅ le 19/11/2026 à HH:MM, sous le nom `lagon_0003_pantheon_importe` (même accord) |
+| 0002 | `0002-base-unique.sql` (`0002-base-unique-inverse.sql`) | base unique `cukahpyqkljiddmimpyi` | le schéma `lagon`, ses 9 tables **vides**, 8 fonctions internes et 30 fonctions d'entrée `public.lagon_…` | ✅ le 19/11/2026 à 13:36 (heure de Mayotte), sous le nom `lagon_0002_base_unique`, version `20261119103631` (SQL accepté par l'enseignant le 19/11 à 12:51) |
+| 0003 | `0003-pantheon-importe.sql` (`0003-pantheon-importe-inverse.sql`) | base unique | sans import, sur le Panthéon vide : le compteur des identifiants à 1 et `id` « generated always » (son nom et ses commentaires parlent d'un import qui n'a pas eu lieu : le fichier est resté tel quel, pour garder le texte accepté) | ✅ le 19/11/2026 à 13:37 (heure de Mayotte), sous le nom `lagon_0003_pantheon_importe`, version `20261119103723` (même accord) |
 
 **Avant ces fichiers**, dans l'ancien projet (appliquées par leur nom, sans fichier séparé ; leur SQL était dans l'ancien `supabase.sql`, visible dans l'historique) : `etablissement_facultatif`, `pantheon_classe_et_date`, `retrouver_session_par_code` (10/11), `chantier_3_codes_manche_et_entree_pantheon` (10/11). Le socle de la base unique a aussi fermé la séquence du Panthéon de l'ancien projet (`base_unique_0004_ancien_projet_sequence_pantheon`, dépôt du site).
 
@@ -40,22 +40,23 @@ Il faut **un moment sans salle en cours** (ni séance, ni devoir ouvert) : le 19
 | Étape | Qui | Quoi |
 |---|---|---|
 | 1 | enseignant | ✅ a vu le SQL exact de `0002-base-unique.sql` et de `0003-pantheon-importe.sql` (envoyés le 13/11) et l'a accepté le 19/11 à 12:51 (« Ok base lagon »). Empreintes du texte (`empreintes_migration.py` du Gardien) : `bbd3aa60…` pour `0002`, `3159dc3a…` pour `0003` ; elles n'ont pas changé depuis l'envoi |
-| 2 | chef d'orchestre | applique `0002` à la base unique (`apply_migration`, nom `lagon_0002_base_unique`). Rien ne change pour les élèves : les tables sont vides, la page utilise encore l'ancien projet |
-| 3 | chef d'orchestre | **recopie les compteurs** : il lit les 4 lignes de `public.compteurs` dans l'ancien projet (`select nom, valeur, maj from public.compteurs order by nom;`), puis les écrit dans la base unique par un `insert` de 4 lignes (modèle ci-dessous). Un `insert` simple, sans `on conflict` : s'il trouvait déjà un compteur, il s'arrêterait sans rien écrire |
-| 4 | chef d'orchestre | applique `0003` juste après (`apply_migration`, nom `lagon_0003_pantheon_importe`). Sur le Panthéon vide, il ne fait que deux choses : le compteur des identifiants est placé à 1 (la première tortue prendra l'identifiant 1) et la colonne `id` devient « generated always » (personne ne peut plus choisir un identifiant). Ses garde-fous passent (le rôle `postgres`, la table de `0002`, au plus 1 000 tortues), l'étape 1 du fichier (les cases vides d'un import) ne trouve aucune ligne, et son contrôle final passe ; aucune autre table, aucune fonction, aucun droit ne change |
+| 2 | chef d'orchestre | ✅ a appliqué `0002` à la base unique le 19/11 à 13:36 (`apply_migration`, nom `lagon_0002_base_unique`, version `20261119103631`). Rien n'a changé pour les élèves : les tables étaient vides, la page utilisait encore l'ancien projet |
+| 3 | chef d'orchestre | ✅ **a recopié les compteurs** à 13:37 : il a lu les 4 lignes de `public.compteurs` dans l'ancien projet (`select nom, valeur, maj from public.compteurs order by nom;`), puis les a écrites dans la base unique par un `insert` de 4 lignes, avec `on conflict (nom) do nothing` : un compteur déjà présent n'aurait pas été écrasé (modèle ci-dessous). Valeurs recopiées, avec leurs dates `maj` : `parties` 7, `participants` 109, `salles` 12, `dernier_menage` 64 |
+| 4 | chef d'orchestre | ✅ a appliqué `0003` juste après, à 13:37 (`apply_migration`, nom `lagon_0003_pantheon_importe`, version `20261119103723`). Sur le Panthéon vide, il ne fait que deux choses : le compteur des identifiants est placé à 1 (la première tortue prendra l'identifiant 1) et la colonne `id` devient « generated always » (personne ne peut plus choisir un identifiant). Ses garde-fous passent (le rôle `postgres`, la table de `0002`, au plus 1 000 tortues), l'étape 1 du fichier (les cases vides d'un import) ne trouve aucune ligne, et son contrôle final passe ; aucune autre table, aucune fonction, aucun droit ne change |
 | 5 | Gardien | vérifie, par les métadonnées seulement (requêtes ci-dessous, dont `count(*)` : 4 compteurs, 0 tortue ; et les conseillers), et l'inscrit au journal |
 | 6 | Gardien | publie la bascule (branche `atelier/t42-lagon-bascule`) : `js/config.js` prend l'adresse et la clé « publishable » de la base unique, et les textes du dépôt disent l'état d'après le déménagement |
 | 7 | enseignant | essaie : créer une salle, la rejoindre depuis un autre appareil, jouer une manche, voir le Panthéon (vide au départ ; la meilleure tortue de la manche y entre à la 1re place) et l'accueil (les nombres d'avant, recopiés). « Mes salles » oublie les anciennes salles quand il les ouvre (« Salle introuvable »). Pour vérifier les scores du Panthéon, il enregistre une fois le mot de passe de l'administration dans la base unique (« L'administration du Panthéon », plus bas) |
 | 8 | 30 jours plus tard (vers le 19/12/2026) | une migration montrée à l'enseignant retire les objets de Lagon Arena de l'ancien projet, ancien Panthéon compris, sans toucher aux objets `guilde_*` (n° 9 du plan) ; la page perd alors sa compatibilité avec l'ancienne forme (`js/db.js`), et le retour en arrière n'est plus possible |
 
-Le modèle de l'étape 3 (les `…` sont les valeurs lues dans l'ancien projet ; `maj` est la date de la dernière mise à jour, pour `dernier_menage` la date du dernier ménage) :
+Le modèle de l'étape 3, celui qui a servi (les `…` sont les valeurs lues dans l'ancien projet ; `maj` est la date de la dernière mise à jour, pour `dernier_menage` la date du dernier ménage) :
 
 ```sql
 insert into lagon.compteurs (nom, valeur, maj) values
   ('dernier_menage', …, '…'),
   ('participants',   …, '…'),
   ('parties',        …, '…'),
-  ('salles',         …, '…');
+  ('salles',         …, '…')
+on conflict (nom) do nothing;
 ```
 
 ## Vérifier, par les métadonnées seulement
@@ -113,7 +114,7 @@ Toujours sur une reproduction locale de la base unique (rôles de Supabase, socl
 
 **Le 19/11, sans import** (le déroulé du jour du déménagement) : PostgreSQL 16 ; dans une copie d'essai de `0002` et du socle `0003`, le droit `maintain` (nouveau dans Postgres 17) est retiré des deux lignes de contrôle finales, seul écart avec les fichiers.
 
-- `0002` comme `apply_migration`, puis relancé dans l'éditeur SQL, sans effet ; les 4 compteurs (valeurs inventées) par un `insert` (un second `insert` du même compteur est refusé) ; `0003` sur le Panthéon vide, relancé sans effet : il ne change que le compteur des identifiants (à 1) et la colonne `id` (« generated always ») ; rien ne change hors du schéma `lagon`, ni dans les compteurs ;
+- `0002` comme `apply_migration`, puis relancé dans l'éditeur SQL, sans effet ; les 4 compteurs (valeurs inventées) par le même `insert` qu'au jour J, avec `on conflict (nom) do nothing` (relancé avec d'autres valeurs, il n'écrase rien) ; `0003` sur le Panthéon vide, relancé sans effet : il ne change que le compteur des identifiants (à 1) et la colonne `id` (« generated always ») ; rien ne change hors du schéma `lagon`, ni dans les compteurs ;
 - les vérifications ci-dessus (métadonnées) : toutes au résultat attendu ;
 - en `anon`, par les seules fonctions : l'accueil affiche les compteurs recopiés et un Panthéon à 0 ; la première tortue proposée entre à la 1re place avec l'identifiant 1, la tortue d'une classe (Panthéon automatique) avec l'identifiant 2 et l'établissement de la salle ; un code Panthéon d'avant ne retrouve rien ; personne ne peut choisir un identifiant ; les tables restent illisibles ;
 - les inverses : `0003` inverse, puis `0003` de nouveau (la tortue suivante prend l'identifiant 3) ; `0002` inverse refusé tant qu'une salle existe, puis, sans salle, on retrouve exactement l'état d'avant ; l'aller-retour complet, et le retour en arrière d'avant la bascule (`0003` inverse, puis `0002` inverse) ;
