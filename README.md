@@ -49,7 +49,7 @@ La tortue fournie au départ sait manger… mais **ne pond jamais** : sans rien 
 
 | Usage | Comment |
 |---|---|
-| **Une séance en classe** (≈ 55 min, jusqu'à 30 élèves) | Les missions du parcours, puis trois manches : programmation, brawl projeté, rapport, rematch. Le déroulé est [prêt à l'emploi](docs/GUIDE-ENSEIGNANT.md#2-le-déroulé-conseillé-dune-séance--55-min). |
+| **Une séance en classe** (≈ 55 min, toute la classe) | Les missions du parcours, puis trois manches : programmation, brawl projeté, rapport, rematch. Le déroulé est [prêt à l'emploi](docs/GUIDE-ENSEIGNANT.md#2-le-déroulé-conseillé-dune-séance--55-min). |
 | **Un devoir à la maison** | **📚 Créer un devoir** : choisis la nouveauté, lance, envoie le lien aux élèves. Ils et elles programment à la maison ; tu lances le brawl quand tu veux. |
 | **Une manche sur plusieurs cours** | ♾️ Temps illimité : chaque élève reprend sa tortue sur n'importe quel ordinateur avec son seul **code de session** (8 caractères), sans retaper la salle ni le pseudo. |
 | **En équipes** | 2 à 6 équipes, équilibrées d'après le classement : seul le rang de l'équipe compte, et l'entraide devient une stratégie. |
@@ -57,7 +57,7 @@ La tortue fournie au départ sait manger… mais **ne pond jamais** : sans rien 
 | **Pour les élèves les plus à l'aise** | Des [missions avancées](https://babash.github.io/lagon-arena/tuto-avance.html) en trois niveaux : 🥈 intermédiaire, 🥇 expert (choisir ses algues), 👥 équipe. |
 | **Pour s'entraîner seul·e** | Le [bac à sable](https://babash.github.io/lagon-arena/eleve.html?libre=1), contre 5 tortues d'entraînement, avec une estimation sur 50 parties. |
 | **Voir où chacun·e bloque** | Pendant la programmation, une pastille 🟢 🟠 🔴 🐞 par élève, d'après sa dernière tortue envoyée, et « 🥚 18 tortues sur 25 pondent ». Un clic sur un pseudo montre son code et pourquoi sa tortue ne pond pas (avec un bouton 🙈 Masquer, car l'écran est souvent projeté). |
-| **Le Panthéon** | Les [100 meilleures tortues de tous les temps](https://babash.github.io/lagon-arena/pantheon.html), toutes jugées sur les mêmes 20 lagons, affichées avec le pseudo, l'établissement (s'il est renseigné), le score et la date ; classement par établissement. À la fin de chaque manche, la meilleure tortue de la classe y entre toute seule (réglable, ou désactivable). Le programme des tortues reste secret. |
+| **Le Panthéon** | Les [100 meilleures tortues de tous les temps](https://babash.github.io/lagon-arena/pantheon.html), toutes jugées sur les mêmes 20 lagons, affichées avec le pseudo, l'établissement (s'il est renseigné), le score et la date ; classement par établissement. À la fin de chaque manche, la meilleure tortue de la classe y entre toute seule (réglable, ou désactivable). Le programme des tortues reste secret. Le Panthéon a repris à zéro le 19/11/2026, avec le déménagement de la base. |
 
 ## Pourquoi ça marche
 
@@ -71,10 +71,10 @@ Les principes, les limites (franchement) et un argumentaire pour présenter le j
 
 ## Données des élèves
 
-- **Enregistré en ligne** (Supabase) : pour chaque salle, son code et, si tu le renseignes, ton établissement ; pour chaque élève, un pseudo, une couleur, les programmes envoyés et les scores ; au Panthéon, le pseudo, la date, l'établissement de la salle, la moyenne, le programme et la salle d'où vient la tortue (jamais affichée). Aucun champ pour le nom ni pour l'adresse électronique.
+- **Enregistré en ligne** (Supabase, dans la base commune des applications du site, schéma `lagon`, depuis le 19/11/2026) : pour chaque salle, son code et, si tu le renseignes, ton établissement ; pour chaque élève, un pseudo, une couleur, les programmes envoyés et les scores ; au Panthéon, le pseudo, la date, l'établissement de la salle, la moyenne, le programme et la salle d'où vient la tortue (jamais affichée). Aucun champ pour le nom ni pour l'adresse électronique. Aucune table n'est lisible directement : la page passe par des fonctions qui vérifient le code de la salle, son secret ou le jeton de l'élève.
 - **Visible par les autres** : les pseudos et les scores ; les programmes des tortues, par l'enseignant·e de la salle pendant la manche, et par la classe seulement après le brawl ; au Panthéon, le pseudo, l'établissement, la date et la moyenne, jamais le programme ni la classe.
 - **Sur l'appareil** : le stockage du navigateur, un jour pour ce qui est à l'élève (codes de session, programme en cours, tutoriels), 60 jours pour ce qui est à toi (tes salles, tes réglages).
-- **Pour effacer** : tu peux retirer un·e élève de ta salle ; les séances terminées depuis 7 jours et les salles sans activité depuis 60 jours sont effacées automatiquement ; l'administration du Panthéon peut retirer une tortue.
+- **Pour effacer** : tu peux retirer un·e élève de ta salle ; les séances terminées depuis 7 jours et les salles sans activité depuis 60 jours sont effacées automatiquement ; l'administration du Panthéon peut retirer une tortue. Ce qui avait été enregistré avant le 19/11/2026 (salles, élèves, Panthéon) reste dans l'ancienne base, sans servir, jusqu'à son effacement, prévu 30 jours plus tard.
 
 Le détail : [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (§ 7, la base de données) et [docs/GUIDE-ENSEIGNANT.md](docs/GUIDE-ENSEIGNANT.md) (§ 6, le Panthéon).
 

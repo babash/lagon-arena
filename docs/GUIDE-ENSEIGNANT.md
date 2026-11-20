@@ -114,7 +114,7 @@ Le bouton **🔗 Lien d'accès élèves** de la salle redonne le lien et le mess
 Le [Panthéon](https://babash.github.io/lagon-arena/pantheon.html) classe les **100 meilleures tortues de tous les temps**, toutes classes confondues. Chaque tortue y est affichée avec **le pseudo, l'établissement** (s'il est renseigné), **le score et la date** (« Moya · Lycée de Chirongui · 4,35 · entrée le 6 nov. 2026 »). La classe (le code de la salle) n'est pas affichée. L'établissement n'est jamais tapé par l'élève : c'est celui que tu donnes à la salle. Depuis son bac à sable, un·e élève clique sur **🏛️ Proposer au Panthéon** :
 
 - sa tortue joue **20 parties** dans le lagon calme contre les 5 tortues d'entraînement, sur **les mêmes 20 lagons pour tout le monde** : son score est sa **moyenne de nids** ;
-- **depuis la salle**, sa tortue est inscrite avec **son pseudo de la salle** et **sa classe** (le code de la salle, prouvé par son jeton de session), et avec l'établissement que l'enseignant·e a renseigné pour la salle. Rien à taper ;
+- **depuis la salle**, sa tortue est inscrite avec **son pseudo de la salle** et **sa classe** (le code de la salle, prouvé par son jeton de session), et avec l'établissement que l'enseignant·e a renseigné pour la salle. Rien à taper. Si tu changes l'établissement de la salle, les tortues de la classe le suivent ;
 - **depuis le bac à sable libre**, l'élève choisit un pseudo ; la tortue est affichée sans établissement ;
 - on peut afficher le classement d'un seul établissement ;
 - l'élève reçoit un **code Panthéon** pour améliorer sa tortue plus tard : la nouvelle version remplace l'ancienne si elle fait mieux (et reste rattachée à sa classe, même améliorée depuis la maison) ;
@@ -123,6 +123,8 @@ Le [Panthéon](https://babash.github.io/lagon-arena/pantheon.html) classe les **
 Les tortues d'entraînement apparaissent dans le classement comme **repères** (la Championne fait 5,5 nids en moyenne sur ce banc d'essai). Chaque score est **recalculé** par l'administration du Panthéon (⏳ puis ✔), qui peut aussi retirer une tortue au pseudo ou à l'établissement inapproprié.
 
 C'est un bon objectif pour les élèves rapides, ou pour prolonger le travail à la maison : « Entrez au Panthéon, et battez la Championne ! »
+
+Le Panthéon **a repris à zéro le 19/11/2026**, avec le déménagement de la base : les tortues entrées avant n'y sont plus, et un code Panthéon donné avant ne retrouve plus de tortue. Un·e élève peut reproposer la sienne depuis le bac à sable, avec son ancien code s'il ou elle l'a gardé.
 
 ### Le Panthéon automatique
 
